@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'talker = py_pubsub.publisher_member_function:main',
             'listener = py_pubsub.sub_test:main',
+            'serial_talker = py_pubsub.pub_serial_test:main',
         ],
     },
 )
