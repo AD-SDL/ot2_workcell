@@ -21,9 +21,15 @@ class OT2(Node):
 		self.run_lock = Lock()
 
 		# readability
+		self.state = { #TODO
+			"BUSY":1,
+			"READY":0
+		}
 		self.status = {
 			"ERROR":1,
-			"SUCCESS":0
+			"SUCCESS":0,
+			"WARNING":2,
+			"FATAL":3
 		}
 
 		# Path setup
@@ -36,7 +42,7 @@ class OT2(Node):
 		while not self.register_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
 
-		# Register with master
+		# Register with master TODO: retry handling for this registration
 		self.register() #TODO: need to setup retry
 
 		# Create services: Have to wait until after registration this way we will have the id
@@ -83,6 +89,7 @@ class OT2(Node):
 	def run_handler(self, request, response):
 		pass
 
+	# registers OT-2 with the master node
 	def register(self):
 
 		# Create request

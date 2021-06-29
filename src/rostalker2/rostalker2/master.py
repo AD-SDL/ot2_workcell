@@ -19,6 +19,12 @@ class Master(Node):
 			"BUSY":1,
 			"READY":0
 		}
+		self.status = {
+			"SUCCESS":0,
+			"WARNING":2,
+			"ERROR":1,
+			"FATAL":3
+		}
 
 		# Path setup
 		path = Path()
@@ -43,7 +49,7 @@ class Master(Node):
 		self.get_logger().info("Master initialization complete")
 
 	# Loads filename to a worker node
-	def load(self, name, replacement):
+	def load(self, name, replacement): #TODO: Add return statements, using self.status
 
 		# Select a node
 		target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment
@@ -99,7 +105,7 @@ class Master(Node):
 			dict = {
 				"type":request.type,
 				"id":"O"+str(self.nodes),
-				"state":self.states['READY']
+				"state":self.states['READY'] #TODO: implement states
 			}
 			self.nodes_list.append(dict)
 			self.get_logger().info("Registered ID: %s with master"%dict['id'])
