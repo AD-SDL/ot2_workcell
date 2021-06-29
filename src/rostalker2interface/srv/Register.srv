@@ -1,4 +1,4 @@
 string type
 ---
-int64 id
+string id
 int64 status
