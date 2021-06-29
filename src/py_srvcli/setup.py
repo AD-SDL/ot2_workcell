@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'py_pubsub'
+package_name = 'py_srvcli'
 
 setup(
     name=package_name,
@@ -14,17 +14,16 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nerra',
-    maintainer_email='nerra@todo.todo',
+    maintainer_email='alan.linghao.wang@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.sub_test:main',
-            'serial_talker = py_pubsub.pub_serial_test:main',
-            'custom_talker = py_pubsub.custom_publisher:main',
-            'custom_listener = py_pubsub.custom_subscriber:main',
+            'service = py_srvcli.service_member_function:main',
+            'client = py_srvcli.client_member_function:main',
+            'custom_service = py_srvcli.custom_service:main',
+            'custom_client = py_srvcli.custom_client:main',
         ],
     },
 )

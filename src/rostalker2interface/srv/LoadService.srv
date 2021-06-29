@@ -1,0 +1,5 @@
+string name
+string contents
+bool replace
+---
+int64 status
