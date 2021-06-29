@@ -32,9 +32,13 @@ class Master(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Service setup 
-		self.register_service = self.create_service(Register, 'register', self.handle_register)
-		self.nodes = 0
-		self.nodes_list = []
+		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service
+
+		# Registration setup
+		self.nodes = 0 # Total nodes registered
+		self.nodes_list = [] # Information about all nodes registered: type, id, state
+
+		# Lock setup
 		self.register_lock = Lock()
 
 		# Get Node
