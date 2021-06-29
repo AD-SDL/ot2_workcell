@@ -49,6 +49,9 @@ class OT2(Node):
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 #		self.run_service = self.create_service(TODO, "/OT_2/%s/run"%self.id, self.run_handler)
 
+		# Initialization Complete
+		self.get_logger().info("ID: %s initialization completed"%self.id)
+
 	# Handles load_module service calls
 	def load_handler(self, request, response):
 		# Get lock, enter critical section

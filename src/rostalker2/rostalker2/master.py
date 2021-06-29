@@ -39,10 +39,9 @@ class Master(Node):
 
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
-		self.get_logger().info("Waitting for nodes...")
 		while(len(self.nodes_list) == 0): 
-			rclpy.spin_once(self) # Allow node to register itself
 			self.get_logger().info("Waitting for nodes...")
+			rclpy.spin_once(self) # Allow node to register itself
 			time.sleep(.5) # 2 seconds
 
 		# Initialization Complete
