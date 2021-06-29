@@ -121,6 +121,7 @@ class Master(Node):
 		else:
 			self.get_logger().error("type %s not supported at this moment"%request.type)
 			response.status = response.ERROR # Error
+			self.register_lock.release() # Release lock before exiting
 			return response
 
 		# Create response
