@@ -91,19 +91,24 @@ class Master(Node):
 					response = self.future.result()
 				except Exception as e:
 					self.get_logger().error("Error occured %r"%(e,))
-
-				# Error handling
-				if(response.status == response.ERROR):
-					self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
-				elif(response.status == response.WARNING):
-					self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
 				else:
-					self.get_logger().info("Load succeeded")
+					# Error handling
+					if(response.status == response.ERROR):
+						self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
+					elif(response.status == response.WARNING):
+						self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
+					else:
+						self.get_logger().info("Load succeeded")
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
+		# Lock
 		self.register_lock.acquire()
+
+		# Create response
 		response = Register.Response()
+
+		# Check type
 		if(request.type == 'OT_2'):
 			dict = {
 				"type":request.type,
@@ -118,9 +123,14 @@ class Master(Node):
 			response.status = response.ERROR # Error
 			return response
 
+		# Create response
 		response.status = response.SUCCESS
 		response.id = dict['id'] # Send back the ID to the worker
+
+		# Update Node information
 		self.nodes += 1
+
+		# Release lock and exit
 		self.register_lock.release()
 		return response
 
