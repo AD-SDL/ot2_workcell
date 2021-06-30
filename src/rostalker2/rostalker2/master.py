@@ -42,6 +42,9 @@ class Master(Node):
 		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service
 		self.destroy_service = self.create_service(Destroy, 'destroy', self.handle_destroy_worker) # Destroy worker service
 
+		# Client setup
+		# TODO: see if any clients can be setup here 
+
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
 		while(len(self.nodes_list) == 0): 
@@ -65,13 +68,14 @@ class Master(Node):
 			id = target_node['id']
 		except Exception as e: 
 			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
 		finally: # Fault tolerance, even on fail the system won't deadlock
 			# Exit critical section
 			self.node_lock.release()
 
-		# Client setup 
-		self.load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
-		while not self.load_cli.wait_for_service(timeout_sec=2.0):
+		# Client setup    (client can't be in the class as it constantly changes)
+		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
 			rclpy.spin_once(self) # Spin so nodes can activate themselves
 
@@ -93,14 +97,14 @@ class Master(Node):
 			load_request.replace = replacement # If the file exists do we overwrite it?
 
 			# Call service to load module
-			self.future = self.load_cli.call_async(load_request)
+			future = load_cli.call_async(load_request)
 			self.get_logger().info("Waiting for completion...")
 
 			# Waiting on future
-			rclpy.spin_until_future_complete(self, self.future)
-			if(self.future.done()):
+			rclpy.spin_until_future_complete(self, future)
+			if(future.done()):
 				try:
-					response = self.future.result()
+					response = future.result()
 				except Exception as e:
 					self.get_logger().error("Error occured %r"%(e,))
 					return self.status['ERROR'] # Error
@@ -148,7 +152,8 @@ class Master(Node):
 		self.nodes_list.append(dict)
 
 		# Release lock and exit
-		self.register_lock.release()
+		self.node_lock.release()
+		self.get_logger().info("Registration of %s complete"%dict['id'])
 		return response
 
 	# Removes node information upon service call
@@ -157,7 +162,7 @@ class Master(Node):
 		self.node_lock.acquire()
 
 		# Create response
-		response = Destroy.response()
+		response = Destroy.Response()
 
 		# Find id in nodes_list
 		for i in range(0, self.nodes):
@@ -188,7 +193,7 @@ def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
 	status = master.load("test.py", False)
-	master.get_logger().info("Status: %d"%status)
+	rclpy.spin(master) #TODO: DELETE
 	master.destroy_node()
 	rclpy.shutdown()
 
