@@ -121,8 +121,7 @@ class Master(Node):
 				"id":"O"+str(self.nodes), #TODO: set this so this is specified by worker node
 				"state":self.states['READY'] #TODO: implement states
 			}
-			self.get_logger().info("Registered ID: %s with master"%dict['id'])
-			response.status = response.ERROR #TODO: DELETE
+			self.get_logger().info("Trying to register ID: %s with master"%dict['id'])
 		# TODO: more types
 		else:
 			self.get_logger().error("type %s not supported at this moment"%request.type)
