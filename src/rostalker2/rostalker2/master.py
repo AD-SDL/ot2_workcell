@@ -14,6 +14,13 @@ class Master(Node):
 		# Node creation
 		super().__init__("master_node") #TODO: Add in the ability to have multiple masters (maybe?)
 
+		# Lock setup
+		self.node_lock = Lock() # This lock controls access to the self.nodes and self.nodes_list structure
+
+		# Registration setup
+		self.nodes = 0 # Total nodes registered
+		self.nodes_list = [] # Information about all nodes registered: type, id, state
+
 		# Readability
 		self.states = { #TODO: more states
 			"BUSY":1,
@@ -33,13 +40,7 @@ class Master(Node):
 
 		# Service setup 
 		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service
-
-		# Registration setup
-		self.nodes = 0 # Total nodes registered
-		self.nodes_list = [] # Information about all nodes registered: type, id, state
-
-		# Lock setup
-		self.register_lock = Lock()
+		self.destroy_service = self.create_service(Destroy, 'destroy', self.handle_destroy_worker) # Destroy worker service
 
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
@@ -54,10 +55,19 @@ class Master(Node):
 	# Loads filename to a worker node
 	def load(self, name, replacement):
 
+		# Lock: Entering critical section
+		self.node_lock.acquire()
+
 		# Select a node
-		target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment
-		type = target_node['type'] # These will be needed to acess the service
-		id = target_node['id']
+		try:
+			target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment: allow users to choose
+			type = target_node['type'] # These will be needed to acess the service
+			id = target_node['id']
+		except Exception as e: 
+			self.get_logger().error("Error occured: %r"%(e,))
+		finally: # Fault tolerance, even on fail the system won't deadlock
+			# Exit critical section
+			self.node_lock.release()
 
 		# Client setup 
 		self.load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
@@ -108,8 +118,6 @@ class Master(Node):
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response): #TODO: add upon error status is deregistered
-		# Lock
-		self.register_lock.acquire()
 
 		# Create response
 		response = Register.Response()
@@ -126,12 +134,14 @@ class Master(Node):
 		else:
 			self.get_logger().error("type %s not supported at this moment"%request.type)
 			response.status = response.ERROR # Error
-			self.register_lock.release() # Release lock before exiting
 			return response
 
 		# Create response
 		response.status = response.SUCCESS
 		response.id = dict['id'] # Send back the ID to the worker
+
+		# Lock: Critical section entry
+		self.node_lock.acquire()
 
 		# Update Node information: done last
 		self.nodes += 1
@@ -141,9 +151,37 @@ class Master(Node):
 		self.register_lock.release()
 		return response
 
-	#TODO
+	# Removes node information upon service call
 	def handle_destroy_worker(self, request, response):
-		pass
+		# Lock: Entering critical section
+		self.node_lock.acquire()
+
+		# Create response
+		response = Destroy.response()
+
+		# Find id in nodes_list
+		for i in range(0, self.nodes):
+			dict = self.nodes_list[i]
+			if(dict['id'] == request.id and dict['type'] == request.type):
+				self.nodes_list.pop(i) # Remove from list
+				self.nodes -= 1
+				self.get_logger().info("Removed id: %s of type: %s from nodes_list"%(dict['id'], dict['type']))
+				response.status = response.SUCCESS
+				self.node_lock.release()
+				return response
+			# Error checking
+			elif(dict['id'] == request.id and not dict['type'] == request.type):
+				self.nodes_list.pop(i) # Remove from list
+				self.nodes -= 1
+				self.get_logger().info("Warning! id: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], request.type, dict['type']))
+				response.status = response.WARNING
+				self.node_lock.release()
+
+		# No id found in nodes_list
+		self.get_logger().error("Unable to find id: %s of type: %s"%(request.id, request.type))
+		response.status = response.ERROR
+		self.node_lock.release()
+		return response
 
 # This is just for testing, this class can be used anywhere 
 def main(args=None):

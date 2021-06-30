@@ -37,9 +37,12 @@ class OT2(Node):
 		self.home_location = str(path.home())
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
-		# Create clients
+		# Create clients TODO: format like master, these are created when needed not on initialization
 		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 		while not self.register_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
+		while not self.deregister_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
 
 		# Register with master
@@ -138,10 +141,15 @@ class OT2(Node):
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
 
+	# De-registers this node with the master node
+	def deregister_node():
+		
+
 def main(args=None):
 	rclpy.init(args=args)
 	ot2node = OT2()
 	rclpy.spin(ot2node)
+	ot2node.deregister_node()
 	ot2node.destroy_node()
 	rclpy.shutdown()
 
