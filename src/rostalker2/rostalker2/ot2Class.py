@@ -8,6 +8,7 @@ import os
 import os.path
 from os import path
 from pathlib import Path
+import importlib.util
 
 class OT2(Node):
 
@@ -17,8 +18,7 @@ class OT2(Node):
 		super().__init__("ot2") #TODO: anonymous
 
 		# Lock creation
-		self.load_lock = Lock()
-		self.run_lock = Lock()
+		self.file_lock = Lock() # Access to the file system
 
 		# readability
 		self.state = { #TODO: sync with master
@@ -56,25 +56,25 @@ class OT2(Node):
 
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
-#		self.run_service = self.create_service(TODO, "/OT_2/%s/run"%self.id, self.run_handler)
+		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
 
 		# Initialization Complete
 		self.get_logger().info("ID: %s initialization completed"%self.id)
 
 	# Handles load_module service calls
 	def load_handler(self, request, response):
-		# Get lock, enter critical section
-		self.load_lock.acquire()
 
 		# Get request information
 		name = request.name
 		file = self.module_location + name
 		contents = request.contents
 
+		# Create response
+		response = LoadService.Response()
+
 		# Warnings
 		if(path.exists(file) and request.replace == False):
 			self.get_logger().warning("File %s already exists on the system and replacement is false, upload terminating..."%name)
-			self.load_lock.release()
 			response.status = response.WARNING # Warning: in this context file already exists on system
 			return response
 		if(request.replace == True):
@@ -83,6 +83,10 @@ class OT2(Node):
 		# Begin loading module
 		self.get_logger().info("Beginning load")
 		try:
+			# Get lock, Entering critical section
+			self.file_lock.acquire()
+
+			# Write to file and set permissions
 			f = open(file, "w")
 			f.write(contents)
 			f.close()
@@ -94,12 +98,79 @@ class OT2(Node):
 			self.get_logger().info("File %s loaded to OT2"%name)
 			response.status = response.SUCCESS # All good
 		finally:
-			self.load_lock.release()
+			# Exiting critical section
+			self.file_lock.release()
 			return response
+
+	# TODO: Check the following code
+	# import sys
+	## the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
+	#sys.path.append('/foo/bar/mock-0.3.1')
+	#from testcase import TestCase
+	#from testutils import RunTests
+	#from mock import Mock, sentinel, patch
 
 	# Handles run module service calls
 	def run_handler(self, request, response):
-		pass
+
+		# Get request information
+		type = request.type
+		id = request.id
+		file = self.module_location + request.file # Worker attaches to the well known location
+
+		# Create response
+		resposne = Run.Response()
+
+		# Warnings / Errors
+		if(not id == self.id): # Wrong ID
+			self.get_logger().error("Request id: %s doesn't match node id: %s"%(id, self.id))
+			response.status = response.ERROR
+			return response
+		elif(not type == "OT_2"): # Wrong type
+			self.get_logger().warning("The requested node type: %s doesn't match the node type of id: %s, but will still proceed"%(type, self.id))
+		elif(path.exists(file) == False): # File doesn't exist
+			self.get_logger().error("File: %s doesn't exist"%(file))
+			response.status = response.ERROR
+			return response
+
+		# Get lock, entering file critical section (Can't be reading when file is still being written)
+		self.file_lock.acquire()
+
+		# import module
+		self.get_logger().info("Importing module...")
+		try:
+			# Loading and attaching the module to the program
+			spec = importlib.util.spec_from_file_location(request.file, file)
+			ot2Module = importlib.util.module_from_spec(spec)
+			spec.loader.exec_module(ot2Module)
+		except Exception as e:
+			# Error
+			self.get_logger().error("Error occured when trying to load module %s: %r"%(file,e,))
+			response.status = response.ERROR # Error
+			return response
+		else:
+			# All Good
+			self.get_logger().info("Module %s loaded and attached to the program"%file)
+		finally:
+			# After exiting critical section release lock
+			self.file_lock.release()
+
+		# Running the module (The function ran is work()
+		self.get_logger().info("Running module...")
+		try:
+			# Runs well-known function work()
+			ot2Module.work()
+		except Exception as e:
+			# Error
+			self.get_logger().error("Error occured when trying to run module %s: %r"%(file,e,))
+			response.status = response.ERROR # Error
+			return response
+		else:
+			# All good
+			self.get_logger().info("Module %s successfully ran to completion"%file)
+			response.status = response.SUCCESS
+			return response
+
 
 	# registers OT-2 with the master node
 	def register(self):

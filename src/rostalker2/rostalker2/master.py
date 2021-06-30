@@ -87,38 +87,38 @@ class Master(Node):
 		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR'] # Error
-		else:
-			self.get_logger().info("File %s read complete"%name)
 
-			# Create a request
-			load_request = LoadService.Request()
-			load_request.name = name # File path: insert file name, the file path even though the same is given to the client to set up
-			load_request.contents = contents # File string contents
-			load_request.replace = replacement # If the file exists do we overwrite it?
+		self.get_logger().info("File %s read complete"%name)
 
-			# Call service to load module
-			future = load_cli.call_async(load_request)
-			self.get_logger().info("Waiting for completion...")
+		# Create a request
+		load_request = LoadService.Request()
+		load_request.name = name # File path: insert file name, the file path even though the same is given to the client to set up
+		load_request.contents = contents # File string contents
+		load_request.replace = replacement # If the file exists do we overwrite it?
 
-			# Waiting on future
-			rclpy.spin_until_future_complete(self, future)
-			if(future.done()):
-				try:
-					response = future.result()
-				except Exception as e:
-					self.get_logger().error("Error occured %r"%(e,))
+		# Call service to load module
+		future = load_cli.call_async(load_request)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		rclpy.spin_until_future_complete(self, future)
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error handling
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
 					return self.status['ERROR'] # Error
+				elif(response.status == response.WARNING):
+					self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
+					return self.status['WARNING'] # Warning
 				else:
-					# Error handling
-					if(response.status == response.ERROR):
-						self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
-						return self.status['ERROR'] # Error
-					elif(response.status == response.WARNING):
-						self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
-						return self.status['WARNING'] # Warning
-					else:
-						self.get_logger().info("Load succeeded")
-						return self.status['SUCCESS'] # All good
+					self.get_logger().info("Load succeeded")
+					return self.status['SUCCESS'] # All good
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response): #TODO: add upon error status is deregistered
@@ -158,6 +158,7 @@ class Master(Node):
 
 	# Removes node information upon service call
 	def handle_destroy_worker(self, request, response):
+		print('here')
 		# Lock: Entering critical section
 		self.node_lock.acquire()
 
@@ -175,7 +176,7 @@ class Master(Node):
 				self.node_lock.release()
 				return response
 			# Error checking
-			elif(dict['id'] == request.id and not dict['type'] == request.type):
+			elif(dict['id'] == request.id and not dict['type'] == request.type): # TODO: Test the warning if we don't put the right type in the request
 				self.nodes_list.pop(i) # Remove from list
 				self.nodes -= 1
 				self.get_logger().info("Warning! id: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], request.type, dict['type']))
@@ -188,11 +189,76 @@ class Master(Node):
 		self.node_lock.release()
 		return response
 
+	# Helper function to search nodes_list by id
+	def search_by_id(self, id):
+		# get lock entering critical section
+		self.node_lock.acquire()
+
+		for dict in self.nodes_list:
+			if(dict['id'] == id):
+				# release lock and exit
+				self.node_lock.release()
+				return dict
+
+		# leaving critical section
+		self.node_lock.release()
+
+		# Not found
+		dict = { 'type':'-1' }
+		return dict
+
+
+	# Runs a module on the node (id)
+	# TODO: implement something can load and run modules
+	def run(self, file, id):
+		# Get type
+		node = self.search_by_id(id)
+		type = node['type']
+
+		# Error checking
+		if(type == '-1'): # id not found
+			self.get_logger().error("Id: %s doesn't exist in nodes_list"%id)
+			return self.status['ERROR']
+
+		# Client setup
+		run_cli = self.create_client(Run, "/%s/%s/run"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not run_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+			rclpy.spin_once(self) # Spin so nodes can activate themselves
+
+		# Create a request
+		req = Run.Request()
+		req.type = type
+		req.id = id
+		req.file = file
+
+		# Call service
+		future = run_cli.call_async(req)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		rclpy.spin_until_future_complete(self, future)
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error checking
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured when running file %s at id: %s"%(name, id))
+					return self.status['ERROR'] # Error
+				else:
+					self.get_logger().info("Module run succeeded")
+					return self.status['SUCCESS'] # All good
+
 # This is just for testing, this class can be used anywhere 
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
-	status = master.load("test.py", False)
+	status = master.load("module_test.py", False)
+	status2 = master.run("module_test.py", "O0")
 	rclpy.spin(master) #TODO: DELETE
 	master.destroy_node()
 	rclpy.shutdown()
