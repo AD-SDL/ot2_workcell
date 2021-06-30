@@ -51,6 +51,9 @@ class OT2(Node):
 			time.sleep(timeout) # timeout
 			status = self.register()
 			attempts += 1
+		if(attempts == max_attempts):
+			self.get_logger().fatal("Unable to register with master node terminating program...")
+			sys.exit(1)
 
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 

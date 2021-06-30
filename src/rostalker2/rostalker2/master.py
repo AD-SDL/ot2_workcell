@@ -63,6 +63,7 @@ class Master(Node):
 		self.load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not self.load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
+			rclpy.spin_once(self) # Spin so nodes can activate themselves
 
 		# Client ready
 		try:
@@ -106,7 +107,7 @@ class Master(Node):
 						return self.status['SUCCESS'] # All good
 
 	# Registers a worker with the master so modules can be distrubuted
-	def handle_register(self, request, response):
+	def handle_register(self, request, response): #TODO: add upon error status is deregistered
 		# Lock
 		self.register_lock.acquire()
 
@@ -117,11 +118,11 @@ class Master(Node):
 		if(request.type == 'OT_2'):
 			dict = {
 				"type":request.type,
-				"id":"O"+str(self.nodes),
+				"id":"O"+str(self.nodes), #TODO: set this so this is specified by worker node
 				"state":self.states['READY'] #TODO: implement states
 			}
-			self.nodes_list.append(dict)
 			self.get_logger().info("Registered ID: %s with master"%dict['id'])
+			response.status = response.ERROR #TODO: DELETE
 		# TODO: more types
 		else:
 			self.get_logger().error("type %s not supported at this moment"%request.type)
@@ -133,8 +134,9 @@ class Master(Node):
 		response.status = response.SUCCESS
 		response.id = dict['id'] # Send back the ID to the worker
 
-		# Update Node information
+		# Update Node information: done last
 		self.nodes += 1
+		self.nodes_list.append(dict)
 
 		# Release lock and exit
 		self.register_lock.release()
