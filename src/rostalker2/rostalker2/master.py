@@ -71,6 +71,7 @@ class Master(Node):
 			f.close()
 		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR'] # Error
 		else:
 			self.get_logger().info("File %s read complete"%name)
 
@@ -91,14 +92,18 @@ class Master(Node):
 					response = self.future.result()
 				except Exception as e:
 					self.get_logger().error("Error occured %r"%(e,))
+					return self.status['ERROR'] # Error
 				else:
 					# Error handling
 					if(response.status == response.ERROR):
 						self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
+						return self.status['ERROR'] # Error
 					elif(response.status == response.WARNING):
 						self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
+						return self.status['WARNING'] # Warning
 					else:
 						self.get_logger().info("Load succeeded")
+						return self.status['SUCCESS'] # All good
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
@@ -143,7 +148,8 @@ class Master(Node):
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
-	master.load("test.py", False)
+	status = master.load("test.py", False)
+	master.get_logger().info("Status: %d"%status)
 	master.destroy_node()
 	rclpy.shutdown()
 
