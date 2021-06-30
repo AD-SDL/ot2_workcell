@@ -21,7 +21,7 @@ class OT2(Node):
 		self.run_lock = Lock()
 
 		# readability
-		self.state = { #TODO
+		self.state = { #TODO: sync with master
 			"BUSY":1,
 			"READY":0
 		}
@@ -42,8 +42,15 @@ class OT2(Node):
 		while not self.register_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
 
-		# Register with master TODO: retry handling for this registration
-		self.register() #TODO: need to setup retry
+		# Register with master
+		status = 1
+		max_attempts = 10
+		attempts = 0
+		timeout = 1 # 1 second
+		while status == 1 and attempts < max_attempts: # While status is not equal to error
+			time.sleep(timeout) # timeout
+			status = self.register()
+			attempts += 1
 
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
@@ -74,7 +81,7 @@ class OT2(Node):
 		# Begin loading module
 		self.get_logger().info("Beginning load")
 		try:
-			f = open(file, "w") #TODO: add-well known directory for this to be placed in
+			f = open(file, "w")
 			f.write(contents)
 			f.close()
 			os.chmod(file, 0o777) # Exectuable permissions
@@ -112,7 +119,7 @@ class OT2(Node):
 
 				# Error checking
 				if(response.status == response.ERROR):
-					self.get_logger().error("Registration of type OT_2 failed, retrying...") #TODO: setup retry
+					self.get_logger().error("Registration of type OT_2 failed, retrying...")
 					return self.status['ERROR']
 
 				# All good

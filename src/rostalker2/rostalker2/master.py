@@ -52,7 +52,7 @@ class Master(Node):
 		self.get_logger().info("Master initialization complete")
 
 	# Loads filename to a worker node
-	def load(self, name, replacement): #TODO: Add return statements, using self.status
+	def load(self, name, replacement):
 
 		# Select a node
 		target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment
@@ -66,7 +66,7 @@ class Master(Node):
 
 		# Client ready
 		try:
-			f = open(self.module_location+name, "r") # TODO: create an actual well-known directory for modules to be placed in
+			f = open(self.module_location+name, "r")
 			contents = f.read()
 			f.close()
 		except Exception as e:
