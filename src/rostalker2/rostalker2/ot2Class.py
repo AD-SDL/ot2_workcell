@@ -42,17 +42,10 @@ class OT2(Node):
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
-		status = 1
-		max_attempts = 10
-		attempts = 0
-		timeout = 1 # 1 second
-		while status == 1 and attempts < max_attempts: # While status is not equal to error
-			time.sleep(timeout) # timeout
-			status = self.register()
-			attempts += 1
-		if(attempts == max_attempts):
-			self.get_logger().fatal("Unable to register with master node terminating program...")
-			sys.exit(1)
+		status = self.retry(self.register, 10, 1) # Setups up a retry system for a function
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().fatal("Unable to register with master, exiting...")
+			sys.exit(1) # Can't register node even after retrying
 
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
@@ -196,8 +189,14 @@ class OT2(Node):
 				response = future.result()
 
 				# Error checking
-				if(response.status == response.ERROR):
+				if(response.status == response.ERROR or response.status == response.FATAL): #TODO: maybe add checks for valid status
 					self.get_logger().error("Registration of type OT_2 failed, retrying...")
+					return self.status['ERROR']
+
+				# Invalid id format check
+				if(" " in response.id): #TODO: more invalid id checks
+					self.get_logger().error("Invalid id format from master")
+					#TODO: deregister the invalid node
 					return self.status['ERROR']
 
 				# All good
@@ -214,7 +213,7 @@ class OT2(Node):
 			sys.exit(1)
 
 	# De-registers this node with the master node
-	def deregister_node(self):
+	def deregister_node(self): #TODO swith to arg
 		# Create Request
 		req = Destroy.Request()
 		req.type = "OT_2"
@@ -236,9 +235,12 @@ class OT2(Node):
 				response = future.result()
 
 				# Error checking
-				if(response.status != response.SUCCESS):
-					self.get_logger().error("Deregistration failed of id: %s, retrying...") #TODO: setup retry
+				if(response.status == response.ERROR or response.status == response.FATAL):
+					self.get_logger().error("Deregistration failed of id: %s, retrying..." % self.id)
 					return self.status['ERROR']
+				elif(response.status == response.WARNING):
+					self.get_logger().warn("Deregistration success of id: %s, but warning thrown by master" % self.id)
+					return self.status['WARNING']
 
 				# All good
 				self.get_logger().info("Deregistration complete")
@@ -251,6 +253,40 @@ class OT2(Node):
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
 
+	# Tries until sucessfully executes, parameters: function, maximum number of attempts, and the timeout if failed (seconds)
+	def retry(self, function, max_attempts, timeout): # TODO: TESTING
+		attempts = 0
+		status = 1 # Only works for functions that return a standard status signal
+		while status != self.status['SUCCESS'] and status != self.status['WARNING'] and attempts < max_attempts: # Allowing for warnings to be passed
+			try:
+				# Attempting to run function
+				status = function() # No debug information, function assumed to have it
+
+				# Error checking
+				if(status == self.status['ERROR'] or status == self.status['FATAL']):
+					raise Exception
+				if(status not in range(0, 4)):
+					self.get_logger().error("Function doesn't return standard status output, stopping...")
+					return self.status['ERROR'] # prematurely exit
+			except:
+				self.get_logger().error("Failed, retrying %s..."%str(function)) # Error occurred
+			else:
+				break
+
+			# Increment counter and sleep
+			attempts += 1
+			time.sleep(timeout)
+
+		# Error checking
+		if(attempts == max_attempts): # If the loop is exited and we have a max attempt 
+			return self.status['ERROR'] # Fatal error stopping attempts
+		elif(status == self.status['SUCCESS'] or status == self.status['WARNING']):
+			return self.status['SUCCESS'] # All good
+		else: # Never should happen
+			self.get_logger().fatal("Something unexpected occured in retry function")
+			return self.status['FATAL'] # Let caller know a unknown error occured
+
+
 def main(args=None):
 	rclpy.init(args=args)
 	ot2node = OT2()
@@ -258,7 +294,7 @@ def main(args=None):
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
-		ot2node.deregister_node()
+		ot2node.retry(ot2node.deregister_node, 10, 1.5) #TODO: handle status
 		ot2node.destroy_node()
 		rclpy.shutdown()
 

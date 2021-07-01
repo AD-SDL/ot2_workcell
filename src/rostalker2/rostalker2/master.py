@@ -158,7 +158,7 @@ class Master(Node):
 
 	# Removes node information upon service call
 	def handle_destroy_worker(self, request, response):
-		print('here')
+
 		# Lock: Entering critical section
 		self.node_lock.acquire()
 
@@ -176,12 +176,13 @@ class Master(Node):
 				self.node_lock.release()
 				return response
 			# Error checking
-			elif(dict['id'] == request.id and not dict['type'] == request.type): # TODO: Test the warning if we don't put the right type in the request
+			elif(dict['id'] == request.id and not dict['type'] == request.type):
 				self.nodes_list.pop(i) # Remove from list
 				self.nodes -= 1
 				self.get_logger().info("Warning! id: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], request.type, dict['type']))
 				response.status = response.WARNING
 				self.node_lock.release()
+				return response
 
 		# No id found in nodes_list
 		self.get_logger().error("Unable to find id: %s of type: %s"%(request.id, request.type))
