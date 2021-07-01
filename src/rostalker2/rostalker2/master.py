@@ -6,6 +6,7 @@ import time
 from random import random
 from rostalker2interface.srv import *
 from pathlib import Path
+from rostalker2.retry_functions import *
 
 # Only one master node can be running at anytime, or else you will cause issues 
 class Master(Node):
@@ -56,22 +57,25 @@ class Master(Node):
 		self.get_logger().info("Master initialization complete")
 
 	# Loads filename to a worker node
-	def load(self, name, replacement):
-
-		# Lock: Entering critical section
-		self.node_lock.acquire()
+	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not? 
+	def load(self, name, id, replacement):
 
 		# Select a node
 		try:
-			target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment: allow users to choose
+			# Get node information
+			target_node = self.search_by_id(id) # See if id robot exists and the data
+
+			# Error checking
+			if(target_node['type'] == '-1'): # No such node
+				self.get_logger().error("id: %s doesn't exist"%id)
+				return self.status['ERROR']
+
+#			target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment: allow users to choose
 			type = target_node['type'] # These will be needed to acess the service
 			id = target_node['id']
 		except Exception as e: 
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
-		finally: # Fault tolerance, even on fail the system won't deadlock
-			# Exit critical section
-			self.node_lock.release()
 
 		# Client setup    (client can't be in the class as it constantly changes)
 		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
@@ -254,12 +258,41 @@ class Master(Node):
 					self.get_logger().info("Module run succeeded")
 					return self.status['SUCCESS'] # All good
 
+	# Function to segway to main function call
+	def _load(self, args):
+		return self.load(args[0], args[1], args[2]) # File, id, replacement
+
+	# Function to segway to main function call
+	def _run(self, args):
+		return self.run(args[0], args[1]) # File, id
+
+	# this will both load and run a file at the robot id 
+	def load_and_run(self, file, id):
+		# Load the module
+		args = []
+		args.append(file)
+		args.append(id)
+		args.append(True) # Auto update
+		retry(self, self._load, 1, 0, args) # Calling retry function with 1 attempt, just want output information
+		#TODO: error checking
+
+		# Run the module
+		args = []
+		args.append(file)
+		args.append(id)
+		retry(self, self._run, 1, 0, args) # Calling retry function with 1 attempt to get output messages
+		#TODO: error checking
+		return self.status['SUCCESS'] #TODO: DELETE
+
+#TODO: create a means of async running this in the background
+#TODO: add in setup file support
 # This is just for testing, this class can be used anywhere 
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
-	status = master.load("module_test.py", False)
-	status2 = master.run("module_test.py", "O0")
+#	status = master.load("module_test.py", "O0",  False)
+#	status2 = master.run("module_test.py", "O0")
+	status = master.load_and_run("module_test.py", "O0")
 	rclpy.spin(master) #TODO: DELETE
 	master.destroy_node()
 	rclpy.shutdown()

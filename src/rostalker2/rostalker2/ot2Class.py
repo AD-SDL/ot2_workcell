@@ -43,7 +43,7 @@ class OT2(Node):
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
-		status = retry(self, self.register, 10, 1) # Setups up a retry system for a function
+		status = retry(self, self.register, 10, 1, []) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
@@ -254,6 +254,8 @@ class OT2(Node):
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
 
+#TODO: create a means of async running this in the background
+
 def main(args=None):
 	rclpy.init(args=args)
 	ot2node = OT2()
@@ -261,7 +263,7 @@ def main(args=None):
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
-		retry(ot2node, ot2node.deregister_node, 10, 1.5) #TODO: handle status
+		retry(ot2node, ot2node.deregister_node, 10, 1.5, []) #TODO: handle status
 		ot2node.destroy_node()
 		rclpy.shutdown()
 

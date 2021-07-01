@@ -11,14 +11,17 @@ from pathlib import Path
 import importlib.util
 
 
-# Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds)
-def retry(self, function, max_attempts, timeout): # TODO: TESTING
+# Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
+def retry(self, function, max_attempts, timeout, args): # TODO: TESTING
 	attempts = 0
 	status = 1 # Only works for functions that return a standard status signal
 	while status != self.status['SUCCESS'] and status != self.status['WARNING'] and attempts < max_attempts: # Allowing for warnings to be passed
 		try:
 			# Attempting to run function
-			status = function() # No debug information, function assumed to have it
+			if(len(args) > 0): # Allow parameters to be given to the function
+				status = function(args)
+			else:
+				status = function() # No debug information, function assumed to have it
 
 			# Error checking
 			if(status == self.status['ERROR'] or status == self.status['FATAL']):
