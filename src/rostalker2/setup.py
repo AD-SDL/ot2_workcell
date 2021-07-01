@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'OT2 = rostalker2.ot2Class:main',
             'master = rostalker2.master:main',
+            'retry_functions = rostalker2.retry_functions:main_null',
         ],
     },
 )

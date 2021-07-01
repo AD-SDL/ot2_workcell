@@ -9,6 +9,7 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
+from rostalker2.retry_functions import *
 
 class OT2(Node):
 
@@ -42,7 +43,7 @@ class OT2(Node):
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
-		status = self.retry(self.register, 10, 1) # Setups up a retry system for a function
+		status = retry(self, self.register, 10, 1) # Setups up a retry system for a function
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
@@ -253,40 +254,6 @@ class OT2(Node):
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
 
-	# Tries until sucessfully executes, parameters: function, maximum number of attempts, and the timeout if failed (seconds)
-	def retry(self, function, max_attempts, timeout): # TODO: TESTING
-		attempts = 0
-		status = 1 # Only works for functions that return a standard status signal
-		while status != self.status['SUCCESS'] and status != self.status['WARNING'] and attempts < max_attempts: # Allowing for warnings to be passed
-			try:
-				# Attempting to run function
-				status = function() # No debug information, function assumed to have it
-
-				# Error checking
-				if(status == self.status['ERROR'] or status == self.status['FATAL']):
-					raise Exception
-				if(status not in range(0, 4)):
-					self.get_logger().error("Function doesn't return standard status output, stopping...")
-					return self.status['ERROR'] # prematurely exit
-			except:
-				self.get_logger().error("Failed, retrying %s..."%str(function)) # Error occurred
-			else:
-				break
-
-			# Increment counter and sleep
-			attempts += 1
-			time.sleep(timeout)
-
-		# Error checking
-		if(attempts == max_attempts): # If the loop is exited and we have a max attempt 
-			return self.status['ERROR'] # Fatal error stopping attempts
-		elif(status == self.status['SUCCESS'] or status == self.status['WARNING']):
-			return self.status['SUCCESS'] # All good
-		else: # Never should happen
-			self.get_logger().fatal("Something unexpected occured in retry function")
-			return self.status['FATAL'] # Let caller know a unknown error occured
-
-
 def main(args=None):
 	rclpy.init(args=args)
 	ot2node = OT2()
@@ -294,7 +261,7 @@ def main(args=None):
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
-		ot2node.retry(ot2node.deregister_node, 10, 1.5) #TODO: handle status
+		retry(ot2node, ot2node.deregister_node, 10, 1.5) #TODO: handle status
 		ot2node.destroy_node()
 		rclpy.shutdown()
 
