@@ -1,5 +1,5 @@
 # ros2tests
-Basic tests with ros2, repo for when learning ROS2
+Basic tests with ros2, repo for when learning ROS2, and repo for running basic rostalker2 files during the intial prototyping stage.
 
 # Rostalker2
 **master.py** - master node, this node runs on the control computer which grants access and contains information to the worker nodes  
