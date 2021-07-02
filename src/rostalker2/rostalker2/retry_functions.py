@@ -42,7 +42,7 @@ def retry(self, function, max_attempts, timeout, args): # TODO: TESTING
 	if(attempts == max_attempts): # If the loop is exited and we have a max attempt 
 		return self.status['ERROR'] # Fatal error stopping attempts
 	elif(status == self.status['SUCCESS'] or status == self.status['WARNING']):
-		return self.status['SUCCESS'] # All good
+		return status # Returns a success or warning status to caller
 	else: # Never should happen
 		self.get_logger().fatal("Something unexpected occured in retry function")
 		return self.status['FATAL'] # Let caller know a unknown error occured
