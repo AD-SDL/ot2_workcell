@@ -27,3 +27,6 @@ This is for ubuntu 20.04 running ROS2 foxy
 2. ros2 run rostalker2 OT2
 
 Currently this will load a basic hello_world module onto the OT2 node and run it, on the terminal that you ran OT2 you should see the words hello world pop up 
+
+# Diagrams for different components
+TODO
