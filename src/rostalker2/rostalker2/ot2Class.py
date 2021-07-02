@@ -13,10 +13,10 @@ from rostalker2.retry_functions import *
 
 class OT2(Node):
 
-	def __init__(self):
+	def __init__(self, name):
 
 		# Node creation
-		super().__init__("ot2") #TODO: anonymous
+		super().__init__("ot2_"+name) # Users specifies name #TODO: have the robot be identifable by this name!, upon registration this is given to master
 
 		# Lock creation
 		self.file_lock = Lock() # Access to the file system
@@ -214,7 +214,7 @@ class OT2(Node):
 			sys.exit(1)
 
 	# De-registers this node with the master node
-	def deregister_node(self): #TODO swith to arg
+	def deregister_node(self):
 		# Create Request
 		req = Destroy.Request()
 		req.type = "OT_2"
@@ -255,10 +255,15 @@ class OT2(Node):
 			sys.exit(1)
 
 #TODO: create a means of async running this in the background
-
 def main(args=None):
 	rclpy.init(args=args)
-	ot2node = OT2()
+
+	if(len(sys.argv) != 2):
+		print("need 1 arguments")
+		sys.exit(1)
+	name = str(sys.argv[1])
+
+	ot2node = OT2(name) # TODO take input from user
 	try:
 		rclpy.spin(ot2node)
 	except:

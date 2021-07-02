@@ -70,7 +70,7 @@ class Master(Node):
 				self.get_logger().error("id: %s doesn't exist"%id)
 				return self.status['ERROR']
 
-#			target_node = self.nodes_list[int(random()*len(self.nodes_list))] #TODO switch from random assignment: allow users to choose
+#			target_node = self.nodes_list[int(random()*len(self.nodes_list))] # Random load assignment
 			type = target_node['type'] # These will be needed to acess the service
 			id = target_node['id']
 		except Exception as e: 
@@ -125,7 +125,7 @@ class Master(Node):
 					return self.status['SUCCESS'] # All good
 
 	# Registers a worker with the master so modules can be distrubuted
-	def handle_register(self, request, response): #TODO: add upon error status is deregistered
+	def handle_register(self, request, response):
 
 		# Create response
 		response = Register.Response()
@@ -174,7 +174,6 @@ class Master(Node):
 			dict = self.nodes_list[i]
 			if(dict['id'] == request.id and dict['type'] == request.type):
 				self.nodes_list.pop(i) # Remove from list
-				self.nodes -= 1
 				self.get_logger().info("Removed id: %s of type: %s from nodes_list"%(dict['id'], dict['type']))
 				response.status = response.SUCCESS
 				self.node_lock.release()
@@ -182,7 +181,6 @@ class Master(Node):
 			# Error checking
 			elif(dict['id'] == request.id and not dict['type'] == request.type):
 				self.nodes_list.pop(i) # Remove from list
-				self.nodes -= 1
 				self.get_logger().info("Warning! id: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], request.type, dict['type']))
 				response.status = response.WARNING
 				self.node_lock.release()
@@ -214,7 +212,6 @@ class Master(Node):
 
 
 	# Runs a module on the node (id)
-	# TODO: implement something can load and run modules
 	def run(self, file, id):
 		# Get type
 		node = self.search_by_id(id)
@@ -273,16 +270,45 @@ class Master(Node):
 		args.append(file)
 		args.append(id)
 		args.append(True) # Auto update
-		retry(self, self._load, 1, 0, args) # Calling retry function with 1 attempt, just want output information
-		#TODO: error checking
+		status = retry(self, self._load, 1, 0, args) # Calling retry function with 1 attempt, just want output information
+
+		# Status check
+		if(status == self.status['FATAL']):
+			self.get_logger().fatal("Major error occured when attempting to run function")
+			return self.status['FATAL'] # Fatal error
+		elif(status == self.status['ERROR']):
+			self.get_logger().error("Retry function stopped, either due to too many attempts or a bad status returned")
+			return self.status['ERROR'] # Error
+		elif(status == self.status['WARNING']):
+			self.get_logger().warning("Warning thrown by retry function during execution, but ran to completion")
+			# Continue
+		else:
+			self.get_logger().info("Function ran to completion")
+			# Continue
 
 		# Run the module
 		args = []
 		args.append(file)
 		args.append(id)
-		retry(self, self._run, 1, 0, args) # Calling retry function with 1 attempt to get output messages
-		#TODO: error checking
-		return self.status['SUCCESS'] #TODO: DELETE
+		status = retry(self, self._run, 1, 0, args) # Calling retry function with 1 attempt to get output messages
+
+		# Status check
+		if(status == self.status['FATAL']):
+			self.get_logger().fatal("Major error occured when attempting to run function")
+			return self.status['FATAL'] # Fatal error
+		elif(status == self.status['ERROR']):
+			self.get_logger().error("Retry function stopped, either due to too many attempts or a bad status returned")
+			return self.status['ERROR'] # Error
+		elif(status == self.status['WARNING']):
+			self.get_logger().warning("Warning thrown by retry function during execution, but ran to completion")
+			return self.status['WARNING'] # Warnning thrown
+		else:
+			self.get_logger().info("Function ran to completion")
+			return self.status['SUCCESS'] # All Good
+
+	# Reads from a setup file to run a number of files on a specified robot 
+	def read_from_setup(self):
+		pass
 
 #TODO: create a means of async running this in the background
 #TODO: add in setup file support
