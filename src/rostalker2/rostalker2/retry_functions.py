@@ -47,5 +47,7 @@ def retry(self, function, max_attempts, timeout, args): # TODO: TESTING
 		self.get_logger().fatal("Something unexpected occured in retry function")
 		return self.status['FATAL'] # Let caller know a unknown error occured
 
+	#TODO: async retry function with future
+
 def main_null():
 	print("Not a program meant to have a main")

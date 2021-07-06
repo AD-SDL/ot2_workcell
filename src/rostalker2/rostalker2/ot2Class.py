@@ -16,7 +16,7 @@ class OT2(Node):
 	def __init__(self, name):
 
 		# Node creation
-		super().__init__("ot2_"+name) # Users specifies name #TODO: have the robot be identifable by this name!, upon registration this is given to master
+		super().__init__("ot2_"+name) # Users specifies name
 
 		# Lock creation
 		self.file_lock = Lock() # Access to the file system
@@ -43,7 +43,10 @@ class OT2(Node):
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
-		status = retry(self, self.register, 10, 1, []) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
+		args = []
+		args.append("OT_2") # Type 
+		args.append(name) # Name
+		status = retry(self, self._register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
@@ -53,7 +56,7 @@ class OT2(Node):
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
 
 		# Initialization Complete
-		self.get_logger().info("ID: %s initialization completed"%self.id)
+		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
 
 	# Handles load_module service calls
 	def load_handler(self, request, response):
@@ -167,11 +170,12 @@ class OT2(Node):
 
 
 	# registers OT-2 with the master node
-	def register(self):
+	def register(self, type, name):
 
 		# Create request
 		req = Register.Request()
-		req.type = "OT_2"
+		req.type = "OT_2" # TODO: type check
+		req.name = name
 
 		# Wait for service
 		while not self.register_cli.wait_for_service(timeout_sec=2.0):
@@ -202,16 +206,21 @@ class OT2(Node):
 
 				# All good
 				self.id = future.result().id # Set ID
-			except Exception as e:
+				self.name = name
+			except Exception as e: # Error occured
 				self.get_logger().error("Error occured: %r"%(e,))
 				return self.status['ERROR']
-			else:
+			else: # All good
 				self.get_logger().info("Registration complete id: %s"%self.id)
 				return self.status['SUCCESS']
-		else: # This should never happen
+		else: # This should never happen FATAL
 			rospy.get_logger().fatal("future failed, critical failure")
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
+
+	# Middleman function to set up args
+	def _register(self, args):
+		return self.register(args[0], args[1]) # type, name
 
 	# De-registers this node with the master node
 	def deregister_node(self):

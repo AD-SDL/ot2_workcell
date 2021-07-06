@@ -22,6 +22,9 @@ class Master(Node):
 		self.nodes = 0 # Total nodes registered
 		self.nodes_list = [] # Information about all nodes registered: type, id, state
 
+		# Thread setup
+		self.threads_list = [] # Maintains all the thread objects
+
 		# Readability
 		self.states = { #TODO: more states
 			"BUSY":1,
@@ -134,10 +137,11 @@ class Master(Node):
 		if(request.type == 'OT_2'):
 			dict = {
 				"type":request.type,
-				"id":"O"+str(self.nodes), #TODO: set this so this is specified by worker node
-				"state":self.states['READY'] #TODO: implement states
+				"id":"O"+str(self.nodes), # Can be searched along with name (each id must be unique)
+				"state":self.states['READY'], #TODO: implement states
+				"name":request.name # TODO: add ability to search by name
 			}
-			self.get_logger().info("Trying to register ID: %s with master"%dict['id'])
+			self.get_logger().info("Trying to register ID: %s name: %s with master"%(dict['id'], dict['name']))
 		# TODO: more types
 		else:
 			self.get_logger().error("type %s not supported at this moment"%request.type)
@@ -157,11 +161,11 @@ class Master(Node):
 
 		# Release lock and exit
 		self.node_lock.release()
-		self.get_logger().info("Registration of %s complete"%dict['id'])
+		self.get_logger().info("Registration of ID: %s name: %s complete"%(dict['id'], dict['name']))
 		return response
 
 	# Removes node information upon service call
-	def handle_destroy_worker(self, request, response):
+	def handle_destroy_worker(self, request, response): #TODO make it request name as well
 
 		# Lock: Entering critical section
 		self.node_lock.acquire()
@@ -174,14 +178,14 @@ class Master(Node):
 			dict = self.nodes_list[i]
 			if(dict['id'] == request.id and dict['type'] == request.type):
 				self.nodes_list.pop(i) # Remove from list
-				self.get_logger().info("Removed id: %s of type: %s from nodes_list"%(dict['id'], dict['type']))
+				self.get_logger().info("Removed id: %s of type: %s name: %s from nodes_list"%(dict['id'], dict['type'], dict['name']))
 				response.status = response.SUCCESS
 				self.node_lock.release()
 				return response
 			# Error checking
 			elif(dict['id'] == request.id and not dict['type'] == request.type):
 				self.nodes_list.pop(i) # Remove from list
-				self.get_logger().info("Warning! id: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], request.type, dict['type']))
+				self.get_logger().info("Warning! id: %s name: %s doesn't match type in service request, type in request: %s, actual type: %s" % (dict['id'], dict['name'],  request.type, dict['type']))
 				response.status = response.WARNING
 				self.node_lock.release()
 				return response
@@ -307,8 +311,8 @@ class Master(Node):
 			return self.status['SUCCESS'] # All Good
 
 	# Reads from a setup file to run a number of files on a specified robot 
-	def read_from_setup(self):
-		pass
+	def read_from_setup(self, file):
+		pass #TODO
 
 #TODO: create a means of async running this in the background
 #TODO: add in setup file support
