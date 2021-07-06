@@ -19,6 +19,7 @@ class Master(Node):
 
 		# Lock setup
 		self.node_lock = Lock() # This lock controls access to the self.nodes and self.nodes_list structure
+		self.rclpy_spin_lock = Lock() # This lock controls access to rclpy spin
 
 		# Registration setup
 		self.nodes = 0 # Total nodes registered
@@ -54,9 +55,9 @@ class Master(Node):
 
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
-		while(len(self.nodes_list) == 0): 
+		while(len(self.nodes_list) < 2): # TODO: get rid of hardcoded wait
 			self.get_logger().info("Waiting for nodes...")
-			rclpy.spin_once(self) # Allow node to register itself
+			rclpy.spin_once(self) # The async thread hasn't started running yet
 			time.sleep(.5) # 2 seconds
 
 		# Initialization Complete
@@ -86,7 +87,6 @@ class Master(Node):
 		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
-			rclpy.spin_once(self) # Spin so nodes can activate themselves
 
 		# Client ready
 		try:
@@ -110,7 +110,8 @@ class Master(Node):
 		self.get_logger().info("Waiting for completion...")
 
 		# Waiting on future
-		rclpy.spin_until_future_complete(self, future)
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
 		if(future.done()):
 			try:
 				response = future.result()
@@ -232,7 +233,6 @@ class Master(Node):
 		run_cli = self.create_client(Run, "/%s/%s/run"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not run_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
-			rclpy.spin_once(self) # Spin so nodes can activate themselves
 
 		# Create a request
 		req = Run.Request()
@@ -245,7 +245,8 @@ class Master(Node):
 		self.get_logger().info("Waiting for completion...")
 
 		# Waiting on future
-		rclpy.spin_until_future_complete(self, future)
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
 		if(future.done()):
 			try:
 				response = future.result()
@@ -364,17 +365,31 @@ class Master(Node):
 		self.get_logger().info("Setup file read and run complete")
 		return self.status['SUCCESS']
 
-#TODO: create a means of async running this in the background
-#TODO: add in setup file support
+# This is just to spin the master in another thread
+def spin(master): #TODO do this on worker nodes, Integrate into the class structure
+	rclpy.spin(master)
+
+# TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
+
+
+
+
 # This is just for testing, this class can be used anywhere 
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
+	
+	# Create a thread just to spin the master node
+	spin_thread = Thread(target = spin, args = (master,))
+	spin_thread.start()
+
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
 #	status = master.load_and_run("module_test.py", "O0")
 	status = master.read_from_setup("setup") 
-	rclpy.spin(master) #TODO: DELETE
+
+	# End
+	spin_thread.join()
 	master.destroy_node()
 	rclpy.shutdown()
 
