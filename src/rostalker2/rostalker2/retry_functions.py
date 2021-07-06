@@ -29,6 +29,8 @@ def retry(self, function, max_attempts, timeout, args): # TODO: TESTING
 			if(status not in range(0, 4)):
 				self.get_logger().error("Function doesn't return standard status output, stopping...")
 				return self.status['ERROR'] # prematurely exit
+		except Exception as e:
+			self.get_logger().error("Error occured: %r"%(e,)) # TODO: fix it up
 		except:
 			self.get_logger().error("Failed, retrying %s..."%str(function)) # Error occurred
 		else:

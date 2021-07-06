@@ -4,3 +4,4 @@ log/*
 src/ros_tutorials/
 *.swp
 src/OT2_Modules/*
+*.save

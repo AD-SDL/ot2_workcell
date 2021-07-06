@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+import threading
 from threading import Thread, Lock
 import sys
 import time
@@ -7,6 +8,7 @@ from random import random
 from rostalker2interface.srv import *
 from pathlib import Path
 from rostalker2.retry_functions import *
+from rostalker2.worker_thread import worker_class
 
 # Only one master node can be running at anytime, or else you will cause issues 
 class Master(Node):
@@ -23,6 +25,7 @@ class Master(Node):
 		self.nodes_list = [] # Information about all nodes registered: type, id, state
 
 		# Thread setup
+		self.files_for_threads = [] # Maintains list of all the files each thread saved in threads_list needs to run
 		self.threads_list = [] # Maintains all the thread objects
 
 		# Readability
@@ -52,7 +55,7 @@ class Master(Node):
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
 		while(len(self.nodes_list) == 0): 
-			self.get_logger().info("Waitting for nodes...")
+			self.get_logger().info("Waiting for nodes...")
 			rclpy.spin_once(self) # Allow node to register itself
 			time.sleep(.5) # 2 seconds
 
@@ -62,11 +65,10 @@ class Master(Node):
 	# Loads filename to a worker node
 	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not? 
 	def load(self, name, id, replacement):
-
 		# Select a node
 		try:
 			# Get node information
-			target_node = self.search_by_id(id) # See if id robot exists and the data
+			target_node = self.search_for_node(id) # See if id robot exists and the data
 
 			# Error checking
 			if(target_node['type'] == '-1'): # No such node
@@ -197,12 +199,12 @@ class Master(Node):
 		return response
 
 	# Helper function to search nodes_list by id
-	def search_by_id(self, id):
+	def search_for_node(self, id_or_name):
 		# get lock entering critical section
 		self.node_lock.acquire()
 
 		for dict in self.nodes_list:
-			if(dict['id'] == id):
+			if(dict['id'] == id_or_name or dict['name'] == id_or_name):
 				# release lock and exit
 				self.node_lock.release()
 				return dict
@@ -218,7 +220,7 @@ class Master(Node):
 	# Runs a module on the node (id)
 	def run(self, file, id):
 		# Get type
-		node = self.search_by_id(id)
+		node = self.search_for_node(id)
 		type = node['type']
 
 		# Error checking
@@ -311,8 +313,56 @@ class Master(Node):
 			return self.status['SUCCESS'] # All Good
 
 	# Reads from a setup file to run a number of files on a specified robot 
-	def read_from_setup(self, file):
-		pass #TODO
+	def read_from_setup(self, file): # TODO add error checking
+		# Read from setup file and distrubute to worker threads
+		# Read number of threads
+		f = open(self.module_location + file, "r") # Open up file "setup" in well-known directory
+		n = int(f.readline()) # First line should contain an integer 
+
+		# For each thread
+		for i in range(n): # Starts reading names and files to be run
+			# Get identification
+			name_or_id = f.readline().strip() # Remove newline
+
+			# Find entry for that id or name
+			entry = self.search_for_node(name_or_id)
+
+			# Error checking
+			if(entry['type'] == '-1'):
+				self.get_logger().error("Invalid identification %s for node process is terminating..."%name_or_id)
+				return self.status['ERROR']
+			else:
+				self.get_logger().info("Node %s found"%name_or_id)
+
+
+			# Get files for the worker
+			files = f.readline().split()
+			self.files_for_threads.append(files) # should be the same index
+
+			# Create thread
+			temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
+			self.threads_list.append(temp_thread) # Record information
+
+			# Setup complete for this thread
+			self.get_logger().info("Setup complete for %s"%name_or_id)
+
+		# New barrier for each thread (So we know when they all finish)
+		self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
+
+		# Start running each thread
+		for item in self.threads_list:
+			item.start()
+
+		# Waiting on finish
+		self.read_from_setup_barrier.wait()
+
+		# Join each thread
+		for item in self.threads_list:
+			item.join()
+
+		# Done
+		self.get_logger().info("Setup file read and run complete")
+		return self.status['SUCCESS']
 
 #TODO: create a means of async running this in the background
 #TODO: add in setup file support
@@ -322,7 +372,8 @@ def main(args=None):
 	master = Master()
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
-	status = master.load_and_run("module_test.py", "O0")
+#	status = master.load_and_run("module_test.py", "O0")
+	status = master.read_from_setup("setup") 
 	rclpy.spin(master) #TODO: DELETE
 	master.destroy_node()
 	rclpy.shutdown()

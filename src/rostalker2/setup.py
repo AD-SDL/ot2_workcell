@@ -23,6 +23,7 @@ setup(
             'OT2 = rostalker2.ot2Class:main',
             'master = rostalker2.master:main',
             'retry_functions = rostalker2.retry_functions:main_null',
+            'worker_thread = rostalker2.worker_thread:main_null',
         ],
     },
 )
