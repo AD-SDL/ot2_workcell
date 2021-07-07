@@ -55,10 +55,11 @@ class Master(Node):
 
 		# Get Node
 		# Master doesn't do anywork until there is a worker node to do stuff with
-		while(len(self.nodes_list) < 2): # TODO: get rid of hardcoded wait
-			self.get_logger().info("Waiting for nodes...")
-			rclpy.spin_once(self) # The async thread hasn't started running yet
-			time.sleep(.5) # 2 seconds
+		# TODO: add wait to the functions
+#		while(len(self.nodes_list) < 2): # TODO: get rid of hardcoded wait
+#			self.get_logger().info("Waiting for nodes...")
+#			rclpy.spin_once(self) # The async thread hasn't started running yet
+#			time.sleep(.5) # .5 seconds
 
 		# Initialization Complete
 		self.get_logger().info("Master initialization complete")
@@ -313,6 +314,16 @@ class Master(Node):
 			self.get_logger().info("Function ran to completion")
 			return self.status['SUCCESS'] # All Good
 
+	# Checks to see if the node/worker is ready (registered with the master)
+	def node_ready(self, args):
+		entry = self.search_for_node(args[0])
+		if(entry['type'] == '-1'):
+			self.get_logger().info("Waiting on node %s"%args[0])
+			return self.status['ERROR']
+		else:
+			return self.status['SUCCESS']
+
+
 	# Reads from a setup file to run a number of files on a specified robot 
 	def read_from_setup(self, file): # TODO add error checking
 		# Read from setup file and distrubute to worker threads
@@ -325,15 +336,16 @@ class Master(Node):
 			# Get identification
 			name_or_id = f.readline().strip() # Remove newline
 
-			# Find entry for that id or name
-			entry = self.search_for_node(name_or_id)
-
-			# Error checking
-			if(entry['type'] == '-1'):
-				self.get_logger().error("Invalid identification %s for node process is terminating..."%name_or_id)
+			# Find entry for that id or name (spin to wait for it)
+			args = []
+			args.append(name_or_id)
+			status = retry(self, self.node_ready, 10, 2, args) # max_attempts = 10, timeout = 2 seconds
+			if(status == self.status['ERROR'] or status == self.status['FATAL']):
+				self.get_logger().error("Unable to find node %s"%name_or_id) # Node isn't registered
 				return self.status['ERROR']
 			else:
-				self.get_logger().info("Node %s found"%name_or_id)
+				entry = self.search_for_node(name_or_id) # get information about that node
+				self.get_logger().info("Node %s found"%name_or_id) # Found
 
 
 			# Get files for the worker
@@ -366,6 +378,7 @@ class Master(Node):
 		return self.status['SUCCESS']
 
 # This is just to spin the master in another thread
+# TODO: Error catching
 def spin(master): #TODO do this on worker nodes, Integrate into the class structure
 	rclpy.spin(master)
 

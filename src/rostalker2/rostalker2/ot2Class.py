@@ -99,14 +99,6 @@ class OT2(Node):
 			self.file_lock.release()
 			return response
 
-	# TODO: Check the following code
-	# import sys
-	## the mock-0.3.1 dir contains testcase.py, testutils.py & mock.py
-	#sys.path.append('/foo/bar/mock-0.3.1')
-	#from testcase import TestCase
-	#from testutils import RunTests
-	#from mock import Mock, sentinel, patch
-
 	# Handles run module service calls
 	def run_handler(self, request, response):
 
