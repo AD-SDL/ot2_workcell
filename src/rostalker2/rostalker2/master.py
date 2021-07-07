@@ -143,10 +143,18 @@ class Master(Node):
 		# Check type
 		if(request.type == 'OT_2'):
 			dict = {
-				"type":request.type,
+				"type":'OT_2',
 				"id":"O"+str(self.nodes), # Can be searched along with name (each id must be unique)
 				"state":self.states['READY'], #TODO: implement states
-				"name":request.name # TODO: add ability to search by name
+				"name":request.name
+			}
+			self.get_logger().info("Trying to register ID: %s name: %s with master"%(dict['id'], dict['name']))
+		elif(request.type == 'arm'):
+			dict = {
+				"type":'arm',
+				"id":"A"+str(self.nodes), # Can be searched along with name (each id must be unique)
+				"state":self.states['READY'], #TODO: implement states
+				"name":request.name
 			}
 			self.get_logger().info("Trying to register ID: %s name: %s with master"%(dict['id'], dict['name']))
 		# TODO: more types
@@ -271,6 +279,14 @@ class Master(Node):
 					self.get_logger().info("Module run succeeded")
 					return self.status['SUCCESS'] # All good
 
+	# This handles transfer service calls
+	def transfer(self):
+		pass #TODO
+
+	# Function to segway to main function call
+	def _transfer(self, args):
+		pass #TODO
+
 	# Function to segway to main function call
 	def _load(self, args):
 		return self.load(args[0], args[1], args[2]) # File, id, replacement
@@ -391,6 +407,10 @@ class Master(Node):
 def setup_thread_work(master):
 	status = master.read_from_setup("setup") 
 
+
+
+
+
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
 
@@ -400,7 +420,7 @@ def setup_thread_work(master):
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
-	
+
 	# Create a thread to run setup_thread
 	spin_thread = Thread(target = setup_thread_work, args = (master,))
 	spin_thread.start()
@@ -409,14 +429,18 @@ def main(args=None):
 #	status2 = master.run("module_test.py", "O0")
 #	status = master.load_and_run("module_test.py", "O0")
 
-	# End
+	# Spin
 	try:
 		rclpy.spin(master)
+	except Exception as e:
+		master.get_logger().fatal("rclpy.spin failed, system in volatile state %r"%(e,))
 	except:
 		master.get_logger().fatal("Terminating...")
-		spin_thread.join()
-#		master.destroy_node()
-		rclpy.shutdown()
+
+	# End
+	spin_thread.join()
+	master.destroy_node()
+	rclpy.shutdown()
 
 if __name__ ==  "__main__":
 	main()

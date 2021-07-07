@@ -5,7 +5,7 @@ Basic tests with ros2, repo for when learning ROS2, and repo for running basic r
 **master.py** - master node, this node runs on the control computer which grants access and contains information to the worker nodes  
 **ot2class.py** - a worker node, this node runs on OT-2 robots and provides an interface to the master node to upload and run modules on the OT-2 via ros service calls  
 **retry_functions.py** - helper function with error handling and the ability to retry a function upon an error  
-
+**worker_thread.py** - Class for thread which currently only can execute the load_and_run function in parrallel  
 ### TODO more information about rostalker2
 
 # Install 

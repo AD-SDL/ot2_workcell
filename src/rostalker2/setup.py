@@ -24,6 +24,8 @@ setup(
             'master = rostalker2.master:main',
             'retry_functions = rostalker2.retry_functions:main_null',
             'worker_thread = rostalker2.worker_thread:main_null',
+            'arm = rostalker2.armClass:main',
+            'register_functions = rostalker2.register_functions:main_null',
         ],
     },
 )

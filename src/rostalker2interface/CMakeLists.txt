@@ -28,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Register.srv"
   "srv/Destroy.srv"
   "srv/Run.srv"
+  "srv/Transfer.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

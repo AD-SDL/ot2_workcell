@@ -12,6 +12,10 @@ from pathlib import Path
 import importlib.util
 from rostalker2.retry_functions import *
 
+
+# TODO: add in states for threads (busy, ready, down) 
+# TODO: add locks, for future models if the thread is a shared resource it needs to be able to lock itself
+
 class worker_class(threading.Thread): # This is a thread class that handles work on OT-2
 	def __init__(self, thread_name, thread_ID, master, index):
 		threading.Thread.__init__(self)
@@ -26,7 +30,7 @@ class worker_class(threading.Thread): # This is a thread class that handles work
 		self.node_print("Node init successful name: %s, files to run are %s"%(str(self.thread_name), ' '.join(self.tasks)))
 
 	def run(self):
-		for file in self.tasks:
+		for file in self.tasks: #TODO: check if transfer command
 			# Debug information
 			self.node_print("Running file %s"%file)
 
