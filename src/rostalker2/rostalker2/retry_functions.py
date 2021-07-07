@@ -12,7 +12,7 @@ import importlib.util
 
 
 # Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
-def retry(self, function, max_attempts, timeout, args): # TODO: TESTING
+def retry(self, function, max_attempts, timeout, args):
 	attempts = 0
 	status = 1 # Only works for functions that return a standard status signal
 	while status != self.status['SUCCESS'] and status != self.status['WARNING'] and attempts < max_attempts: # Allowing for warnings to be passed

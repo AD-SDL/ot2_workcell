@@ -30,3 +30,10 @@ Currently this will load a basic hello_world module onto the OT2 node and run it
 
 # Diagrams for different components
 TODO
+
+# TODOs
+1) look at how OT-2 code is uploaded   
+2) get pipeline feature setup   
+3) better input from user  
+4) topic pub from different robots   
+5) attempt to run sim   
