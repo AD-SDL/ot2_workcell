@@ -1,5 +1,7 @@
 string to_id
 string to_name
+string from_id
+string from_name
 string item
 ---
 int64 WARNING = 2 

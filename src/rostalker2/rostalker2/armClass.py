@@ -11,6 +11,7 @@ from pathlib import Path
 import importlib.util
 from rostalker2.retry_functions import *
 from rostalker2.register_functions import *
+from rostalker2.register_functions import _register, _deregister_node
 
 # TODO: arm is a shared resource has to be able to lock itself
 # TODO: figure out how to integrate arm code
@@ -50,7 +51,7 @@ class Arm(Node):
 		args.append(self) # Self
 		args.append("arm") # Type
 		args.append(name) # Name
-		status = retry(self, self._register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
+		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
@@ -61,17 +62,29 @@ class Arm(Node):
 		# Initialization Complete
 		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
 
-	# Middleman function to set up args
-	def _register(self, args):
-		return register(args[0], args[1], args[2]) # self, type, name
-
-	# Middleman function to set up args
-	def _deregister_node(self, args):
-		return deregister_node(args[0]) # self
-
 	# Handles transfer service requests
-	def transfer_handler(self, request, response):
+	def transfer_handler(self, request, response): #TODO
+
+		# Get request information
+		to_name = request.to_name
+		to_id = request.to_id
+		from_name = request.from_name
+		from_id = request.from_id
+		item = request.item
+
+		# Create response
+		response = Transfer.Resonse()
+
+		# Get node (to/from) information
+
+		# error / warning
+
+
+
+	# Create request to get node info
+	def node_info_request(self, name_or_id):
 		pass #TODO
+
 
 def main(args=None):
 	rclpy.init(args=args)
@@ -90,7 +103,7 @@ def main(args=None):
 		# set up args
 		args = []
 		args.append(arm_node)
-		status = retry(arm_node, arm_node._deregister_node, 10, 1.5, args) #TODO: handle status
+		status = retry(arm_node, _deregister_node, 10, 1.5, args) #TODO: handle status
 		arm_node.destroy_node()
 		rclpy.shutdown()
 

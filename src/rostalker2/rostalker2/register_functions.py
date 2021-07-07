@@ -97,5 +97,13 @@ def deregister_node(self):
 		rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 		sys.exit(1)
 
+# Middleman function to set up args
+def _register(args):
+	return register(args[0], args[1], args[2]) # self, type, name
+
+# Middleman function to set up args
+def _deregister_node(args):
+	return deregister_node(args[0]) # self
+
 def main_null():
 	print("This is not meant to have a main function")

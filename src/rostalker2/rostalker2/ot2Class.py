@@ -10,6 +10,8 @@ from os import path
 from pathlib import Path
 import importlib.util
 from rostalker2.retry_functions import *
+from rostalker2.register_functions import *
+from rostalker2.register_functions import _register, _deregister_node
 
 class OT2(Node):
 
@@ -44,9 +46,10 @@ class OT2(Node):
 
 		# Register with master
 		args = []
+		args.append(self) # Self
 		args.append("OT_2") # Type 
 		args.append(name) # Name
-		status = retry(self, self._register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
+		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
@@ -54,6 +57,7 @@ class OT2(Node):
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
+		#TODO: create service to unload and recieve items
 
 		# Initialization Complete
 		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
@@ -160,101 +164,6 @@ class OT2(Node):
 			response.status = response.SUCCESS
 			return response
 
-
-	# registers OT-2 with the master node
-	def register(self, type, name):
-
-		# Create request
-		req = Register.Request()
-		req.type = "OT_2" # TODO: type check
-		req.name = name
-
-		# Wait for service
-		while not self.register_cli.wait_for_service(timeout_sec=2.0):
-			self.get_logger().info("Service not available, trying again...")
-
-
-		# Call
-		future = self.register_cli.call_async(req)
-		self.get_logger().info("Registering with master...")
-
-		# Wait for completion
-		rclpy.spin_until_future_complete(self, future)
-		if(future.done()):
-			try:
-				# Get Response
-				response = future.result()
-
-				# Error checking
-				if(response.status == response.ERROR or response.status == response.FATAL): #TODO: maybe add checks for valid status
-					self.get_logger().error("Registration of type OT_2 failed, retrying...")
-					return self.status['ERROR']
-
-				# Invalid id format check
-				if(" " in response.id): #TODO: more invalid id checks
-					self.get_logger().error("Invalid id format from master")
-					#TODO: deregister the invalid node
-					return self.status['ERROR']
-
-				# All good
-				self.id = future.result().id # Set ID
-				self.name = name
-			except Exception as e: # Error occured
-				self.get_logger().error("Error occured: %r"%(e,))
-				return self.status['ERROR']
-			else: # All good
-				self.get_logger().info("Registration complete id: %s"%self.id)
-				return self.status['SUCCESS']
-		else: # This should never happen FATAL
-			rospy.get_logger().fatal("future failed, critical failure")
-			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
-			sys.exit(1)
-
-	# Middleman function to set up args
-	def _register(self, args):
-		return self.register(args[0], args[1]) # type, name
-
-	# De-registers this node with the master node
-	def deregister_node(self):
-		# Create Request
-		req = Destroy.Request()
-		req.type = "OT_2"
-		req.id = self.id
-
-		# Wait for service
-		while not self.deregister_cli.wait_for_service(timeout_sec=2.0):
-			self.get_logger().info("Service not available, trying again...")
-
-		# Call
-		future = self.deregister_cli.call_async(req)
-		self.get_logger().info("Deregistering with master...")
-
-		# Wait for completion
-		rclpy.spin_until_future_complete(self, future)
-		if(future.done()):
-			try:
-				# Get Response
-				response = future.result()
-
-				# Error checking
-				if(response.status == response.ERROR or response.status == response.FATAL):
-					self.get_logger().error("Deregistration failed of id: %s, retrying..." % self.id)
-					return self.status['ERROR']
-				elif(response.status == response.WARNING):
-					self.get_logger().warn("Deregistration success of id: %s, but warning thrown by master" % self.id)
-					return self.status['WARNING']
-
-				# All good
-				self.get_logger().info("Deregistration complete")
-				return self.status['SUCCESS']
-			except Exception as e:
-				self.get_logger().error("Error occured: %r"%(e,))
-				return self.status['ERROR']
-		else: # This should never happen
-			rospy.get_logger().fatal("future failed, critical failure")
-			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
-			sys.exit(1)
-
 def main(args=None):
 	rclpy.init(args=args)
 
@@ -268,7 +177,11 @@ def main(args=None):
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
-		status = retry(ot2node, ot2node.deregister_node, 10, 1.5, []) #TODO: handle status
+
+		# Setup args
+		args = []
+		args.append(ot2node) # Self
+		status = retry(ot2node, _deregister_node, 10, 1.5, args) #TODO: handle status
 		ot2node.destroy_node()
 		rclpy.shutdown()
 

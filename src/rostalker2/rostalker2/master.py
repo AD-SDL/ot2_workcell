@@ -50,6 +50,8 @@ class Master(Node):
 		# Service setup 
 		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service
 		self.destroy_service = self.create_service(Destroy, 'destroy', self.handle_destroy_worker) # Destroy worker service
+		self.get_node_info_service = self.create_service(GetNodeInfo, 'get_node_info', self.handle_get_node_info) # Request is a name_or_id and returns all the information master has about that node
+		self.get_node_list_service = self.create_service(GetNodeList, 'get_node_list', self.handle_get_node_list) # Blank request returns a list of all the nodes the master knows about
 
 		# Client setup
 		# TODO: see if any clients can be setup here 
@@ -150,7 +152,7 @@ class Master(Node):
 			}
 			self.get_logger().info("Trying to register ID: %s name: %s with master"%(dict['id'], dict['name']))
 		elif(request.type == 'arm'):
-			dict = {
+			dict = { #TODO: add more features that the master keeps about the node
 				"type":'arm',
 				"id":"A"+str(self.nodes), # Can be searched along with name (each id must be unique)
 				"state":self.states['READY'], #TODO: implement states
@@ -404,17 +406,23 @@ class Master(Node):
 		self.get_logger().info("Setup file read and run complete")
 		return self.status['SUCCESS']
 
+	# Handles get node info service call
+	def handle_get_node_info(self, request, response):
+		pass #TODO
+
+	# Hanldes get the whole node list service call
+	def handle_get_node_list(self, request, response):
+		pass #TODO
+
+
+
+
+
+
 def setup_thread_work(master):
 	status = master.read_from_setup("setup") 
 
-
-
-
-
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
-
-
-
 
 # This is just for testing, this class can be used anywhere 
 def main(args=None):
