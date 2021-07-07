@@ -255,7 +255,6 @@ class OT2(Node):
 			rospy.get_logger().fatal("Program is now terminating, PLEASE NOTE: System may be unstable")
 			sys.exit(1)
 
-#TODO: create a means of async running this in the background
 def main(args=None):
 	rclpy.init(args=args)
 
@@ -264,12 +263,12 @@ def main(args=None):
 		sys.exit(1)
 	name = str(sys.argv[1])
 
-	ot2node = OT2(name) # TODO take input from user
+	ot2node = OT2(name)
 	try:
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
-		retry(ot2node, ot2node.deregister_node, 10, 1.5, []) #TODO: handle status
+		status = retry(ot2node, ot2node.deregister_node, 10, 1.5, []) #TODO: handle status
 		ot2node.destroy_node()
 		rclpy.shutdown()
 

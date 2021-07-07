@@ -19,11 +19,12 @@ class Master(Node):
 
 		# Lock setup
 		self.node_lock = Lock() # This lock controls access to the self.nodes and self.nodes_list structure
-		self.rclpy_spin_lock = Lock() # This lock controls access to rclpy spin
 
 		# Registration setup
 		self.nodes = 0 # Total nodes registered
 		self.nodes_list = [] # Information about all nodes registered: type, id, state
+		self.node_wait_timeout = 2 # 2 seconds
+		self.node_wait_attempts = 10 # 10 attempts before error thrown
 
 		# Thread setup
 		self.files_for_threads = [] # Maintains list of all the files each thread saved in threads_list needs to run
@@ -53,20 +54,22 @@ class Master(Node):
 		# Client setup
 		# TODO: see if any clients can be setup here 
 
-		# Get Node
-		# Master doesn't do anywork until there is a worker node to do stuff with
-		# TODO: add wait to the functions
-#		while(len(self.nodes_list) < 2): # TODO: get rid of hardcoded wait
-#			self.get_logger().info("Waiting for nodes...")
-#			rclpy.spin_once(self) # The async thread hasn't started running yet
-#			time.sleep(.5) # .5 seconds
-
 		# Initialization Complete
 		self.get_logger().info("Master initialization complete")
 
 	# Loads filename to a worker node
 	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not? 
 	def load(self, name, id, replacement):
+		# Check node online?
+		args = []
+		args.append(id)
+		status = retry(self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args) # retry function
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to find node %s"%id) # Node isn't registered
+			return self.status['ERROR']
+		else:
+			self.get_logger().info("Node %s found"%id) # Found
+
 		# Select a node
 		try:
 			# Get node information
@@ -221,14 +224,19 @@ class Master(Node):
 
 	# Runs a module on the node (id)
 	def run(self, file, id):
+		# Check node online?
+		args = []
+		args.append(id)
+		status = retry(self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args) # retry function
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to find node %s"%id) # Node isn't registered
+			return self.status['ERROR']
+		else:
+			self.get_logger().info("Node %s found"%id) # Found
+
 		# Get type
 		node = self.search_for_node(id)
 		type = node['type']
-
-		# Error checking
-		if(type == '-1'): # id not found
-			self.get_logger().error("Id: %s doesn't exist in nodes_list"%id)
-			return self.status['ERROR']
 
 		# Client setup
 		run_cli = self.create_client(Run, "/%s/%s/run"%(type, id)) # format of service is /{type}/{id}/{service name}
@@ -325,7 +333,7 @@ class Master(Node):
 
 
 	# Reads from a setup file to run a number of files on a specified robot 
-	def read_from_setup(self, file): # TODO add error checking
+	def read_from_setup(self, file):
 		# Read from setup file and distrubute to worker threads
 		# Read number of threads
 		f = open(self.module_location + file, "r") # Open up file "setup" in well-known directory
@@ -339,7 +347,7 @@ class Master(Node):
 			# Find entry for that id or name (spin to wait for it)
 			args = []
 			args.append(name_or_id)
-			status = retry(self, self.node_ready, 10, 2, args) # max_attempts = 10, timeout = 2 seconds
+			status = retry(self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args) # retry function
 			if(status == self.status['ERROR'] or status == self.status['FATAL']):
 				self.get_logger().error("Unable to find node %s"%name_or_id) # Node isn't registered
 				return self.status['ERROR']
@@ -347,10 +355,13 @@ class Master(Node):
 				entry = self.search_for_node(name_or_id) # get information about that node
 				self.get_logger().info("Node %s found"%name_or_id) # Found
 
-
 			# Get files for the worker
-			files = f.readline().split()
-			self.files_for_threads.append(files) # should be the same index
+			try:
+				files = f.readline().split()
+				self.files_for_threads.append(files) # should be the same index
+			except Exception as e:
+				self.get_logger().error("Reading from setup error: %r"%(e,))
+				return self.status['ERROR'] # Error
 
 			# Create thread
 			temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
@@ -377,10 +388,8 @@ class Master(Node):
 		self.get_logger().info("Setup file read and run complete")
 		return self.status['SUCCESS']
 
-# This is just to spin the master in another thread
-# TODO: Error catching
-def spin(master): #TODO do this on worker nodes, Integrate into the class structure
-	rclpy.spin(master)
+def setup_thread_work(master):
+	status = master.read_from_setup("setup") 
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
@@ -392,19 +401,22 @@ def main(args=None):
 	rclpy.init(args=args)
 	master = Master()
 	
-	# Create a thread just to spin the master node
-	spin_thread = Thread(target = spin, args = (master,))
+	# Create a thread to run setup_thread
+	spin_thread = Thread(target = setup_thread_work, args = (master,))
 	spin_thread.start()
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
 #	status = master.load_and_run("module_test.py", "O0")
-	status = master.read_from_setup("setup") 
 
 	# End
-	spin_thread.join()
-	master.destroy_node()
-	rclpy.shutdown()
+	try:
+		rclpy.spin(master)
+	except:
+		master.get_logger().fatal("Terminating...")
+		spin_thread.join()
+#		master.destroy_node()
+		rclpy.shutdown()
 
 if __name__ ==  "__main__":
 	main()

@@ -13,7 +13,7 @@ import importlib.util
 from rostalker2.retry_functions import *
 
 class worker_class(threading.Thread): # This is a thread class that handles work on OT-2
-	def __init__(self, thread_name, thread_ID, master, index): #TODO how does master class get information to a whole separate class
+	def __init__(self, thread_name, thread_ID, master, index):
 		threading.Thread.__init__(self)
 		self.thread_name = thread_name # Name of the OT_2 (given by user)
 		self.thread_ID = thread_ID # ID of the OT_2 (given by master)
