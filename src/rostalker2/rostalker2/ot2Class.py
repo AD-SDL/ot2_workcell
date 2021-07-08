@@ -15,6 +15,7 @@ from rostalker2.register_functions import _register, _deregister_node
 
 class OT2(Node):
 
+#TODO: run lock
 	def __init__(self, name):
 
 		# Node creation

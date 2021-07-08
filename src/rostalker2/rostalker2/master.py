@@ -228,7 +228,7 @@ class Master(Node):
 		self.node_lock.release()
 
 		# Not found
-		dict = { 'type':'-1' }
+		dict = { 'type':'-1', 'name':'-1', 'state':'-1', 'id':'-1' }
 		return dict
 
 
@@ -288,6 +288,15 @@ class Master(Node):
 	# Function to segway to main function call
 	def _transfer(self, args):
 		pass #TODO
+
+	# This handles transfer wait service calls
+	def wait_for_transfer(self):
+		pass #TODO
+
+	# Function to segway to main function all
+	def _wait_for_transfer(self, args):
+		pass #TODO
+
 
 	# Function to segway to main function call
 	def _load(self, args):
@@ -351,7 +360,7 @@ class Master(Node):
 
 
 	# Reads from a setup file to run a number of files on a specified robot 
-	def read_from_setup(self, file):
+	def read_from_setup(self, file): #TODO: deadlock detection algorithm
 		# Read from setup file and distrubute to worker threads
 		# Read number of threads
 		f = open(self.module_location + file, "r") # Open up file "setup" in well-known directory
@@ -408,7 +417,21 @@ class Master(Node):
 
 	# Handles get node info service call
 	def handle_get_node_info(self, request, response):
-		pass #TODO
+		#TODO: DELETE Debug
+		self.get_logger().info("Node info request for %s"%request.name_or_id)
+
+		# Get request
+		entry = self.search_for_node(request.name_or_id)
+
+		# Create a response
+		response = GetNodeInfo.Response()
+		response.entry.id = entry['id']
+		response.entry.name = entry['name']
+		response.entry.state = entry['state']
+		response.entry.type = entry['type'] # Differ error checking back to caller
+
+		# return response
+		return response
 
 	# Hanldes get the whole node list service call
 	def handle_get_node_list(self, request, response):
