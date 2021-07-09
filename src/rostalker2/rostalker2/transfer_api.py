@@ -11,7 +11,8 @@ from rostalker2.worker_info_api import *
 from rostalker2.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 # Transfers from the current robot to another robot
-def transfer(self, to_name_or_id, item, arm_id):
+def transfer(self, to_name_or_id, item, arm_id): #TODO: switch from id to name_or_id
+
 	# Get destination node info
 	to_entry = get_node_info(self, to_name_or_id)
 
@@ -38,10 +39,12 @@ def transfer(self, to_name_or_id, item, arm_id):
 
 	# Call client
 	future = transfer_cli.call_async(request)
+	self.get_logger().info("Waiting on transfer")
 
 	# Waiting for completion
 	while(future.done() == False):
 		time.sleep(1) # 1 second timeout
+		self.get_logger().info("spinning") #TODO: DELETE
 	if(future.done()):
 		try:
 			response = future.result()
@@ -64,8 +67,9 @@ def _transfer(args):
 
 # Called when waiting on a transfer to happen
 def wait_for_transfer(self, from_name_or_id, item, arm_id):
+
 	# Get destination node info
-	to_entry = get_node_info(self, to_name_or_id)
+	to_entry = get_node_info(self, from_name_or_id)
 
 	# Error handling
 	if(to_entry['type'] == '-1'): # Doesn't exist
@@ -83,17 +87,22 @@ def wait_for_transfer(self, from_name_or_id, item, arm_id):
 	request.to_name = to_name
 	request.item = item
 
+	while True:
+		pass #TODO: DELETE
+
 	# Wait for service TODO: make sure the arm exists with master first
 	wait_for_transfer_cli = self.create_client(WaitForTransfer, "/arm/%s/wait_for_transfer"%arm_id)
-	while(not transfer_cli.wait_for_service(timeout_sec=2.0)):
+	while(not wait_for_transfer_cli.wait_for_service(timeout_sec=2.0)):
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call client
 	future = wait_for_transfer_cli.call_async(request)
+	self.get_logger().info("Waiting on transfer")
 
 	# Waiting for completion
 	while(future.done() == False):
 		time.sleep(1) # 1 second timeout
+		self.get_logger().info("spinning") #TODO: DELETE
 	if(future.done()):
 		try:
 			response = future.result()
@@ -109,8 +118,8 @@ def wait_for_transfer(self, from_name_or_id, item, arm_id):
 			return self.status['SUCCESS']
 
 # Middleman function to segway to wait for transfer call in retry function
-def _wait_for_transfer():
-	return transfer(args[0], args[1], args[2], args[3]) #self, from_name_or_id, item, arm_id
+def _wait_for_transfer(args):
+	return wait_for_transfer(args[0], args[1], args[2], args[3]) #self, from_name_or_id, item, arm_id
 
 # dud main function
 def main_null():

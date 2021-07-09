@@ -28,6 +28,7 @@ setup(
             'arm_transfer_handler = rostalker2.armTransferHandler:main',
             'register_functions = rostalker2.register_functions:main_null',
             'worker_info_api = rostalker2.worker_info_api:main_null',
+            'transfer_api = rostalker2.transfer_api:main_null',
         ],
     },
 )

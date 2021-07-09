@@ -12,6 +12,8 @@ import importlib.util
 from rostalker2.retry_functions import *
 from rostalker2.register_functions import *
 from rostalker2.register_functions import _register, _deregister_node
+from rostalker2.worker_info_api import *
+from rostalker2.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 # TODO: arm is a shared resource has to be able to lock itself
 # TODO: figure out how to integrate arm code
@@ -83,7 +85,7 @@ class ArmManager(Node):
 		response.type = type
 
 		# Return response
-		return reponse
+		return response
 
 	# TODO state of the machine
 
@@ -99,14 +101,14 @@ def main(args=None):
 	try:
 		rclpy.spin(arm_manager_node)
 	except:
-		arm_node.get_logger().error("Terminating...")
+		arm_manager_node.get_logger().error("Terminating...")
 
-		# set up args
-		args = []
-		args.append(arm_manager_node)
-		status = retry(arm_manager_node, _deregister_node, 10, 1.5, args) #TODO: handle status
-		arm_manager_node.destroy_node()
-		rclpy.shutdown()
+	# End
+	args = []
+	args.append(arm_manager_node)
+	status = retry(arm_manager_node, _deregister_node, 10, 1.5, args) #TODO: handle status
+	arm_manager_node.destroy_node()
+	rclpy.shutdown()
 
 if __name__ == '__main__':
 	main()

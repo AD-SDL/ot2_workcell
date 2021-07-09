@@ -21,7 +21,7 @@ from rostalker2.worker_info_api import _get_node_info, _get_node_list, get_node_
 class ArmTransferHandler(Node):
 	def __init__(self, name):
 		# Node creation
-		super().__init__("arm_transfer_handler" + name) # User specifies name
+		super().__init__("arm_transfer_handler_" + name) # User specifies name
 		self.name = name
 
 		# Lock creation
@@ -54,6 +54,8 @@ class ArmTransferHandler(Node):
 		# Get ID and confirm name from manager
 		self.get_id_name()
 
+#		rclpy.spin_once(self)
+
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
 		self.wait_service = self.create_service(WaitForTransfer, "/arm/%s/wait_for_transfer"%self.id, self.wait_handler) # Handles transfer service requests
@@ -72,8 +74,9 @@ class ArmTransferHandler(Node):
 
 		# Call client
 		future = self.get_id_cli.call_async(request)
-		while(future.done() == False):
-			time.sleep(1) # 1 second timeout
+		rclpy.spin_until_future_complete(self, future) #TODO: find a way to switch to the while loop
+#		while(future.done() == False):
+#			time.sleep(1) # 1 second timeout
 		if(future.done()):
 			try:
 				response = future.result()
@@ -93,6 +96,8 @@ class ArmTransferHandler(Node):
 	def transfer_handler(self, request, response):
 		# TODO if it sees another transfer request that also points to itself (to of the request)
 		# Notify the user that a deadlock is occuring
+		print("here")
+		self.get_logger().info("here") #TODO: DELETE
 
 		# only one transfer at a time
 		self.arm_lock.acquire()
@@ -105,24 +110,26 @@ class ArmTransferHandler(Node):
 		item = request.item
 
 		# Create response
-		response = Transfer.Resonse()
+		response = Transfer.Response()
+		self.get_logger().info("here") #TODO: DELETE
 
 		# Get node (to/from) information (TODO future support for locating the OT-2s)
-		to_entry = get_node_info(to_name) # Search by name for now
-		from_entry = get_node_info(from_name)
+#		to_entry = get_node_info(to_name) # Search by name for now
+#		from_entry = get_node_info(from_name)
 
-		# error / warning
-		if(to_entry['type'] == '-1'):
-			response.status = response.ERROR # Error
-		if(from_entry['type'] == '-1'):
-			response.status = response.ERROR # Error
-		if(response.status == response.ERROR):
-			self.arm_lock.release() # release lock
-			return response # Exit due to error
+		# error / warning   TODO: move over to wait
+#		if(to_entry['type'] == '-1'):
+#			response.status = response.ERROR # Error
+#		if(from_entry['type'] == '-1'):
+#			response.status = response.ERROR # Error
+#		if(response.status == response.ERROR):
+#			self.arm_lock.release() # release lock
+#			return response # Exit due to error
 
 		# Set identifier and lock
 		identifier = from_name + " " + to_name + " " + item
 		self.cur_transfer = identifier # Identifier for this current transfer
+		self.get_logger().info("here") #TODO: DELETE
 
 		# Spin for the other robot waiting for it
 		while(not self.cur_wait == identifier):
@@ -155,6 +162,11 @@ class ArmTransferHandler(Node):
 		from_id = request.from_id
 		item = request.item
 
+		# Create response
+		response = WaitForTransfer.Response()
+
+
+		print("running")
 		# Begin waiting on identifier to be published
 		identifier = from_name + " " + to_name + " " + item #TODO: add support for like max wait time to avoid deadlocks
 		while(not self.cur_transfer == identifier):
@@ -182,15 +194,15 @@ def main(args=None):
 	arm_transfer_node = ArmTransferHandler(name)
 	try:
 		rclpy.spin(arm_transfer_node)
+#		while True:
+#			rclpy.spin_once(arm_transfer_node)
+#			arm_transfer_node.get_logger().info("spin")
 	except:
 		arm_transfer_node.get_logger().error("Terminating...")
 
-		# set up args
-		args = []
-		args.append(arm_transfer_node)
-		status = retry(arm_transfer_node, _deregister_node, 10, 1.5, args) #TODO: handle status
-		arm_transfer_node.destroy_node()
-		rclpy.shutdown()
+	# End
+	arm_transfer_node.destroy_node()
+	rclpy.shutdown()
 
 if __name__ == '__main__':
 	main()

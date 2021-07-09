@@ -12,6 +12,7 @@ import importlib.util
 from rostalker2.retry_functions import *
 from rostalker2.register_functions import *
 from rostalker2.register_functions import _register, _deregister_node
+from rostalker2.transfer_api import _transfer, _wait_for_transfer
 
 class OT2(Node):
 
@@ -171,6 +172,23 @@ class OT2(Node):
 			return response
 		finally:
 			self.run_lock.release() # Release lock no matter what
+#TODO: DELETE
+def work(ot2node, name):
+	args = []
+	if(name == "bob"):
+		args.append(ot2node)
+		args.append("alex")
+		args.append("10")
+		args.append("A0")
+		status = retry(ot2node, _transfer, 20, 2, args)
+		print("Bob returned %d"%status)
+	if(name == "alex"):
+		args.append(ot2node)
+		args.append("bob")
+		args.append("10")
+		args.append("A0")
+		status = retry(ot2node, _wait_for_transfer, 20, 2, args)
+		print("Alex returned %d"%status)
 
 def main(args=None):
 	rclpy.init(args=args)
@@ -182,6 +200,10 @@ def main(args=None):
 
 	ot2node = OT2(name)
 	try:
+		# TODO: DELETE
+		spin_thread = Thread(target = work, args = (ot2node,name,))
+		spin_thread.start()
+
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")

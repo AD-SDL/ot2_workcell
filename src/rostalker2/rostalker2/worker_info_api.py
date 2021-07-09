@@ -26,7 +26,7 @@ def get_node_info(self, name_or_id):
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call service to get node info
-	future = get_node_info_cli(request)
+	future = get_node_info_cli.call_async(request)
 	self.get_logger().info("Waiting on node info for %s"%name_or_id)
 
 	# Waiting on future

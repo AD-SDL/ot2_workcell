@@ -32,8 +32,8 @@ class Master(Node):
 
 		# Readability
 		self.states = { #TODO: more states
-			"BUSY":1,
-			"READY":0
+			"BUSY":'1',
+			"READY":'0'
 		}
 		self.status = {
 			"SUCCESS":0,
@@ -402,18 +402,24 @@ class Master(Node):
 
 	# Handles get node info service call
 	def handle_get_node_info(self, request, response):
-		#TODO: DELETE Debug
-		self.get_logger().info("Node info request for %s"%request.name_or_id)
-
-		# Get request
-		entry = self.search_for_node(request.name_or_id)
-
 		# Create a response
 		response = GetNodeInfo.Response()
+
+		# Get request
+		name_or_id = request.name_or_id
+
+		#TODO: DELETE Debug
+		self.get_logger().info("Node info request for %s"%name_or_id)
+
+		# Get request
+		entry = self.search_for_node(name_or_id)
+
+		# Edit response
 		response.entry.id = entry['id']
 		response.entry.name = entry['name']
 		response.entry.state = entry['state']
 		response.entry.type = entry['type'] # Differ error checking back to caller
+		response.status = response.SUCCESS #all good
 
 		# return response
 		return response
@@ -438,8 +444,8 @@ def main(args=None):
 	master = Master()
 
 	# Create a thread to run setup_thread
-	spin_thread = Thread(target = setup_thread_work, args = (master,))
-	spin_thread.start()
+#	spin_thread = Thread(target = setup_thread_work, args = (master,))
+#	spin_thread.start()
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
