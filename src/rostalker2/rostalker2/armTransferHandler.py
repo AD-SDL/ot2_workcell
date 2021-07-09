@@ -13,13 +13,12 @@ from rostalker2.retry_functions import *
 from rostalker2.register_functions import *
 from rostalker2.register_functions import _register, _deregister_node
 from rostalker2.worker_info_api import *
-from rostalker2.worker_info_api import _get_node_info, _get_node_list
+from rostalker2.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 # TODO: arm is a shared resource has to be able to lock itself
 # TODO: figure out how to integrate arm code
 
 class ArmTransferHandler(Node):
-# TODO, class runners rclpy.spin()
 	def __init__(self, name):
 		# Node creation
 		super().__init__("arm_transfer_handler" + name) # User specifies name
@@ -40,7 +39,6 @@ class ArmTransferHandler(Node):
 		self.status = {
 			"ERROR":1,
 			"SUCCESS":0,
-		self.get_logger().info("Transfering from %s to %s"%(from_name, to_name))
 			"WARNING":2,
 			"FATAL":3
 		}
@@ -120,7 +118,7 @@ class ArmTransferHandler(Node):
 			response.status = response.ERROR # Error
 		if(from_entry['type'] == '-1'):
 			response.status = response.ERROR # Error
-		if(response.status = response.ERROR):
+		if(response.status == response.ERROR):
 			self.arm_lock.release() # release lock
 			return response # Exit due to error
 
@@ -168,45 +166,12 @@ class ArmTransferHandler(Node):
 		self.cur_wait = identifier # Lets the transfer happen
 
 		# Spin for transfer to finish
-		while(self.cur_wait == identifier);
+		while(self.cur_wait == identifier):
 			time.sleep(2) # timeout 2 seconds
 
 		# all done return status
 		response.status = response.SUCCESS
 		return response
-
-	# Create request to get node info
-	def node_info_request(self, name_or_id): #TODO: move to api
-
-		# Create request
-		request = GetNodeInfo.Request()
-		request.name_or_id = name_or_id
-
-		# Client setup
-		while(not self.get_node_info_cli.wait_for_service(timeout_sec=2.0)): # Wait for service to start
-			self.get_logger().info("Service not available, trying again...")
-
-		# Call service to get node info
-		future = self.get_node_info_cli(request)
-		self.get_logger().info("Waiting on node info for %s"%name_or_id)
-
-		# Waiting on future
-		while(future.done() == False):
-			time.sleep(1) # 1 second timeout
-		if(future.done()):
-			entry = {'type':'-1'}
-			try:
-				response = future.result()
-			except Exception as e:
-				self.get_logger().error("Error occured %r"%(e,))
-				return entry # Error
-			else:
-				self.get_logger().info("Node info for %s recieved"%name_or_id)
-				entry['type'] = response.entry.type
-				entry['name'] = response.entry.name
-				entry['state'] = response.entry.state
-				entry['id'] = response.entry.id
-				return entry # All Good
 
 def main(args=None):
 	rclpy.init(args=args)
