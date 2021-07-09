@@ -90,6 +90,7 @@ class Master(Node):
 			return self.status['ERROR']
 
 		# Client setup    (client can't be in the class as it constantly changes)
+		#
 		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
@@ -116,6 +117,7 @@ class Master(Node):
 		self.get_logger().info("Waiting for completion...")
 
 		# Waiting on future
+		#TODO: edit
 		while(future.done() == False):
 			time.sleep(1) # timeout 1 second
 		if(future.done()):
@@ -135,6 +137,18 @@ class Master(Node):
 				else:
 					self.get_logger().info("Load succeeded")
 					return self.status['SUCCESS'] # All good
+
+	# Creates client that sends scripts to worker OT-2
+	def send_script(self, name, id):
+
+		# identify all files contianing work
+		# probably a for loop to go over all files
+		# keep thread_list format?
+
+		# load files containing work using load fuinction (master)
+
+		# create client that calls file handler service on OT-2 module
+		# here for locked work queue? 
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
