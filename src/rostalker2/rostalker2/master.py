@@ -307,6 +307,7 @@ class Master(Node):
 		return self.run(args[0], args[1]) # File, id
 
 	# this will both load and run a file at the robot id 
+	#TODO: change to just load, transfer and run files onm OT-2s
 	def load_and_run(self, file, id):
 		# Load the module
 		args = []
@@ -364,7 +365,7 @@ class Master(Node):
 		# Read from setup file and distrubute to worker threads
 		# Read number of threads
 		f = open(self.module_location + file, "r") # Open up file "setup" in well-known directory
-		n = int(f.readline()) # First line should contain an integer 
+		n = int(f.readline()) # First line should contain an integer, corresponds to number of threads
 
 		# For each thread
 		for i in range(n): # Starts reading names and files to be run
@@ -385,6 +386,9 @@ class Master(Node):
 			# Get files for the worker
 			try:
 				files = f.readline().split()
+				#TODO: set up here to send files to individual OT-2s
+				#Service to provide files to client on OT-2
+
 				self.files_for_threads.append(files) # should be the same index
 			except Exception as e:
 				self.get_logger().error("Reading from setup error: %r"%(e,))
