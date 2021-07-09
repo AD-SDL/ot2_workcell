@@ -59,6 +59,7 @@ class Master(Node):
 		# Initialization Complete
 		self.get_logger().info("Master initialization complete")
 
+#TODO move outside of master class
 	# Loads filename to a worker node
 	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not? 
 	def load(self, name, id, replacement):
@@ -231,7 +232,7 @@ class Master(Node):
 		dict = { 'type':'-1', 'name':'-1', 'state':'-1', 'id':'-1' }
 		return dict
 
-
+#TODO move outside of master class
 	# Runs a module on the node (id)
 	def run(self, file, id):
 		# Check node online?
@@ -281,23 +282,6 @@ class Master(Node):
 					self.get_logger().info("Module run succeeded")
 					return self.status['SUCCESS'] # All good
 
-	# This handles transfer service calls
-	def transfer(self):
-		pass #TODO
-
-	# Function to segway to main function call
-	def _transfer(self, args):
-		pass #TODO
-
-	# This handles transfer wait service calls
-	def wait_for_transfer(self):
-		pass #TODO
-
-	# Function to segway to main function all
-	def _wait_for_transfer(self, args):
-		pass #TODO
-
-
 	# Function to segway to main function call
 	def _load(self, args):
 		return self.load(args[0], args[1], args[2]) # File, id, replacement
@@ -306,6 +290,7 @@ class Master(Node):
 	def _run(self, args):
 		return self.run(args[0], args[1]) # File, id
 
+#TODO move outside of master class
 	# this will both load and run a file at the robot id 
 	def load_and_run(self, file, id):
 		# Load the module

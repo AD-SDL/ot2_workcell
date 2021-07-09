@@ -15,7 +15,6 @@ from rostalker2.register_functions import _register, _deregister_node
 
 class OT2(Node):
 
-#TODO: run lock
 	def __init__(self, name):
 
 		# Node creation
@@ -23,6 +22,7 @@ class OT2(Node):
 
 		# Lock creation
 		self.file_lock = Lock() # Access to the file system
+		self.run_lock = Lock() # Only one can access this OT-2 as a resource
 
 		# readability
 		self.state = { #TODO: sync with master
@@ -106,6 +106,8 @@ class OT2(Node):
 
 	# Handles run module service calls
 	def run_handler(self, request, response):
+		# Acquire lock
+		self.run_lock.acquire()
 
 		# Get request information
 		type = request.type
@@ -119,12 +121,14 @@ class OT2(Node):
 		if(not id == self.id): # Wrong ID
 			self.get_logger().error("Request id: %s doesn't match node id: %s"%(id, self.id))
 			response.status = response.ERROR
+			self.run_lock.release() # Release lock
 			return response
 		elif(not type == "OT_2"): # Wrong type
 			self.get_logger().warning("The requested node type: %s doesn't match the node type of id: %s, but will still proceed"%(type, self.id))
 		elif(path.exists(file) == False): # File doesn't exist
 			self.get_logger().error("File: %s doesn't exist"%(file))
 			response.status = response.ERROR
+			self.run_lock.release() # Release lock
 			return response
 
 		# Get lock, entering file critical section (Can't be reading when file is still being written)
@@ -141,6 +145,7 @@ class OT2(Node):
 			# Error
 			self.get_logger().error("Error occured when trying to load module %s: %r"%(file,e,))
 			response.status = response.ERROR # Error
+			self.run_lock.release() # Release lock
 			return response
 		else:
 			# All Good
@@ -164,6 +169,8 @@ class OT2(Node):
 			self.get_logger().info("Module %s successfully ran to completion"%file)
 			response.status = response.SUCCESS
 			return response
+		finally:
+			self.run_lock.release() # Release lock no matter what
 
 def main(args=None):
 	rclpy.init(args=args)
