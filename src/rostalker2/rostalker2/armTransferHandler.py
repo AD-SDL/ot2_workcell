@@ -49,8 +49,6 @@ class ArmTransferHandler(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.get_node_info_cli = self.create_client(GetNodeInfo, 'get_node_info') #TODO: maybe move this into respective functions
-		self.get_node_list_cli = self.create_client(GetNodeList, 'get_node_list')
 		self.get_id_cli = self.create_client(GetId, '/arm/%s/get_id'%self.name)
 
 		# Get ID and confirm name from manager
@@ -58,7 +56,7 @@ class ArmTransferHandler(Node):
 
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
-		self.wait_service = self.create_service(WaitForTransfer, "/arm/%s/transfer"%self.id, self.wait_handler) # Handles transfer service requests
+		self.wait_service = self.create_service(WaitForTransfer, "/arm/%s/wait_for_transfer"%self.id, self.wait_handler) # Handles transfer service requests
 
 		# Initialization Complete
 		self.get_logger().info("Arm Transfer handler for ID: %s name: %s initialization completed"%(self.id, self.name))

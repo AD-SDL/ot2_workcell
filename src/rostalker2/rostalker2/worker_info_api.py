@@ -21,11 +21,12 @@ def get_node_info(self, name_or_id):
 	request.name_or_id = name_or_id
 
 	# Client setup
-	while(not self.get_node_info_cli.wait_for_service(timeout_sec=2.0)): # Wait for service to start
+	get_node_info_cli = self.create_client(GetNodeInfo, 'get_node_info') # Create client
+	while(not get_node_info_cli.wait_for_service(timeout_sec=2.0)): # Wait for service to start
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call service to get node info
-	future = self.get_node_info_cli(request)
+	future = get_node_info_cli(request)
 	self.get_logger().info("Waiting on node info for %s"%name_or_id)
 
 	# Waiting on future
@@ -52,6 +53,7 @@ def _get_node_info(args):
 
 #TODO
 def get_node_list(self):
+	#get_node_list_cli = self.create_client(GetNodeList, 'get_node_list')
 	pass
 
 def _get_node_list(args):
