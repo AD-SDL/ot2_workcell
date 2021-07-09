@@ -45,6 +45,11 @@ def transfer(self, to_name_or_id, item, arm_id):
 	if(future.done()):
 		try:
 			response = future.result()
+
+			# Error handling
+			if(response.status == response.ERROR or response.status == response.FATAL): # Some error occured
+				raise Exception
+
 		except Exception as e:
 			self.get_logger().error("Error occured %r"%(e,))
 			return self.status['ERROR']
@@ -107,8 +112,6 @@ def wait_for_transfer(self, from_name_or_id, item, arm_id):
 def _wait_for_transfer():
 	return transfer(args[0], args[1], args[2], args[3]) #self, from_name_or_id, item, arm_id
 
-
-
-
+# dud main function
 def main_null():
 	print("This is not meant to have a main")
