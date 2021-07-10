@@ -152,7 +152,7 @@ class ArmTransferHandler(Node):
 		return response
 
 	# Handles wait services requests
-	def wait_handler(self, request, response): #TODO error handling
+	def wait_handler(self, request, response): #TODO this function can't be a service (has to be a topic or needs to run on separate node)
 		# don't need to acquire lock since multiple things can be waiting on at once and no writes are needed
 
 		# Get request
