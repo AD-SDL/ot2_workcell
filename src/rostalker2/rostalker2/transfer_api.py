@@ -46,6 +46,7 @@ def transfer(self, to_name_or_id, item, arm_id): #TODO: switch from id to name_o
 	while(future.done() == False):
 		time.sleep(1) # 1 second timeout
 		self.get_logger().info("spinning") #TODO: DELETE
+		
 	if(future.done()):
 		try:
 			response = future.result()
@@ -87,9 +88,6 @@ def wait_for_transfer(self, from_name_or_id, item, arm_id):
 	request.to_id = to_id
 	request.to_name = to_name
 	request.item = item
-
-	while True:
-		pass #TODO: DELETE
 
 	# Wait for service TODO: make sure the arm exists with master first
 	wait_for_transfer_cli = self.create_client(WaitForTransfer, "/arm/%s/wait_for_transfer"%arm_id)

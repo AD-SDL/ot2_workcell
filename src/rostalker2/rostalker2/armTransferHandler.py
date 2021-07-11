@@ -55,6 +55,7 @@ class ArmTransferHandler(Node):
 		# Get ID and confirm name from manager
 		self.get_id_name()
 
+		# Create subscribers TODO
 
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests

@@ -4,6 +4,7 @@ from threading import Thread, Lock
 import sys
 import time
 from rostalker2interface.srv import *
+from rostalker2interface.msg import *
 import os
 import os.path
 from os import path
