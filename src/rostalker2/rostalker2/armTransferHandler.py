@@ -29,8 +29,8 @@ class ArmTransferHandler(Node):
 		self.arm_lock = Lock() # Only one can access arm at a time
 
 		# Store who is doing the transfer and store respective locks
-		self.cur_transfer = "" # identification of the 
-		self.cur_wait = ""
+		self.transfer_queue = []
+		self.completed_queue = []
 
 		# Readabilty
 		self.state = { #TODO maybe a sync with the master
@@ -59,7 +59,7 @@ class ArmTransferHandler(Node):
 
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
-		self.wait_service = self.create_service(WaitForTransfer, "/arm/%s/wait_for_transfer"%self.id, self.wait_handler) # Handles transfer service requests
+#		self.wait_service = self.create_service(WaitForTransfer, "/arm/%s/wait_for_transfer"%self.id, self.wait_handler_old) # Handles transfer service requests
 
 		# Initialization Complete
 		self.get_logger().info("Arm Transfer handler for ID: %s name: %s initialization completed"%(self.id, self.name))
@@ -93,8 +93,84 @@ class ArmTransferHandler(Node):
 			else:
 				return self.status['SUCCESS']
 
+
 	# Handles transfer service requests
-	def transfer_handler(self, request, response):
+	def transfer_handler(self, request, response): #TODO: error handling
+		
+		# Acquire lock
+		self.arm_lock.acquire()
+		
+		# Get request
+		to_name = request.to_name
+		to_id = request.to_id
+		from_name = request.from_name
+		from_id = request.from_id
+		item = request.item
+		cur_node = request.cur_name
+		other_node = request.other_name
+		
+		# Create response
+		response = Transfer.Response()
+		
+		# Create identifier
+		identifier_cur = from_name + " " + to_name + " " + item + " Node: " + cur_node
+		identifier_other = from_name + " " + to_name + " " + item + " Node: " + other_node
+		
+		# Check to see if the transfer already completed
+		completed = False
+		for item in self.completed_queue:
+			if(item == identifier_other): # Transfer already completed
+				completed = True
+				self.completed_queue.remove(item) # remove from completed queue
+				break
+		if(completed == True): # We are done
+			response.status = response.SUCCESS
+			self.arm_lock.release() # Realise lock
+			return response
+		
+		# Check to see if other side is ready 
+		both_ready = False
+		for item in self.transfer_queue:
+			if(item == identifier_other): # Item is waiting can continue
+				both_ready = True
+				self.transfer_queue.remove(item) # delete from queue
+				break
+				
+		# Check if in queue
+		in_queue = False
+		for item in self.transfer_queue:
+			if(item == identifier_cur):
+				in_queue = True
+				break # in queue already
+				
+		# Adds current transfer identifier for the other side to verify
+		if(in_queue == False):
+			self.transfer_queue.append(identifier_cur)
+			
+		# If both aren't ready we return WAITING
+		if(both_ready == False):
+			response.status = response.WAITING # Still waiting on the other side
+			self.arm_lock.release() # Realise lock
+			return response 
+		
+		# Both sides are ready complete the transfer and the transfer hasn't already been completed
+		# Do the transfer
+		self.get_logger().info("Attempting to transfer complete transfer %s" % identifier_cur)
+		time.sleep(2) #TODO actual transfer code
+		self.get_logger().info("Transfer %s is complete"%identifier_cur)
+		
+		# Add to completed queue
+		self.completed_queue.append(identifier_cur) # For the node waiting on it
+		self.transfer_queue.remove(identifier_cur) # Remove our identifier from queue
+		self.arm_lock.release() # Release lock
+		response.status = response.SUCCESS
+		return response
+				
+
+
+	# Handles transfer service requests
+	# TODO: DELETE *** This is old
+	def transfer_handler_old(self, request, response):
 		# TODO if it sees another transfer request that also points to itself (to of the request)
 		# Notify the user that a deadlock is occuring
 
@@ -149,7 +225,8 @@ class ArmTransferHandler(Node):
 		return response
 
 	# Handles wait services requests
-	def wait_handler(self, request, response): #TODO this function can't be a service (has to be a topic or needs to run on separate node)
+	# TODO: DELETE *** this is old
+	def wait_handler_old(self, request, response): #TODO this function can't be a service (has to be a topic or needs to run on separate node)
 		# don't need to acquire lock since multiple things can be waiting on at once and no writes are needed
 
 		# Get request
@@ -194,6 +271,8 @@ def main(args=None):
 #		while True:
 #			rclpy.spin_once(arm_transfer_node)
 #			arm_transfer_node.get_logger().info("spin")
+	except Exception as e:
+		arm_transfer_node.get_logger().fatal("Error %r"%(e,))
 	except:
 		arm_transfer_node.get_logger().error("Terminating...")
 

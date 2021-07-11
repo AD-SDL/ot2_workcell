@@ -13,7 +13,7 @@ import importlib.util
 from rostalker2.retry_functions import *
 from rostalker2.register_functions import *
 from rostalker2.register_functions import _register, _deregister_node
-from rostalker2.transfer_api import _transfer, _wait_for_transfer
+from rostalker2.transfer_api import _transfer
 
 class OT2(Node):
 
@@ -179,16 +179,17 @@ def work(ot2node, name):
 	if(name == "bob"):
 		args.append(ot2node)
 		args.append("alex")
-		args.append("10")
-		args.append("A0")
-		status = retry(ot2node, _transfer, 20, 2, args)
-		print("Bob returned %d"%status)
-	if(name == "alex"):
-		args.append(ot2node)
 		args.append("bob")
 		args.append("10")
 		args.append("A0")
-		status = retry(ot2node, _wait_for_transfer, 20, 2, args)
+		status = retry(ot2node, _transfer, 20, 2, args)
+	if(name == "alex"):
+		args.append(ot2node)
+		args.append("alex")
+		args.append("bob")
+		args.append("10")
+		args.append("A0")
+		status = retry(ot2node, _transfer, 20, 2, args)
 		print("Alex returned %d"%status)
 
 def main(args=None):
