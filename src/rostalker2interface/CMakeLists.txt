@@ -29,11 +29,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Destroy.srv"
   "srv/Run.srv"
   "srv/Transfer.srv"
-  "srv/WaitForTransfer.srv"
   "msg/NodeEntry.msg"
   "srv/GetNodeInfo.srv"
   "srv/GetNodeList.srv"
   "srv/GetId.srv"
+  "msg/CurrentTransfer.msg"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

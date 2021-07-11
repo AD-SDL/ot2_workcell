@@ -4,6 +4,7 @@ from threading import Thread, Lock
 import sys
 import time
 from rostalker2interface.srv import *
+from rostalker2interface.msg import *
 import os
 import os.path
 from os import path
@@ -54,7 +55,6 @@ class ArmTransferHandler(Node):
 		# Get ID and confirm name from manager
 		self.get_id_name()
 
-#		rclpy.spin_once(self)
 
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
@@ -96,8 +96,6 @@ class ArmTransferHandler(Node):
 	def transfer_handler(self, request, response):
 		# TODO if it sees another transfer request that also points to itself (to of the request)
 		# Notify the user that a deadlock is occuring
-		print("here")
-		self.get_logger().info("here") #TODO: DELETE
 
 		# only one transfer at a time
 		self.arm_lock.acquire()
@@ -111,7 +109,6 @@ class ArmTransferHandler(Node):
 
 		# Create response
 		response = Transfer.Response()
-		self.get_logger().info("here") #TODO: DELETE
 
 		# Get node (to/from) information (TODO future support for locating the OT-2s)
 #		to_entry = get_node_info(to_name) # Search by name for now
@@ -129,7 +126,6 @@ class ArmTransferHandler(Node):
 		# Set identifier and lock
 		identifier = from_name + " " + to_name + " " + item
 		self.cur_transfer = identifier # Identifier for this current transfer
-		self.get_logger().info("here") #TODO: DELETE
 
 		# Spin for the other robot waiting for it
 		while(not self.cur_wait == identifier):

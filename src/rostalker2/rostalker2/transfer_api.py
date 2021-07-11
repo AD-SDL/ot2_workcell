@@ -6,6 +6,7 @@ import sys
 import time
 from random import random
 from rostalker2interface.srv import *
+from rostalker2interface.msg import *
 from pathlib import Path
 from rostalker2.worker_info_api import *
 from rostalker2.worker_info_api import _get_node_info, _get_node_list, get_node_info
