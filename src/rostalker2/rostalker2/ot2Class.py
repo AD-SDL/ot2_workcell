@@ -10,10 +10,11 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
-from rostalker2.retry_functions import *
-from rostalker2.register_functions import *
-from rostalker2.register_functions import _register, _deregister_node
-from rostalker2.transfer_api import _transfer
+from master_api.retry_api import *
+from master_api.register_api import *
+from master_api.register_api import _register, _deregister_node
+from armtalker_api.transfer_api import *
+from armtalker_api.transfer_api import _transfer
 
 class OT2(Node):
 

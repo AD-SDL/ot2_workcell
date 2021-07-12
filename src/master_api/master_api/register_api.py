@@ -1,10 +1,8 @@
 import rclpy
 from rclpy.node import Node
-from threading import Thread, Lock
 import sys
-import time
 from rostalker2interface.srv import *
-from rostalker2.retry_functions import *
+from master_api.retry_api import *
 
 # registers a worker with the master node
 def register(self, type, name):

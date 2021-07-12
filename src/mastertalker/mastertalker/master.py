@@ -7,8 +7,8 @@ import time
 from random import random
 from rostalker2interface.srv import *
 from pathlib import Path
-from rostalker2.retry_functions import *
-from rostalker2.worker_thread import worker_class
+from master_api.retry_api import *
+from mastertalker.worker_thread import worker_class
 
 # Only one master node can be running at anytime, or else you will cause issues 
 class Master(Node):
@@ -439,8 +439,8 @@ def main(args=None):
 	master = Master()
 
 	# Create a thread to run setup_thread
-#	spin_thread = Thread(target = setup_thread_work, args = (master,))
-#	spin_thread.start()
+	spin_thread = Thread(target = setup_thread_work, args = (master,))
+	spin_thread.start()
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")

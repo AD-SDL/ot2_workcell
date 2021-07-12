@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'rostalker2'
+package_name = 'armtalker'
 
 setup(
     name=package_name,
@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'OT2 = rostalker2.ot2Class:main',
+            'arm_manager = armtalker.armManager:main',
+            'arm_transfer_handler = armtalker.armTransferHandler:main',
         ],
     },
 )

@@ -1,14 +1,5 @@
-import rclpy
-from rclpy.node import Node
-from threading import Thread, Lock
-import sys
 import time
 from rostalker2interface.srv import *
-import os
-import os.path
-from os import path
-from pathlib import Path
-import importlib.util
 
 
 # Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
