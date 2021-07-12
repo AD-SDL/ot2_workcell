@@ -406,7 +406,15 @@ class Master(Node):
 			self.get_logger().info("Service not available, trying again...")
 
 		# Client ready
-		#TODO: For loop to go over every file at index?
+		#TODO: For loop to go over every file at index? or send all files at once?
+		#TODO: replacement parameter?
+		#TODO: make custom SendFiles srv file for sending files
+		# Create a request
+		send_request = SendFiles.Request()
+		send_request.numFiles = len(files) # number of files to be sent to worker node
+		send_request.files = files # File string contents
+
+		# Call Service to load module
 
 	# Reads from a setup file to run a number of files on a specified robot 
 	def read_from_setup(self, file): #TODO: deadlock detection algorithm
