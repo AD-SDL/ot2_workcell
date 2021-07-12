@@ -164,6 +164,15 @@ class OT2(Node):
 			self.get_logger().info("Module %s successfully ran to completion"%file)
 			response.status = response.SUCCESS
 			return response
+	# load function
+
+
+
+	# run function
+
+
+
+	#load_and_run funtion using retry 
 
 def main(args=None):
 	rclpy.init(args=args)

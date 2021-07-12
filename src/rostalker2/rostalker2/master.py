@@ -104,7 +104,7 @@ class Master(Node):
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR'] # Error
 
-		self.get_logger().info("File %s read complete"%name)
+		self.get_logger().info("File %s read complete"%name) #Contents of file read
 
 		# Create a request
 		load_request = LoadService.Request()
@@ -138,17 +138,7 @@ class Master(Node):
 					self.get_logger().info("Load succeeded")
 					return self.status['SUCCESS'] # All good
 
-	# Creates client that sends scripts to worker OT-2
-	def send_script(self, name, id):
-
-		# identify all files contianing work
-		# probably a for loop to go over all files
-		# keep thread_list format?
-
-		# load files containing work using load fuinction (master)
-
-		# create client that calls file handler service on OT-2 module
-		# here for locked work queue? 
+	
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
@@ -373,6 +363,50 @@ class Master(Node):
 		else:
 			return self.status['SUCCESS']
 
+	# Creates client that sends files to worker OT-2 to create threads
+	def send_files(self, id, index): #self, name of file, id of robot, and index of files in files_for_threads
+
+		# Check node online?
+		args = []
+		args.append(id)
+		status = retry(self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args) # retry function
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to find node %s"%id) # Node isn't registered
+			return self.status['ERROR']
+		else:
+			self.get_logger().info("Node %s found"%id) # Found
+
+		# use index in files_for_threads to call files
+		files = self.files_for_threads[index]
+
+		# Select a node
+		try:
+			# Get node information
+			target_node = self.search_for_node(id) # See if id robot exists and the data
+
+			# Error checking
+			if(target_node['type'] == '-1'): # No such node
+				self.get_logger().error("id: %s doesn't exist"%id)
+				return self.status['ERROR']
+
+
+			type = target_node['type'] # These will be needed to acess the service
+			id = target_node['id']
+
+		except Exception as e: 
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
+
+		# create client that calls file handler service on OT-2 module
+		# here for locked work queue? 
+
+		# Client setup
+		send_cli = self.create_client(SendFiles, "/%s/%s/send"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not load_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+
+		# Client ready
+		#TODO: For loop to go over every file at index?
 
 	# Reads from a setup file to run a number of files on a specified robot 
 	def read_from_setup(self, file): #TODO: deadlock detection algorithm
@@ -400,8 +434,6 @@ class Master(Node):
 			# Get files for the worker
 			try:
 				files = f.readline().split()
-				#TODO: set up here to send files to individual OT-2s
-				#Service to provide files to client on OT-2
 
 				self.files_for_threads.append(files) # should be the same index
 			except Exception as e:
@@ -409,26 +441,33 @@ class Master(Node):
 				return self.status['ERROR'] # Error
 
 			# Create thread
-			temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
-			print(temp_thread)
-			self.threads_list.append(temp_thread) # Record information
+			# replace worker_class with send_files
+			#temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
+			#self.threads_list.append(temp_thread) # Record information
+
+			#files sent to worker OT-2 to become threads
+			send_files(self, entry['name'], entry['id'], i)
+
+			#TODO: set up lock? verify set up complete once files are sent
 
 			# Setup complete for this thread
 			self.get_logger().info("Setup complete for %s"%name_or_id)
 
+		#TODO: migrate all below to ot2 class
+
 		# New barrier for each thread (So we know when they all finish)
-		self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
+		# self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
 
 		# Start running each thread
-		for item in self.threads_list:
-			item.start()
+		# for item in self.threads_list:
+			# item.start()
 
 		# Waiting on finish
-		self.read_from_setup_barrier.wait()
+		# self.read_from_setup_barrier.wait()
 
 		# Join each thread
-		for item in self.threads_list:
-			item.join()
+		# for item in self.threads_list:
+			# item.join()
 
 		# Done
 		self.get_logger().info("Setup file read and run complete")
