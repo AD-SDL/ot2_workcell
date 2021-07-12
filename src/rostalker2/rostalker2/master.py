@@ -428,11 +428,6 @@ class Master(Node):
 	def handle_get_node_list(self, request, response):
 		pass #TODO
 
-
-
-
-
-
 def setup_thread_work(master):
 	status = master.read_from_setup("setup") 
 

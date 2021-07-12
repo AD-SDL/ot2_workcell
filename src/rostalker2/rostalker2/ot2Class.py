@@ -44,8 +44,8 @@ class OT2(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
-		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
+#		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
+#		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
 		args = []
@@ -178,19 +178,18 @@ def work(ot2node, name):
 	args = []
 	if(name == "bob"):
 		args.append(ot2node)
-		args.append("alex")
 		args.append("bob")
+		args.append("alex")
 		args.append("10")
-		args.append("A0")
-		status = retry(ot2node, _transfer, 20, 2, args)
+		args.append("army")
+		status = retry(ot2node, _transfer, 20, 4, args)
 	if(name == "alex"):
 		args.append(ot2node)
-		args.append("alex")
 		args.append("bob")
+		args.append("alex")
 		args.append("10")
-		args.append("A0")
-		status = retry(ot2node, _transfer, 20, 2, args)
-		print("Alex returned %d"%status)
+		args.append("army")
+		status = retry(ot2node, _transfer, 20, 4, args)
 
 def main(args=None):
 	rclpy.init(args=args)

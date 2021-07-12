@@ -16,12 +16,13 @@ def register(self, type, name):
 	req.type = type # TODO: type check
 	req.name = name
 
-	# Wait for service TODO client creation here
-	while not self.register_cli.wait_for_service(timeout_sec=2.0):
+	# Create client and wait for service
+	register_cli = self.create_client(Register, 'register')
+	while not register_cli.wait_for_service(timeout_sec=2.0):
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call
-	future = self.register_cli.call_async(req)
+	future = register_cli.call_async(req)
 	self.get_logger().info("Registering with master...")
 
 	# Wait for completion
@@ -63,12 +64,13 @@ def deregister_node(self):
 	req.type = self.type
 	req.id = self.id
 
-	# Wait for service TODO client creation here
-	while not self.deregister_cli.wait_for_service(timeout_sec=2.0):
+	# Create client and wait for service
+	deregister_cli = self.create_client(Destroy, 'destroy')
+	while not deregister_cli.wait_for_service(timeout_sec=2.0):
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call
-	future = self.deregister_cli.call_async(req)
+	future = deregister_cli.call_async(req)
 	self.get_logger().info("Deregistering with master...")
 
 	# Wait for completion

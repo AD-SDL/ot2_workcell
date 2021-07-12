@@ -25,7 +25,7 @@ class ArmManager(Node):
 		super().__init__("arm_manager_" + name) # User specifies name
 
 		# Lock creation
-#		self.arm_lock = Lock() # Only one can access arm at a time
+		self.arm_lock = Lock() # Only one can access arm at a time
 
 		# Store who is doing the transfer and store respective locks
 		self.cur_transfer = "" # identification of the 
@@ -49,10 +49,6 @@ class ArmManager(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
-		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
-		self.get_node_info_cli = self.create_client(GetNodeInfo, 'get_node_info') #TODO: maybe move this into respective functions
-		self.get_node_list_cli = self.create_client(GetNodeList, 'get_node_list')
 
 		# Register with master
 		args = []
