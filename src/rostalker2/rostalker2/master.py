@@ -410,6 +410,7 @@ class Master(Node):
 
 			# Create thread
 			temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
+			print(temp_thread)
 			self.threads_list.append(temp_thread) # Record information
 
 			# Setup complete for this thread
