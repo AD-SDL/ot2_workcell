@@ -9,6 +9,7 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
+from random import random
 from master_api.retry_api import *
 from master_api.register_api import *
 from master_api.register_api import _register, _deregister_node
@@ -21,6 +22,15 @@ from master_api.worker_info_api import _get_node_info, _get_node_list, get_node_
 class ArmManager(Node):
 
 	def __init__(self, name):
+		super().__init__("Temp" + str(int(random()*17237534)))
+		self.get_logger().info("Temp node created") #TODO delete
+
+		# Parameters before we register with master
+		self.declare_parameter('name', 'insert_arm_name_here') # 2nd arg is default value
+		while(name == 'temp'):
+			name = self.get_parameter('name').get_parameter_value().string_value
+			time.sleep(1) # 1 second timeout
+
 		# Node creation
 		super().__init__("arm_manager_" + name) # User specifies name
 
@@ -88,10 +98,11 @@ class ArmManager(Node):
 def main(args=None):
 	rclpy.init(args=args)
 
-	if(len(sys.argv) != 2):
-		print("need 1 arguments")
-		sys.exit(1)
-	name = str(sys.argv[1])
+#	if(len(sys.argv) != 2):
+#		print("need 1 arguments")
+#		sys.exit(1)
+#	name = str(sys.argv[1])
+	name = 'temp' #TODO: DELETE
 
 	arm_manager_node = ArmManager(name)
 	try:

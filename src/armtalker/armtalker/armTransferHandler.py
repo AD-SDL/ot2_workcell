@@ -13,11 +13,21 @@ from rostalker2interface.msg import *
 from master_api.retry_api import *
 from master_api.worker_info_api import *
 from master_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from random import random
 
 # TODO: figure out how to integrate arm code
 
 class ArmTransferHandler(Node):
 	def __init__(self, name):
+		# Createa  temporary node so we can read in parameters
+		super().__init__("Temp" + str(int(random()*17237967)))
+
+		# Create parameters for name to be sent through 
+		self.declare_parameter('name', 'insert_arm_name_here') # 2nd arg is default value
+		while(name == 'temp'):
+			name = self.get_parameter('name').get_parameter_value().string_value
+			time.sleep(1) # 1 second timeout
+
 		# Node creation
 		super().__init__("arm_transfer_handler_" + name) # User specifies name
 		self.name = name
@@ -174,10 +184,11 @@ class ArmTransferHandler(Node):
 def main(args=None):
 	rclpy.init(args=args)
 
-	if(len(sys.argv) != 2):
-		print("need 1 arguments")
-		sys.exit(1)
-	name = str(sys.argv[1])
+#	if(len(sys.argv) != 2):
+#		print("need 1 arguments")
+#		sys.exit(1)
+#	name = str(sys.argv[1])
+	name = 'temp' #TODO: DELETE
 
 	arm_transfer_node = ArmTransferHandler(name)
 	try:
