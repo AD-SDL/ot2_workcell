@@ -41,6 +41,8 @@ class OT2(Node):
 		self.home_location = str(path.home())
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
+		self.work_list = [] # list of files list recieved from jobs
+
 		# Create clients
 		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
@@ -58,10 +60,55 @@ class OT2(Node):
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
+		self.send_service = self.create_service(SendFiles, "/OT_2/%s/run"%self.id, self.recieve_files)
 		#TODO: create service to unload and recieve items
 
 		# Initialization Complete
 		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
+
+	#Handles send_module service calls
+	def recieve_files(self, request, response):
+
+		# Get request information
+		files = request.files
+
+		# Create Response
+		response = SendFiles.Response()
+
+		# Warnings
+		if(path.exists(file) and request.replace == False):
+			self.get_logger().warning("File %s already exists on the system and replacement is false, upload terminating..."%name)
+			response.status = response.WARNING # Warning: in this context file already exists on system
+			return response
+		if(request.replace == True):
+			self.get_logger().warning("Replacement is set to True, file %s on this system will be replace with file from master"%name)
+		
+		# Begin reading file names
+		self.get_logger().info("Reading file names")
+
+		#TODO: put lock here?
+		#TODO: make self list of lists of files
+
+		try:
+			# Get lock
+			self.file_lock.acquire()
+
+			# Append files to work list
+			self.work_list.append(files)
+		except Exception as e:
+			self.get_logger().error("Error occured: %r"%(e,))
+			response.status = response.ERROR # Error
+		else:
+			self.get_logger().info("File %s loaded to OT2"%name)
+			response.status = response.SUCCESS # All good
+		finally:
+			# Exiting critical section
+			self.file_lock.release()
+			return response
+
+
+
+
 
 	# Handles load_module service calls
 	def load_handler(self, request, response):

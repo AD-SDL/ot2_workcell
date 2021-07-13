@@ -375,11 +375,10 @@ class Master(Node):
 		else:
 			self.get_logger().info("Node %s found"%id) # Found
 
-
 		# Select a node
 		try:
 			# Get node information
-			target_node = self.search_for_node(id) # See if id robot exists and the data
+			target_node = self.search_for_node(id) # See if id robot exists
 
 			# Error checking
 			if(target_node['type'] == '-1'): # No such node
