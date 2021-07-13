@@ -293,7 +293,7 @@ class OT2(Node):
 
 	# run function, runs client that calls service on this node
 	def run_ot2(self, file):
-		
+
 		#TODO: Check for node online and select node if all on same node?
 
 		try:
@@ -302,6 +302,41 @@ class OT2(Node):
 		except Exception as e: 
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
+		
+		# Client setup
+		run_cli = self.create_client(Run, "/%s/%s/run"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not run_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+		
+		# Create a request
+		# Create a request
+		req = Run.Request()
+		req.type = type
+		req.id = id
+		req.file = file
+
+		# Call service
+		future = run_cli.call_async(req)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error checking
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured when running file %s at id: %s"%(name, id))
+					return self.status['ERROR'] # Error
+				else:
+					self.get_logger().info("Module run succeeded")
+					return self.status['SUCCESS'] # All good
+
 
 
 	#load_and_run funtion using retry 
