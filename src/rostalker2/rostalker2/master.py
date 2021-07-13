@@ -406,13 +406,13 @@ class Master(Node):
 			self.get_logger().info("Service not available, trying again...")
 
 		# Client ready
-		#TODO: For loop to go over every file at index? or send all files at once?
+		#TODO: send all files at once
 		#TODO: replacement parameter?
 		#TODO: make custom SendFiles srv file for sending files
 		# Create a request
 		send_request = SendFiles.Request()
-		send_request.numFiles = len(files) # number of files to be sent to worker node
-		send_request.files = files # File string contents
+		#send_request.numFiles = len(files) # number of files to be sent to worker node
+		send_request.files = files # string of file names list
 
 		# Call Service to load module
 
