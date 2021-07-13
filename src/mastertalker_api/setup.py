@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'rostalker2'
+package_name = 'mastertalker_api'
 
 setup(
     name=package_name,
@@ -20,7 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'OT2 = rostalker2.ot2Class:main',
+            'retry_api = mastertalker_api.retry_api:main_null',
+            'register_api = mastertalker_api.register_api:main_null',
+            'worker_info_api = mastertalker_api.worker_info_api:main_null',
         ],
     },
 )

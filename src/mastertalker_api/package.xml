@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rostalker2</name>
+  <name>mastertalker_api</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="alan.linghao.wang@gmail.com">nerra</maintainer>
@@ -13,8 +13,6 @@
   <test_depend>python3-pytest</test_depend>
 
   <exec_depend>rostalker2interface</exec_depend>
-  <exec_depend>armtalker_api</exec_depend>
-  <exec_depend>mastertalker_api</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

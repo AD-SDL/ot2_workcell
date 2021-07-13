@@ -4,18 +4,20 @@ from threading import Thread, Lock
 import sys
 import time
 from rostalker2interface.srv import *
+from rostalker2interface.msg import *
 import os
 import os.path
 from os import path
 from pathlib import Path
 import importlib.util
-from rostalker2.retry_functions import *
-from rostalker2.register_functions import *
-from rostalker2.register_functions import _register, _deregister_node
+from mastertalker_api.retry_api import *
+from mastertalker_api.register_api import *
+from mastertalker_api.register_api import _register, _deregister_node
+from armtalker_api.transfer_api import *
+from armtalker_api.transfer_api import _transfer
 
 class OT2(Node):
 
-#TODO: run lock
 	def __init__(self, name):
 
 		# Node creation
@@ -23,6 +25,7 @@ class OT2(Node):
 
 		# Lock creation
 		self.file_lock = Lock() # Access to the file system
+		self.run_lock = Lock() # Only one can access this OT-2 as a resource
 
 		# readability
 		self.state = { #TODO: sync with master
@@ -42,8 +45,8 @@ class OT2(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
-		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
+#		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
+#		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
 		# Register with master
 		args = []
@@ -106,6 +109,8 @@ class OT2(Node):
 
 	# Handles run module service calls
 	def run_handler(self, request, response):
+		# Acquire lock
+		self.run_lock.acquire()
 
 		# Get request information
 		type = request.type
@@ -119,12 +124,14 @@ class OT2(Node):
 		if(not id == self.id): # Wrong ID
 			self.get_logger().error("Request id: %s doesn't match node id: %s"%(id, self.id))
 			response.status = response.ERROR
+			self.run_lock.release() # Release lock
 			return response
 		elif(not type == "OT_2"): # Wrong type
 			self.get_logger().warning("The requested node type: %s doesn't match the node type of id: %s, but will still proceed"%(type, self.id))
 		elif(path.exists(file) == False): # File doesn't exist
 			self.get_logger().error("File: %s doesn't exist"%(file))
 			response.status = response.ERROR
+			self.run_lock.release() # Release lock
 			return response
 
 		# Get lock, entering file critical section (Can't be reading when file is still being written)
@@ -141,6 +148,7 @@ class OT2(Node):
 			# Error
 			self.get_logger().error("Error occured when trying to load module %s: %r"%(file,e,))
 			response.status = response.ERROR # Error
+			self.run_lock.release() # Release lock
 			return response
 		else:
 			# All Good
@@ -164,6 +172,25 @@ class OT2(Node):
 			self.get_logger().info("Module %s successfully ran to completion"%file)
 			response.status = response.SUCCESS
 			return response
+		finally:
+			self.run_lock.release() # Release lock no matter what
+#TODO: DELETE
+def work(ot2node, name):
+	args = []
+	if(name == "bob"):
+		args.append(ot2node)
+		args.append("bob")
+		args.append("alex")
+		args.append("10")
+		args.append("army")
+		status = retry(ot2node, _transfer, 20, 4, args)
+	if(name == "alex"):
+		args.append(ot2node)
+		args.append("bob")
+		args.append("alex")
+		args.append("10")
+		args.append("army")
+		status = retry(ot2node, _transfer, 20, 4, args)
 
 def main(args=None):
 	rclpy.init(args=args)
@@ -175,6 +202,10 @@ def main(args=None):
 
 	ot2node = OT2(name)
 	try:
+		# TODO: DELETE
+#		spin_thread = Thread(target = work, args = (ot2node,name,))
+#		spin_thread.start()
+
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")

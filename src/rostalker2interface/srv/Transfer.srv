@@ -3,10 +3,13 @@ string to_name
 string from_id
 string from_name
 string item
+string cur_name
+string other_name
 ---
 int64 WARNING = 2 
 int64 ERROR = 1
 int64 SUCCESS = 0
 int64 FATAL = 3
+int64 WAITING = 10
 
 int64 status
