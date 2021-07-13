@@ -203,8 +203,8 @@ def main(args=None):
 	ot2node = OT2(name)
 	try:
 		# TODO: DELETE
-		spin_thread = Thread(target = work, args = (ot2node,name,))
-		spin_thread.start()
+#		spin_thread = Thread(target = work, args = (ot2node,name,))
+#		spin_thread.start()
 
 		rclpy.spin(ot2node)
 	except:
