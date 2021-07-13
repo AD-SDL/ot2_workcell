@@ -42,6 +42,7 @@ class OT2(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		self.work_list = [] # list of files list recieved from jobs
+		self.work_index = 0
 
 		# Create clients
 		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
@@ -86,15 +87,15 @@ class OT2(Node):
 		# Begin reading file names
 		self.get_logger().info("Reading file names")
 
-		#TODO: put lock here?
-		#TODO: make self list of lists of files
 
 		try:
 			# Get lock
 			self.file_lock.acquire()
 
 			# Append files to work list
+			#TODO: change, maybe run worker function?
 			self.work_list.append(files)
+			self.work_index = self.work_index + 1
 		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			response.status = response.ERROR # Error
@@ -105,10 +106,6 @@ class OT2(Node):
 			# Exiting critical section
 			self.file_lock.release()
 			return response
-
-
-
-
 
 	# Handles load_module service calls
 	def load_handler(self, request, response):
@@ -211,11 +208,29 @@ class OT2(Node):
 			self.get_logger().info("Module %s successfully ran to completion"%file)
 			response.status = response.SUCCESS
 			return response
-	# load function
+
+
+	# Overarching function. Parses through files in a job, loads and runs files
+	def worker(self, index):
+		files = self.work_list[self.work_index - 1]
+		for file in files:
+			# Debug information
+			self.node_print("Running file %s"%file)
+
+			# Load and run individual file
+			status = self.load_and_run_ot2(self, file)
+
+			# Error checking 
+
+		self.node_print("thread %s done with work"%self.thread_ID)
+
+		#TODO: Barrier?
+
+	# load function, runs client that calls service on this node
 
 
 
-	# run function
+	# run function, runs client that calls service on this node
 
 
 
