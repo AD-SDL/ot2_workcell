@@ -6,6 +6,7 @@ import sys
 import time
 from random import random
 from rostalker2interface.srv import *
+from rostalker2interface.msg import *
 from pathlib import Path
 from mastertalker_api.retry_api import *
 from mastertalker.worker_thread import worker_class
@@ -425,8 +426,20 @@ class Master(Node):
 		return response
 
 	# Hanldes get the whole node list service call
-	def handle_get_node_list(self, request, response):
-		pass #TODO
+	def handle_get_node_list(self, request, response): #TODO testing
+		# Create response
+		response = GetNodeList.Response()
+
+		# Edit response
+		for item in self.nodes_list:
+			entry = NodeEntry()
+			entry.id = item['id']
+			entry.name = item['name']
+			entry.sate = item['state']
+			entry.type = item['type']
+			response.node_list.append(entry)
+		response.status = response.SUCCESS
+		return response
 
 def setup_thread_work(master):
 	status = master.read_from_setup("setup") 
