@@ -14,6 +14,8 @@ from mastertalker_api.retry_api import *
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
+from armtalker_api.publish_arm_state_api import *
+from armtalker_api.publish_arm_state_api import _update_state
 
 # TODO: figure out how to integrate arm code
 
@@ -42,7 +44,8 @@ class ArmTransferHandler(Node):
 		# Readabilty
 		self.state = { #TODO maybe a sync with the master
 			"BUSY":1,
-			"READY":0
+			"READY":0,
+			"ERROR":2,
 		}
 		self.status = {
 			"ERROR":1,
@@ -50,6 +53,9 @@ class ArmTransferHandler(Node):
 			"WARNING":2,
 			"FATAL":3
 		}
+
+		# State of the arm
+		self.current_state = self.state['READY']
 
 		# Path setup
 		path = Path()
@@ -159,8 +165,17 @@ class ArmTransferHandler(Node):
 			self.arm_lock.release() # Realise lock
 			return response
 
+		# Update state and let it be know that we are busy
+		args = []
+		args.append(self)
+		args.append(self.state['BUSY']) # busy
+		status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+
 		# Both sides are ready complete the transfer and the transfer hasn't already been completed
 		# Do the transfer
+		self.current_state = self.state['BUSY']
 		try:
 			self.get_logger().info("Attempting to transfer complete transfer %s" % identifier_cur)
 			time.sleep(2) #TODO actual transfer code
@@ -172,7 +187,18 @@ class ArmTransferHandler(Node):
 			self.get_logger().error("Error occured: %r"%(e,))
 			self.arm_lock.release() # Release lock
 			response.status = response.ERROR # Error
+			self.current_state = self.state['ERROR'] # ERROR state
 			return response
+		else:
+			self.current_state = self.state['READY']
+		finally: # No matter what after this the army is no longer busy 
+			args = []
+			args.append(self)
+			args.append(self.current_state) # ready or error
+			status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
+			if(status == self.status['ERROR'] or status == self.status['FATAL']):
+				self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+
 
 		# Add to completed queue
 		self.completed_queue.append(identifier_cur) # For the node waiting on it

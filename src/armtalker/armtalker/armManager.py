@@ -37,14 +37,11 @@ class ArmManager(Node):
 		# Lock creation
 		self.arm_lock = Lock() # Only one can access arm at a time
 
-		# Store who is doing the transfer and store respective locks
-		self.cur_transfer = "" # identification of the 
-		self.cur_wait = ""
-
 		# Readabilty
 		self.state = { #TODO maybe a sync with the master
 			"BUSY":1,
-			"READY":0
+			"READY":0,
+			"ERROR":2,
 		}
 		self.status = {
 			"ERROR":1,
@@ -52,6 +49,9 @@ class ArmManager(Node):
 			"WARNING":2,
 			"FATAL":3
 		}
+
+		# State information
+		self.current_state = self.state['READY'] # Start ready
 
 		# Path setup
 		path = Path()
@@ -73,9 +73,25 @@ class ArmManager(Node):
 		# Create services
 		self.get_id_service = self.create_service(GetId, "/arm/%s/get_id"%self.name, self.get_id_handler)
 
+		# Create subscribers
+		self.arm_state_update_sub = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.arm_state_update_callback, 10)
+		self.arm_state_update_sub # Prevent unused warning
+
 		# Initialization Complete
 		self.get_logger().info("Arm Manager for ID: %s name: %s initialization completed"%(self.id, self.name))
 
+	# Service to update the state of the arm
+	def arm_state_update_callback(self, msg):
+
+		# Recieve request
+		current_state = msg.state # TODO error checks
+
+		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
+
+		# Update our state
+		self.current_state = current_state
+
+		# TODO: other stuff
 
 	# Service to retrieve ID of the robot
 	def get_id_handler(self, request, response):
