@@ -5,8 +5,8 @@ from threading import Thread, Lock
 import time
 from rostalker2interface.srv import *
 from rostalker2interface.msg import *
-from master_api.worker_info_api import *
-from master_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from mastertalker_api.worker_info_api import *
+from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 def transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO do something with item
 	# Get destination node info

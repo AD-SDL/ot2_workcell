@@ -7,7 +7,7 @@ import time
 from random import random
 from rostalker2interface.srv import *
 from pathlib import Path
-from master_api.retry_api import *
+from mastertalker_api.retry_api import *
 from mastertalker.worker_thread import worker_class
 
 # Only one master node can be running at anytime, or else you will cause issues 

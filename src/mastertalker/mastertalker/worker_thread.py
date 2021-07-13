@@ -10,7 +10,7 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
-from master_api.retry_api import *
+from mastertalker_api.retry_api import *
 
 
 # TODO: add in states for threads (busy, ready, down) 

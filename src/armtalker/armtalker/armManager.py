@@ -10,11 +10,11 @@ from os import path
 from pathlib import Path
 import importlib.util
 from random import random
-from master_api.retry_api import *
-from master_api.register_api import *
-from master_api.register_api import _register, _deregister_node
-from master_api.worker_info_api import *
-from master_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from mastertalker_api.retry_api import *
+from mastertalker_api.register_api import *
+from mastertalker_api.register_api import _register, _deregister_node
+from mastertalker_api.worker_info_api import *
+from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 # TODO: arm is a shared resource has to be able to lock itself
 # TODO: figure out how to integrate arm code

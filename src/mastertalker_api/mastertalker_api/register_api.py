@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 import sys
 from rostalker2interface.srv import *
-from master_api.retry_api import *
+from mastertalker_api.retry_api import *
 
 # registers a worker with the master node
 def register(self, type, name):

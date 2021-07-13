@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'py_pubsub'
+package_name = 'mastertalker_api'
 
 setup(
     name=package_name,
@@ -14,17 +14,15 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nerra',
-    maintainer_email='nerra@todo.todo',
+    maintainer_email='alan.linghao.wang@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = py_pubsub.publisher_member_function:main',
-            'listener = py_pubsub.sub_test:main',
-            'serial_talker = py_pubsub.pub_serial_test:main',
-            'custom_talker = py_pubsub.custom_publisher:main',
-            'custom_listener = py_pubsub.custom_subscriber:main',
+            'retry_api = mastertalker_api.retry_api:main_null',
+            'register_api = mastertalker_api.register_api:main_null',
+            'worker_info_api = mastertalker_api.worker_info_api:main_null',
         ],
     },
 )
