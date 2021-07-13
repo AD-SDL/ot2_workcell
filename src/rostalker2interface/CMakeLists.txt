@@ -33,6 +33,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetNodeInfo.srv"
   "srv/GetNodeList.srv"
   "srv/GetId.srv"
+  "msg/ArmStateUpdate.msg"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

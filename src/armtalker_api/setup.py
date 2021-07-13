@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'transfer_api = armtalker_api.transfer_api:main_null',
+            'publish_arm_state_api = armtalker_api.publish_arm_state_api:main_null',
         ],
     },
 )

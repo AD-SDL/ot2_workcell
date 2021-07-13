@@ -452,8 +452,8 @@ def main(args=None):
 	master = Master()
 
 	# Create a thread to run setup_thread
-	spin_thread = Thread(target = setup_thread_work, args = (master,))
-	spin_thread.start()
+#	spin_thread = Thread(target = setup_thread_work, args = (master,))
+#	spin_thread.start()
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
