@@ -6,53 +6,53 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 
 # Rostalker2 Files
 **armtalker/**   
-  **armtalker/**  
-    armManager.py (Manages the state of the arm)  
-    armTransferHandler.py (Manages transfer service)  
-  **launch/**  
-    arm_bringup.launch.py (Launches the arm)  
+&nbsp;&nbsp;  **armtalker/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    armManager.py (Manages the state of the arm)  
+&nbsp;&nbsp;&nbsp;&nbsp;    armTransferHandler.py (Manages transfer service)  
+&nbsp;&nbsp;  **launch/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    arm_bringup.launch.py (Launches the arm)  
   
 **armtalker_api/**  
-  **armtalker_api/**  
-    transfer_api.py (An api for other OT2s to use to transfer items)  
+&nbsp;&nbsp;  **armtalker_api/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    transfer_api.py (An api for other OT2s to use to transfer items)  
 
 **mastertalker/**  
-  **mastertalker/**  
-    master.py (Controls the state of the system)  
-    worker_thread.py (No longer needed)  
+&nbsp;&nbsp;  **mastertalker/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    master.py (Controls the state of the system)  
+&nbsp;&nbsp;&nbsp;&nbsp;    worker_thread.py (No longer needed)  
 
 **master_api/**  
-  **master_api/**  
-    register_api.py (registration to the master api)  
-    retry_api.py (api to allow users to run a function in an isolated manner)  
-    worker_info_api.py (api to allow workers to retrieve other worker info from the master)  
+&nbsp;&nbsp;  **master_api/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    register_api.py (registration to the master api)  
+&nbsp;&nbsp;&nbsp;&nbsp;    retry_api.py (api to allow users to run a function in an isolated manner)  
+&nbsp;&nbsp;&nbsp;&nbsp;    worker_info_api.py (api to allow workers to retrieve other worker info from the master)  
     
 **rostlalker2/**  
-  **rostalker2/**  
-    load_run_api.py (This will change)  
-    ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)  
+&nbsp;&nbsp;  **rostalker2/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    load_run_api.py (This will change)  
+&nbsp;&nbsp;&nbsp;&nbsp;    ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)  
  
-**rostalker2interface/**
-  **srv/**  
-    Destroy.srv  
-    GetId.srv  
-    GetNodeInfo.srv  
-    GetNodeList.srv  
-    LoadService.srv  
-    Register.srv  
-    Run.srv  
-    Transfer.srv  
-  **msg/**  
-    NodeEntry.msg  
+**rostalker2interface/**  
+&nbsp;&nbsp;  **srv/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    Destroy.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    GetId.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    GetNodeInfo.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    GetNodeList.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    LoadService.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    Register.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    Run.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    Transfer.srv  
+&nbsp;&nbsp;  **msg/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    NodeEntry.msg  
 
 # Install 
 This is for ubuntu 20.04 running ROS2 foxy  
-0. cd (Must be in home directory)
-1. source /opt/ros/foxy/setup.bash
-2. git clone https://github.com/urd00m/ros2tests
-3. cd ros2tests
-4. colcon build 
-5. source install/setup.bash
+1. cd (Must be in home directory)
+2. source /opt/ros/foxy/setup.bash
+3. git clone https://github.com/urd00m/ros2tests
+4. cd ros2tests
+5. colcon build 
+6. source install/setup.bash
 
 # Launching 
 **Master**  
