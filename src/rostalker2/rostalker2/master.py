@@ -117,7 +117,6 @@ class Master(Node):
 		self.get_logger().info("Waiting for completion...")
 
 		# Waiting on future
-		#TODO: edit
 		while(future.done() == False):
 			time.sleep(1) # timeout 1 second
 		if(future.done()):
@@ -364,7 +363,7 @@ class Master(Node):
 			return self.status['SUCCESS']
 
 	# Creates client that sends files to worker OT-2 to create threads
-	def send_files(self, id, index): #self, name of file, id of robot, and index of files in files_for_threads
+	def send_files(self, id, files): #self, id of robot, and files of current job
 
 		# Check node online?
 		args = []
@@ -376,8 +375,6 @@ class Master(Node):
 		else:
 			self.get_logger().info("Node %s found"%id) # Found
 
-		# use index in files_for_threads to call files
-		files = self.files_for_threads[index]
 
 		# Select a node
 		try:
@@ -406,15 +403,33 @@ class Master(Node):
 			self.get_logger().info("Service not available, trying again...")
 
 		# Client ready
-		#TODO: send all files at once
 		#TODO: replacement parameter?
-		#TODO: make custom SendFiles srv file for sending files
 		# Create a request
 		send_request = SendFiles.Request()
 		#send_request.numFiles = len(files) # number of files to be sent to worker node
 		send_request.files = files # string of file names list
 
 		# Call Service to load module
+		future = run_cli.call_async(req)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error checking
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured when running file %s at id: %s"%(name, id))
+					return self.status['ERROR'] # Error
+				else:
+					self.get_logger().info("Module run succeeded")
+					return self.status['SUCCESS'] # All good
 
 	# Reads from a setup file to run a number of files on a specified robot 
 	def read_from_setup(self, file): #TODO: deadlock detection algorithm
@@ -454,7 +469,7 @@ class Master(Node):
 			#self.threads_list.append(temp_thread) # Record information
 
 			#files sent to worker OT-2 to become threads
-			send_files(self, entry['name'], entry['id'], i)
+			send_files(self, entry['name'], entry['id'], files)
 
 			#TODO: set up lock? verify set up complete once files are sent
 
