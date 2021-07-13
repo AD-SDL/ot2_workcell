@@ -44,6 +44,10 @@ class OT2(Node):
 		self.work_list = [] # list of files list recieved from jobs
 		self.work_index = 0
 
+		# Node timeout info
+		self.node_wait_timeout = 2 # 2 seconds
+		self.node_wait_attempts = 10 # 10 attempts before error thrown
+
 		# Create clients
 		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
@@ -212,6 +216,7 @@ class OT2(Node):
 
 	# Overarching function. Parses through files in a job, loads and runs files
 	def worker(self, index):
+		#TODO: retrieve files from work list using method other than index
 		files = self.work_list[self.work_index - 1]
 		for file in files:
 			# Debug information
@@ -227,11 +232,76 @@ class OT2(Node):
 		#TODO: Barrier?
 
 	# load function, runs client that calls service on this node
+	def load_ot2(self, file, replacement):
+		#TODO: Check for node online and select node if all on same node?
+
+		try:
+			type = "OT_2"
+			id = self.id
+		except Exception as e: 
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
+		
+		# Client setup
+		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id))
+		while not load_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+		
+		# Client ready, read contents of file
+		try:
+			f = open(self.module_location+file, "r")
+			contents = f.read()
+			f.close()
+		except Exception as e:
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR'] # Error
+		
+		self.get_logger().info("File %s read complete"%name) #Contents of file read
+
+		# Create Request
+		load_request = LoadService.Request()
+		load_request.name = file # File path: insert file name, the file path even though the same is given to the client to set up
+		load_request.contents = contents # File string contents
+		load_request.replace = replacement # If the file exists do we overwrite it?
+
+		# Call service to load module
+		future = load_cli.call_async(load_request)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error handling
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured in loading at %s for file %s"%(id, name))
+					return self.status['ERROR'] # Error
+				elif(response.status == response.WARNING):
+					self.get_logger().warning("Warning: File %s already exists on system %s"%(name, id))
+					return self.status['WARNING'] # Warning
+				else:
+					self.get_logger().info("Load succeeded")
+					return self.status['SUCCESS'] # All good
 
 
 
 	# run function, runs client that calls service on this node
+	def run_ot2(self, file):
+		
+		#TODO: Check for node online and select node if all on same node?
 
+		try:
+			type = "OT_2"
+			id = self.id
+		except Exception as e: 
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
 
 
 	#load_and_run funtion using retry 
