@@ -394,7 +394,6 @@ class Master(Node):
 			return self.status['ERROR']
 
 		# create client that calls file handler service on OT-2 module
-		# here for locked work queue? 
 
 		# Client setup
 		send_cli = self.create_client(SendFiles, "/%s/%s/send"%(type, id)) # format of service is /{type}/{id}/{service name}
@@ -533,8 +532,10 @@ def main(args=None):
 	master = Master()
 
 	# Create a thread to run setup_thread
-	spin_thread = Thread(target = setup_thread_work, args = (master,))
-	spin_thread.start()
+	# spin_thread = Thread(target = setup_thread_work, args = (master,))
+	# spin_thread.start()
+
+	master.read_from_setup("setup")
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
@@ -549,7 +550,7 @@ def main(args=None):
 		master.get_logger().fatal("Terminating...")
 
 	# End
-	spin_thread.join()
+	# spin_thread.join()
 	master.destroy_node()
 	rclpy.shutdown()
 
