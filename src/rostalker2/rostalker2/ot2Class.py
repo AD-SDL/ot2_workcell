@@ -215,21 +215,43 @@ class OT2(Node):
 
 
 	# Overarching function. Parses through files in a job, loads and runs files
-	def worker(self, index):
+	def read_files(self, index):
 		#TODO: retrieve files from work list using method other than index
 		files = self.work_list[self.work_index - 1]
+
+		#thread created and files loaded and ran in worker function
+		temp_thread = worker(self, files)
+		self.threads_list.append(temp_thread) # Record information
+
+		# Setup complete for this thread
+		self.get_logger().info("Setup complete for job number %s"%index)
+
+
+		#TODO: Barrier?
+		#TODO: files contain one job at a time or multiple jobs
+		
+	
+	def worker(self, files):
 		for file in files:
 			# Debug information
 			self.node_print("Running file %s"%file)
 
 			# Load and run individual file
+			#TODO place in separate function to establish barrier
 			status = self.load_and_run_ot2(self, file)
 
-			# Error checking 
+			# Error checking
+			if(status == self.master.status['ERROR'] or status == self.master.status['FATAL']):
+				self.node_print("Thread ending...")
+				break
+			else: # All Good
+				self.node_print("Node moving onto next task...")
 
 		self.node_print("thread %s done with work"%self.thread_ID)
 
-		#TODO: Barrier?
+		# Waiting on barrier to finish
+		self.read_files_barrier.wait()
+
 
 	# load function, runs client that calls service on this node
 	def load_ot2(self, file, replacement):
