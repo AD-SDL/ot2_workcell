@@ -13,7 +13,7 @@ from mastertalker.worker_thread import worker_class
 
 # Transfer api import
 from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _transfer
+from armtalker_api.transfer_api import _load_transfer
 
 # Only one master node can be running at anytime, or else you will cause issues 
 class Master(Node):

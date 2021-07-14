@@ -14,7 +14,7 @@ from mastertalker_api.retry_api import *
 from mastertalker_api.register_api import *
 from mastertalker_api.register_api import _register, _deregister_node
 from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _transfer
+from armtalker_api.transfer_api import _load_transfer
 
 class OT2(Node):
 
@@ -223,14 +223,14 @@ def work(ot2node, name):
 		args.append("alex")
 		args.append("10")
 		args.append("army")
-		status = retry(ot2node, _transfer, 20, 4, args)
+		status = retry(ot2node, _load_transfer, 20, 4, args)
 	if(name == "alex"):
 		args.append(ot2node)
 		args.append("bob")
 		args.append("alex")
 		args.append("10")
 		args.append("army")
-		status = retry(ot2node, _transfer, 20, 4, args)
+		status = retry(ot2node, _load_transfer, 20, 4, args)
 
 def main(args=None):
 	rclpy.init(args=args)

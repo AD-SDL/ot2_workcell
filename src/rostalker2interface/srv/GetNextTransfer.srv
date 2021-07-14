@@ -1,0 +1,9 @@
+---
+int64 WARNING = 2 
+int64 ERROR = 1
+int64 SUCCESS = 0
+int64 FATAL = 3
+int64 WAITING = 10
+
+int64 status
+string next_transfer
