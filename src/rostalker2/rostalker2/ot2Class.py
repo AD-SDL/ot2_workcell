@@ -309,7 +309,6 @@ class OT2(Node):
 			self.get_logger().info("Service not available, trying again...")
 		
 		# Create a request
-		# Create a request
 		req = Run.Request()
 		req.type = type
 		req.id = id
@@ -337,9 +336,57 @@ class OT2(Node):
 					self.get_logger().info("Module run succeeded")
 					return self.status['SUCCESS'] # All good
 
+	# Function to segway to main function call
+	def _load(self, args):
+		return self.load(args[0], args[1], args[2]) # File, id (self), replacement
 
+	# Function to segway to main function call
+	def _run(self, args):
+		return self.run(args[0], args[1]) # File, id (self)
 
 	#load_and_run funtion using retry 
+	def load_and_run_ot2(self, file):
+		# Load module
+		id = self.id
+		args = []
+		args.append(file)
+		args.append(id)
+		args.append(True) # Auto update
+		status = retry(self, self._load, 1, 0, args) # Calling retry function with 1 attempt, just want output information
+
+		# Status check
+		if(status == self.status['FATAL']):
+			self.get_logger().fatal("Major error occured when attempting to run function")
+			return self.status['FATAL'] # Fatal error
+		elif(status == self.status['ERROR']):
+			self.get_logger().error("Retry function stopped, either due to too many attempts or a bad status returned")
+			return self.status['ERROR'] # Error
+		elif(status == self.status['WARNING']):
+			self.get_logger().warning("Warning thrown by retry function during execution, but ran to completion")
+			# Continue
+		else:
+			self.get_logger().info("Function ran to completion")
+			# Continue
+
+		# Run the module
+		args = []
+		args.append(file)
+		args.append(id)
+		status = retry(self, self._run, 1, 0, args) # Calling retry function with 1 attempt to get output messages
+
+		# Status check
+		if(status == self.status['FATAL']):
+			self.get_logger().fatal("Major error occured when attempting to run function")
+			return self.status['FATAL'] # Fatal error
+		elif(status == self.status['ERROR']):
+			self.get_logger().error("Retry function stopped, either due to too many attempts or a bad status returned")
+			return self.status['ERROR'] # Error
+		elif(status == self.status['WARNING']):
+			self.get_logger().warning("Warning thrown by retry function during execution, but ran to completion")
+			return self.status['WARNING'] # Warnning thrown
+		else:
+			self.get_logger().info("Function ran to completion")
+			return self.status['SUCCESS'] # All Good
 
 def main(args=None):
 	rclpy.init(args=args)
