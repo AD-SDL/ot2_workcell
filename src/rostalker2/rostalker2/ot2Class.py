@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+import threading
 from threading import Thread, Lock
 import sys
 import time
@@ -42,7 +43,8 @@ class OT2(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		self.work_list = [] # list of files list recieved from jobs
-		self.work_index = 0
+		self.work_index = 0 # location of recently added files in work_list
+		self.threads_list = [] # list of all worker threads
 
 		# Node timeout info
 		self.node_wait_timeout = 2 # 2 seconds
@@ -224,11 +226,27 @@ class OT2(Node):
 		self.threads_list.append(temp_thread) # Record information
 
 		# Setup complete for this thread
-		self.get_logger().info("Setup complete for job number %s"%index)
+		self.get_logger().info("Setup complete for jo b number %s"%index)
 
 
 		#TODO: Barrier?
-		#TODO: files contain one job at a time or multiple jobs
+		# New barrier for each thread (So we know when they all finish)
+		self.read_files_barrier = threading.Barrier(2) # This thread plus the main thread
+
+		#Start thread
+		for item in threads_list:
+			item.start()
+		
+		# Waiting on finish
+		self.read_from_setup_barrier.wait()
+
+		# Join each thread
+		for item in self.threads_list:
+			item.join()
+		
+		# Done
+		self.get_logger().info("Setup file read and run complete")
+		return self.status['SUCCESS']
 		
 	
 	def worker(self, files):
