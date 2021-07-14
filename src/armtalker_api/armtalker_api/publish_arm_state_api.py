@@ -7,7 +7,7 @@ from rostalker2interface.srv import *
 from rostalker2interface.msg import *
 
 # Calls a service created by the arm manager to udpate the state of the arm
-def update_state(self, current_state):
+def update_arm_state(self, current_state):
 
 	# Error checking
 	if(current_state > 2 or current_state < 0):
@@ -28,9 +28,9 @@ def update_state(self, current_state):
 	# No error checks without services :(
 	return self.status['SUCCESS']
 
-# Middleman function to segway from retry functions to update_state
-def _update_state(args):
-	return update_state(args[0], args[1]) # self, current_state
+# Middleman function to segway from retry functions to update_arm_state
+def _update_arm_state(args):
+	return update_arm_state(args[0], args[1]) # self, current_state
 
 def main_null():
 	print("This is not meant to have a main function")

@@ -79,6 +79,7 @@ class OT2ProtocolManager(Node):
 		# Initialization Complete
 		self.get_logger().info("OT2 protocol manager for ID: %s name: %s initialization completed"%(self.id, self.name))
 
+	# retrieves next script to run in the queue
 	def get_next_protocol(self):
 		# Get the next protocol
 		# TODO: add in api

@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'load_run_api = ot2talker_api.load_run_api:main_null',
             'publish_ot2_state_api = ot2talker_api.publish_ot2_state_api:main_null',
+            'get_protocol_api = ot2talker_api.get_protocol_api:main_null',
         ],
     },
 )

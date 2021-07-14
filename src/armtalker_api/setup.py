@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'transfer_api = armtalker_api.transfer_api:main_null',
             'publish_arm_state_api = armtalker_api.publish_arm_state_api:main_null',
+            'get_transfer_api = armtalker_api.get_transfer_api:main_null',
         ],
     },
 )

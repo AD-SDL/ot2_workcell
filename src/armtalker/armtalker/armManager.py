@@ -36,6 +36,11 @@ class ArmManager(Node):
 		# Lock creation
 		self.arm_lock = Lock() # Only one can access arm at a time
 
+		# Queues
+		self.transfer_queue = []
+		self.completed_queue = []
+		self.run_queue = [] # Which transfers are currently running
+
 		# Readabilty
 		self.state = { #TODO maybe a sync with the master
 			"BUSY":1,
@@ -78,6 +83,9 @@ class ArmManager(Node):
 
 		# Initialization Complete
 		self.get_logger().info("Arm Manager for ID: %s name: %s initialization completed"%(self.id, self.name))
+
+	# handler for the next transfer service call
+	#TODO
 
 	# Service to update the state of the arm
 	def arm_state_update_callback(self, msg):

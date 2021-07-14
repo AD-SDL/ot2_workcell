@@ -17,7 +17,7 @@ from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
 from armtalker_api.publish_arm_state_api import *
-from armtalker_api.publish_arm_state_api import _update_state
+from armtalker_api.publish_arm_state_api import _update_arm_state
 
 # TODO: figure out how to integrate arm code
 
@@ -142,16 +142,11 @@ class ArmTransferHandler(Node):
 			return response
 
 		# Update state and let it be know that we are busy
-		args = []
-		args.append(self)
-		args.append(self.state['BUSY']) # busy
-		status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
-		if(status == self.status['ERROR'] or status == self.status['FATAL']):
-			self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+		self.current_state = self.state['BUSY']
+		self.set_state()
 
 		# Both sides are ready complete the transfer and the transfer hasn't already been completed
 		# Do the transfer
-		self.current_state = self.state['BUSY']
 		try:
 			self.get_logger().info("Attempting to transfer complete transfer %s" % identifier_cur)
 			time.sleep(2) #TODO actual transfer code
@@ -168,12 +163,7 @@ class ArmTransferHandler(Node):
 		else:
 			self.current_state = self.state['READY']
 		finally: # No matter what after this the army is no longer busy 
-			args = []
-			args.append(self)
-			args.append(self.current_state) # ready or error
-			status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
-			if(status == self.status['ERROR'] or status == self.status['FATAL']):
-				self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+			self.set_state()
 
 		# if this point is reached the transfer is complete
 		# Add to completed queue
@@ -182,6 +172,27 @@ class ArmTransferHandler(Node):
 		self.arm_lock.release() # Release lock
 		response.status = response.SUCCESS
 		return response
+
+	# retrieves the next transfer to run in the queue
+	def get_next_transfer(self):
+		# Get the next transfer
+		pass #TODO
+
+	# Helper function
+	def set_state(self):
+		args = []
+		args.append(self)
+		args.append(self.current_state)
+		status = retry(self, _update_arm_state, 10, 2, args)
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+
+	# Function to constantly poll manager queue for transfers
+	def run(self):
+		# Runs every 3 seconds
+		while(rclpy.ok()):
+			# TODO:
+			time.sleep(3)
 
 def main(args=None):
 	rclpy.init(args=args)
@@ -194,6 +205,9 @@ def main(args=None):
 
 	arm_transfer_node = ArmTransferHandler(name)
 	try:
+		spin_thread = Thread(target = arm_transfer_node.run, args = ())
+		spin_thread.start()
+
 		rclpy.spin(arm_transfer_node)
 	except Exception as e:
 		arm_transfer_node.get_logger().fatal("Error %r"%(e,))
