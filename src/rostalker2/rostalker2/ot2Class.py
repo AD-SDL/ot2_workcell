@@ -67,7 +67,8 @@ class OT2(Node):
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
-		self.send_service = self.create_service(SendFiles, "/OT_2/%s/run"%self.id, self.recieve_files)
+		self.send_service = self.create_service(SendFiles, "/OT_2/%s/send_files"%self.id, self.recieve_files)
+		self.protocol_service = self.create_service(Protocol, "/OT_2/%s/protocol"%self.id, self.protocol_handler)
 		#TODO: create service to unload and recieve items
 
 		# Initialization Complete
@@ -214,6 +215,53 @@ class OT2(Node):
 			self.get_logger().info("Module %s successfully ran to completion"%file)
 			response.status = response.SUCCESS
 			return response
+	
+	# handles protocol module service calls
+	def protocol_handler(self, request, response):
+
+		# No request information
+
+		# Create response
+		response = Protocol.Response()
+
+		# Warnings / Errors
+		if(not id == self.id): # Wrong ID
+			self.get_logger().error("Request id: %s doesn't match node id: %s"%(id, self.id))
+			response.status = response.ERROR
+			return response
+		elif(not type == "OT_2"): # Wrong type
+			self.get_logger().warning("The requested node type: %s doesn't match the node type of id: %s, but will still proceed"%(type, self.id))
+		elif(path.exists(file) == False): # File doesn't exist
+			self.get_logger().error("File: %s doesn't exist"%(file))
+			response.status = response.ERROR
+			return response
+
+		# Get lock
+		self.file_lock.acquire()
+
+		# obtain file containing protocol
+		self.get_logger().info("Handing over file")
+
+		try:
+			# Extract file name from list
+			name = self.work_list[0]
+			response.file = name
+
+			# clear work_list
+			self.work_list.clear()
+		except Exception as e:
+			self.get_logger().error("Error occured: %r"%(e,))
+			response.status = response.ERROR # Error
+		else:
+			self.get_logger().info("File %s handed to OT2"%name)
+			response.status = response.SUCCESS # All good
+		
+		finally:
+			# Exiting critical section
+			self.file_lock.release()
+			return response
+
+
 
 
 	# Overarching function. Parses through files in a job, loads and runs files
