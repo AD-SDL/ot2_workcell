@@ -428,6 +428,9 @@ class OT2(Node):
 			self.get_logger().info("Function ran to completion")
 			return self.status['SUCCESS'] # All Good
 
+def setup_read_files(self, index):
+	status = self.read_files(self, index)
+
 def main(args=None):
 	rclpy.init(args=args)
 
@@ -437,15 +440,22 @@ def main(args=None):
 	name = str(sys.argv[1])
 
 	ot2node = OT2(name)
+
+	# Create thread to run read_files
+	spin_thread = Thread(target = setup_read_files, args = (ot2node,))
+	spin_thread.start
+
+	#Spin
 	try:
 		rclpy.spin(ot2node)
 	except:
 		ot2node.get_logger().error("Terminating...")
 
-		# Setup args
+		# Setup args and end
 		args = []
 		args.append(ot2node) # Self
 		status = retry(ot2node, _deregister_node, 10, 1.5, args) #TODO: handle status
+		spin_thread.join()
 		ot2node.destroy_node()
 		rclpy.shutdown()
 
