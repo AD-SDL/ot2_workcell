@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'protocol_manager = ot2talker.protocol_manager:main',
         ],
     },
 )

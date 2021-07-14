@@ -42,18 +42,19 @@ def transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO
 	request.to_id = to_id
 	request.to_name = to_name
 	request.item = item
-	request.cur_name = self.name
-	if(self.name == to_name): # If we are the one recieving
-		request.other_name = from_name # Then the other one is the one sending
-	else: # We are the one sending
-		request.other_name = to_name # Then the other one is the one recieving
-
-	# Error handling ( Invalid transfer request)
-	# A node can't start a transfer from a different node to a different node
-	# Either to or from need to be the caller node (TODO: maybe change this? But doesn't seem like a necessary change)
-	if(not (self.name == to_name or self.name == from_name)):
-		self.get_logger().error("Invalid transfer request: Node %s can't start transfer: %s"%(self.name, (from_name + " to " + to_name)))
-		return self.status['ERROR'] # Error
+	if(self.type == 'master'):
+		# Bypass restrictions on who does what transfer 
+		request.cur_name = "master" # Only the master can remove it from the queue
+		request.other_name = "master"
+	else:
+		request.cur_name = self.name
+		if(self.name == to_name): # If we are the one recieving
+			request.other_name = from_name # Then the other one is the one sending
+		elif(self.name == from_name): # We are the one sending
+			request.other_name = to_name # Then the other one is the one recieving
+		else: # Error (The one calling this is trying to create an invalid transfer)
+			self.get_logger().error("Invalid transfer request: Node %s can't start transfer: %s"%(self.name, (from_name + " to " + to_name)))
+			return self.status['ERROR'] # Error
 
 	# Wait for service
 	transfer_cli = self.create_client(Transfer, "/arm/%s/transfer"%arm_id)

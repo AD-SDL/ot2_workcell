@@ -11,6 +11,8 @@ import importlib.util
 from rostalker2interface.srv import *
 from rostalker2interface.msg import *
 from mastertalker_api.retry_api import *
+from mastertalker_api.register_api import *
+from mastertalker_api.register_api import _get_id_name
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
@@ -33,6 +35,7 @@ class ArmTransferHandler(Node):
 		# Node creation
 		super().__init__("arm_transfer_handler_" + name) # User specifies name
 		self.name = name
+		self.type = 'arm'
 
 		# Lock creation
 		self.arm_lock = Lock() # Only one can access arm at a time
@@ -63,47 +66,20 @@ class ArmTransferHandler(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.get_id_cli = self.create_client(GetId, '/arm/%s/get_id'%self.name)
 
 		# Get ID and confirm name from manager
-		self.get_id_name()
+		args = []
+		args.append(self)
+		status = retry(self, _get_id_name, 5, 2, args) # 5 retries 2 second timeout
+		if(status == self.status['ERROR']):
+			self.get_logger().fatal("Unable to get id from arm manager, exiting...")
+			sys.exit(1) #TODO: alert manager of error
 
 		# Create services
 		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
 
 		# Initialization Complete
 		self.get_logger().info("Arm Transfer handler for ID: %s name: %s initialization completed"%(self.id, self.name))
-
-	# Gets own id and name from manager
-	# TODO: move to register_api
-	def get_id_name(self):
-		# Create a request
-		request = GetId.Request()
-
-		# Wait for service
-		while(not self.get_id_cli.wait_for_service(timeout_sec=2)):
-			self.get_logger().info("Service not available, trying again...")
-
-		# Call client
-		future = self.get_id_cli.call_async(request)
-		rclpy.spin_until_future_complete(self, future) #TODO: find a way to switch to the while loop
-#		while(future.done() == False):
-#			time.sleep(1) # 1 second timeout
-		if(future.done()):
-			try:
-				response = future.result()
-				# name check
-				if(not response.name == self.name):
-					raise Exception()
-
-				self.id = response.id
-				self.type = response.type
-			except Exception as e:
-				self.get_logger().error("Error occured: %r"%(e,))
-				return self.status['ERROR']
-			else:
-				return self.status['SUCCESS']
-
 
 	# Handles transfer service requests
 	def transfer_handler(self, request, response): #TODO: do something with item
@@ -199,7 +175,7 @@ class ArmTransferHandler(Node):
 			if(status == self.status['ERROR'] or status == self.status['FATAL']):
 				self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
 
-
+		# if this point is reached the transfer is complete
 		# Add to completed queue
 		self.completed_queue.append(identifier_cur) # For the node waiting on it
 		self.transfer_queue.remove(identifier_cur) # Remove our identifier from queue

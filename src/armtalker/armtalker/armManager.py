@@ -23,7 +23,6 @@ class ArmManager(Node):
 
 	def __init__(self, name):
 		super().__init__("Temp" + str(int(random()*17237534)))
-		self.get_logger().info("Temp node created") #TODO delete
 
 		# Parameters before we register with master
 		self.declare_parameter('name', 'insert_arm_name_here') # 2nd arg is default value
@@ -86,7 +85,7 @@ class ArmManager(Node):
 		# Recieve request
 		current_state = msg.state # TODO error checks
 
-		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
+#		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
 
 		# Update our state
 		self.current_state = current_state
@@ -109,7 +108,6 @@ class ArmManager(Node):
 		# Return response
 		return response
 
-	# TODO state of the machine
 
 def main(args=None):
 	rclpy.init(args=args)

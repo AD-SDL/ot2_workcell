@@ -107,3 +107,34 @@ def _deregister_node(args):
 
 def main_null():
 	print("This is not meant to have a main function")
+
+# Get id and name from master
+def get_id_name(self):
+	# Create a request
+	request = GetId.Request()
+
+	# Wait for service
+	get_id_cli = self.create_client(GetId, '/%s/%s/get_id'%(self.type, self.name))
+	while(not get_id_cli.wait_for_service(timeout_sec=2)):
+		self.get_logger().info("Service not available, trying again...")
+
+	# Call client
+	future = get_id_cli.call_async(request)
+	rclpy.spin_until_future_complete(self, future)
+	if(future.done()):
+		try:
+			response = future.result()
+			# name check
+			if(not response.name == self.name):
+				raise Exception()
+
+			self.id = response.id
+			self.type = response.type
+		except Exception as e:
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
+		else:
+			return self.status['SUCCESS']
+
+def _get_id_name(args):
+	return get_id_name(args[0]) # Self

@@ -7,7 +7,7 @@ import time
 from random import random
 from rostalker2interface.srv import *
 from pathlib import Path
-from mastertalker_api.retry_functions import *
+from mastertalker_api.retry_api import *
 
 
 
