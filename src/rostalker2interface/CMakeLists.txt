@@ -32,6 +32,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/NodeEntry.msg"
   "srv/GetNodeInfo.srv"
   "srv/GetNodeList.srv"
+  "srv/SendFiles.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)
