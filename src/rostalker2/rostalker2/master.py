@@ -396,8 +396,8 @@ class Master(Node):
 		# create client that calls file handler service on OT-2 module
 
 		# Client setup
-		send_cli = self.create_client(SendFiles, "/%s/%s/send"%(type, id)) # format of service is /{type}/{id}/{service name}
-		while not load_cli.wait_for_service(timeout_sec=2.0):
+		send_cli = self.create_client(SendFiles, "/%s/%s/send_files"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not send_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
 
 		# Client ready
@@ -408,7 +408,7 @@ class Master(Node):
 		send_request.files = files # string of file names list
 
 		# Call Service to load module
-		future = run_cli.call_async(req)
+		future = send_cli.call_async(send_request)
 		self.get_logger().info("Waiting for completion...")
 
 		# Waiting on future
@@ -450,11 +450,12 @@ class Master(Node):
 				return self.status['ERROR']
 			else:
 				entry = self.search_for_node(name_or_id) # get information about that node
+				id = entry['id']
 				self.get_logger().info("Node %s found"%name_or_id) # Found
 
 			# Get files for the worker
 			try:
-				files = f.readline().split()
+				files = f.readline()
 
 				self.files_for_threads.append(files) # should be the same index
 			except Exception as e:
@@ -467,7 +468,7 @@ class Master(Node):
 			#self.threads_list.append(temp_thread) # Record information
 
 			#files sent to worker OT-2 to become threads
-			send_files(self, entry['name'], entry['id'], files)
+			self.send_files(id, files)
 
 			#TODO: set up lock? verify set up complete once files are sent
 

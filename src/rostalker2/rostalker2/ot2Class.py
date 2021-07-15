@@ -79,6 +79,7 @@ class OT2(Node):
 
 		# Get request information
 		files = request.files
+		files = files.split()
 
 		# Create Response
 		response = SendFiles.Response()
