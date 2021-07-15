@@ -11,11 +11,13 @@ import importlib.util
 from rostalker2interface.srv import *
 from rostalker2interface.msg import *
 from mastertalker_api.retry_api import *
+from mastertalker_api.register_api import *
+from mastertalker_api.register_api import _get_id_name
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
 from armtalker_api.publish_arm_state_api import *
-from armtalker_api.publish_arm_state_api import _update_state
+from armtalker_api.publish_arm_state_api import _update_arm_state
 
 # TODO: figure out how to integrate arm code
 
@@ -33,13 +35,9 @@ class ArmTransferHandler(Node):
 		# Node creation
 		super().__init__("arm_transfer_handler_" + name) # User specifies name
 		self.name = name
+		self.type = 'arm'
 
 		# Lock creation
-		self.arm_lock = Lock() # Only one can access arm at a time
-
-		# Store who is doing the transfer and store respective locks
-		self.transfer_queue = []
-		self.completed_queue = []
 
 		# Readabilty
 		self.state = { #TODO maybe a sync with the master
@@ -51,7 +49,8 @@ class ArmTransferHandler(Node):
 			"ERROR":1,
 			"SUCCESS":0,
 			"WARNING":2,
-			"FATAL":3
+			"FATAL":3,
+			"WAITING":10,
 		}
 
 		# State of the arm
@@ -63,149 +62,122 @@ class ArmTransferHandler(Node):
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
 
 		# Create clients
-		self.get_id_cli = self.create_client(GetId, '/arm/%s/get_id'%self.name)
 
 		# Get ID and confirm name from manager
-		self.get_id_name()
+		args = []
+		args.append(self)
+		status = retry(self, _get_id_name, 5, 2, args) # 5 retries 2 second timeout
+		if(status == self.status['ERROR']):
+			self.get_logger().fatal("Unable to get id from arm manager, exiting...")
+			# Alert manager of error
+			self.current_state  = self.state['ERROR']
+			self.set_state()
 
 		# Create services
-		self.transfer_service = self.create_service(Transfer, "/arm/%s/transfer"%self.id, self.transfer_handler) # Handles transfer service requests
 
 		# Initialization Complete
 		self.get_logger().info("Arm Transfer handler for ID: %s name: %s initialization completed"%(self.id, self.name))
 
-	# Gets own id and name from manager
-	# TODO: move to register_api
-	def get_id_name(self):
-		# Create a request
-		request = GetId.Request()
-
-		# Wait for service
-		while(not self.get_id_cli.wait_for_service(timeout_sec=2)):
+	# retrieves the next transfer to run in the queue
+	# No need to lock the arm this is done by the manager
+	def get_next_transfer(self):
+		# Get the next transfer
+		# Create client and wait for service
+		get_next_transfer_cli = self.create_client(GetNextTransfer, "/arm/%s/get_next_transfer"%self.id)
+		while(not get_next_transfer_cli.wait_for_service(timeout_sec=2.0)):
 			self.get_logger().info("Service not available, trying again...")
 
-		# Call client
-		future = self.get_id_cli.call_async(request)
-		rclpy.spin_until_future_complete(self, future) #TODO: find a way to switch to the while loop
-#		while(future.done() == False):
-#			time.sleep(1) # 1 second timeout
+		# Create request
+		request = GetNextTransfer.Request()
+
+		# Call the cli
+		next_transfer = ""
+		future = get_next_transfer_cli.call_async(request)
+		while(future.done() == False):
+			time.sleep(1) # 1 second timeout
 		if(future.done()):
 			try:
 				response = future.result()
-				# name check
-				if(not response.name == self.name):
-					raise Exception()
 
-				self.id = response.id
-				self.type = response.type
+				if(response.status == response.ERROR or response.status == response.FATAL):
+					raise Exception
+				elif(response.status == response.WAITING):
+					return self.status['WAITING']
 			except Exception as e:
-				self.get_logger().error("Error occured: %r"%(e,))
+				self.get_logger().error("Error occured %r"%(e,))
 				return self.status['ERROR']
 			else:
-				return self.status['SUCCESS']
+				next_transfer = response.next_transfer.splitlines() # Breaks up based on newlines
 
+		# Get transfer data
+		transfer_request = next_transfer[0].split() # Split based on whitespaces
+		from_name = transfer_request[0]
+		to_name = transfer_request[1]
 
-	# Handles transfer service requests
-	def transfer_handler(self, request, response): #TODO: do something with item
+		# Get node information
+		to_entry = get_node_info(self, to_name)
+		from_entry = get_node_info(self, from_name)
 
-		# Acquire lock
-		self.arm_lock.acquire()
-
-		# Get request
-		to_name = request.to_name
-		to_id = request.to_id
-		from_name = request.from_name
-		from_id = request.from_id
-		item = request.item
-		cur_node = request.cur_name
-		other_node = request.other_name
-
-		# Create response
-		response = Transfer.Response()
-
-		# Create identifier
-		identifier_cur = from_name + " " + to_name + " " + item + " Node: " + cur_node
-		identifier_other = from_name + " " + to_name + " " + item + " Node: " + other_node
-#		self.get_logger().info("cur: %s   other: %s"%(identifier_cur, identifier_other)) #TODO: DELETE
-
-		# Check to see if the transfer already completed
-		completed = False
-		for item in self.completed_queue:
-			if(item == identifier_other): # Transfer already completed
-				completed = True
-				self.completed_queue.remove(item) # remove from completed queue
-				break
-		if(completed == True): # We are done
-			response.status = response.SUCCESS
-			self.arm_lock.release() # Realise lock
-			return response
-
-		# Check to see if other side is ready
-		both_ready = False
-		for item in self.transfer_queue:
-			if(item == identifier_other): # Item is waiting can continue
-				both_ready = True
-				self.transfer_queue.remove(item) # delete from queue
-				break
-
-		# Check if in queue
-		in_queue = False
-		for item in self.transfer_queue:
-			if(item == identifier_cur):
-				in_queue = True
-				break # in queue already
-
-		# Adds current transfer identifier for the other side to verify
-		if(in_queue == False):
-			self.transfer_queue.append(identifier_cur)
-
-		# If both aren't ready we return WAITING
-		if(both_ready == False):
-			response.status = response.WAITING # Still waiting on the other side
-			self.arm_lock.release() # Realise lock
-			return response
+		# Error checking
+		if(to_entry['type'] == '-1'): # Doesn't exist
+			self.get_logger().error("node: %s doesn't exist with master"%to_name)
+			return self.status['ERROR']
+		if(from_entry['type'] == '-1'): # Doesn't exist
+			self.get_logger().error("node: %s doesn't exist with master"%from_name)
+			return self.status['ERROR']
 
 		# Update state and let it be know that we are busy
-		args = []
-		args.append(self)
-		args.append(self.state['BUSY']) # busy
-		status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
-		if(status == self.status['ERROR'] or status == self.status['FATAL']):
-			self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
-
-		# Both sides are ready complete the transfer and the transfer hasn't already been completed
-		# Do the transfer
 		self.current_state = self.state['BUSY']
+		self.set_state()
+
+		# Do the transfer
 		try:
-			self.get_logger().info("Attempting to transfer complete transfer %s" % identifier_cur)
+			self.get_logger().info("Attempting to transfer complete transfer %s" % str(next_transfer))
 			time.sleep(2) #TODO actual transfer code
-			self.get_logger().info("Transfer %s is complete"%identifier_cur)
+			self.get_logger().info("Transfer %s is complete"%str(next_transfer))
 		except Exception as e:
 			# At this point it is safe to exit
 			# The reason why is because we still only have one entry in the transfer_queue, and no entry
 			# In the completed queue, which means the system is still in the same state it started in
 			self.get_logger().error("Error occured: %r"%(e,))
-			self.arm_lock.release() # Release lock
-			response.status = response.ERROR # Error
 			self.current_state = self.state['ERROR'] # ERROR state
-			return response
+			return self.status['ERROR']
 		else:
 			self.current_state = self.state['READY']
-		finally: # No matter what after this the army is no longer busy 
-			args = []
-			args.append(self)
-			args.append(self.current_state) # ready or error
-			status = retry(self, _update_state, 10, 2, args) # 10 tries 2 second timeout
-			if(status == self.status['ERROR'] or status == self.status['FATAL']):
-				self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
-
+		finally: # No matter what after this the army is no longer busy
+			self.set_state()
 
 		# Add to completed queue
-		self.completed_queue.append(identifier_cur) # For the node waiting on it
-		self.transfer_queue.remove(identifier_cur) # Remove our identifier from queue
-		self.arm_lock.release() # Release lock
-		response.status = response.SUCCESS
-		return response
+
+		# Create pub
+		completed_transfer_pub = self.create_publisher(CompletedTransfer,"/arm/%s/completed_transfer"%self.id, 10)
+		time.sleep(1) # Wait for it
+
+		# Create msg
+		msg = CompletedTransfer()
+		msg.identifier_cur = next_transfer[0]
+		msg.identifier_other = next_transfer[1]
+
+		# Publish
+		completed_transfer_pub.publish(msg)
+
+		return self.status['ERROR']
+
+	# Helper function
+	def set_state(self):
+		args = []
+		args.append(self)
+		args.append(self.current_state)
+		status = retry(self, _update_arm_state, 10, 2, args)
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to update state with manager, continuing but the state of the arm may be incorrect")
+
+	# Function to constantly poll manager queue for transfers
+	def run(self):
+		# Runs every 3 seconds
+		while(rclpy.ok()):
+			status = self.get_next_transfer()
+			time.sleep(3)
 
 def main(args=None):
 	rclpy.init(args=args)
@@ -218,6 +190,9 @@ def main(args=None):
 
 	arm_transfer_node = ArmTransferHandler(name)
 	try:
+		spin_thread = Thread(target = arm_transfer_node.run, args = ())
+		spin_thread.start()
+
 		rclpy.spin(arm_transfer_node)
 	except Exception as e:
 		arm_transfer_node.get_logger().fatal("Error %r"%(e,))

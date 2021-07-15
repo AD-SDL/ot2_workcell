@@ -11,6 +11,10 @@ from pathlib import Path
 from mastertalker_api.retry_api import *
 from mastertalker.worker_thread import worker_class
 
+# Transfer api import
+from armtalker_api.transfer_api import *
+from armtalker_api.transfer_api import _load_transfer
+
 # Only one master node can be running at anytime, or else you will cause issues 
 class Master(Node):
 
@@ -47,6 +51,11 @@ class Master(Node):
 		path = Path()
 		self.home_location = str(path.home())
 		self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
+
+		# Basic informaton
+		self.id = 'M-1' # Ultimate position, before 0
+		self.type = 'master' # Of type master
+		self.name = 'master' # name is master
 
 		# Service setup 
 		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service

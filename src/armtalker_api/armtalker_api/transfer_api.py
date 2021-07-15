@@ -8,7 +8,8 @@ from rostalker2interface.msg import *
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
-def transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO do something with item
+#TODO: DELETE
+def load_transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO do something with item
 	# Get destination node info
 	to_entry = get_node_info(self, to_name_or_id)
 	from_entry = get_node_info(self, from_name_or_id)
@@ -36,34 +37,35 @@ def transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO
 	arm_id = arm_entry['id']
 
 	# Create request
-	request = Transfer.Request()
+	request = LoadTransfer.Request()
 	request.from_id = from_id
 	request.from_name = from_name
 	request.to_id = to_id
 	request.to_name = to_name
 	request.item = item
-	request.cur_name = self.name
-	if(self.name == to_name): # If we are the one recieving
-		request.other_name = from_name # Then the other one is the one sending
-	else: # We are the one sending
-		request.other_name = to_name # Then the other one is the one recieving
-
-	# Error handling ( Invalid transfer request)
-	# A node can't start a transfer from a different node to a different node
-	# Either to or from need to be the caller node (TODO: maybe change this? But doesn't seem like a necessary change)
-	if(not (self.name == to_name or self.name == from_name)):
-		self.get_logger().error("Invalid transfer request: Node %s can't start transfer: %s"%(self.name, (from_name + " to " + to_name)))
-		return self.status['ERROR'] # Error
+	if(self.type == 'master'):
+		# Bypass restrictions on who does what transfer 
+		request.cur_name = "master" # Only the master can remove it from the queue
+		request.other_name = "master"
+	else:
+		request.cur_name = self.name
+		if(self.name == to_name): # If we are the one recieving
+			request.other_name = from_name # Then the other one is the one sending
+		elif(self.name == from_name): # We are the one sending
+			request.other_name = to_name # Then the other one is the one recieving
+		else: # Error (The one calling this is trying to create an invalid transfer)
+			self.get_logger().error("Invalid transfer request: Node %s can't start transfer: %s"%(self.name, (from_name + " to " + to_name)))
+			return self.status['ERROR'] # Error
 
 	# Wait for service
-	transfer_cli = self.create_client(Transfer, "/arm/%s/transfer"%arm_id)
-	while(not transfer_cli.wait_for_service(timeout_sec=2.0)):
+	load_transfer_cli = self.create_client(LoadTransfer, "/arm/%s/load_transfer"%arm_id)
+	while(not load_transfer_cli.wait_for_service(timeout_sec=2.0)):
 		self.get_logger().info("Service not available, trying again...")
 
 	# Call client
 	status = 10
 	while(status == 10): #10 is WAITING
-		future = transfer_cli.call_async(request)
+		future = load_transfer_cli.call_async(request)
 		self.get_logger().info("Requesting a transfer / Adding a entry to transfer queue")
 
 		# Waiting for completion
@@ -94,9 +96,10 @@ def transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO
 
 	return self.status['SUCCESS']
 
+#TODO: DELETE
 # Middleman function to segway to transfer call in retry function
-def _transfer(args):
-	return transfer(args[0], args[1], args[2], args[3], args[4]) #self, from_name_or_id, to_name_or_id, item, arm_id
+def _load_transfer(args):
+	return load_transfer(args[0], args[1], args[2], args[3], args[4]) #self, from_name_or_id, to_name_or_id, item, arm_id
 
 # dud main function
 def main_null():

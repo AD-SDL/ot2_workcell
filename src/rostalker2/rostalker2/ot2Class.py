@@ -14,7 +14,7 @@ from mastertalker_api.retry_api import *
 from mastertalker_api.register_api import *
 from mastertalker_api.register_api import _register, _deregister_node
 from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _transfer
+from armtalker_api.transfer_api import _load_transfer
 
 class OT2(Node):
 
@@ -30,7 +30,8 @@ class OT2(Node):
 		# readability
 		self.state = { #TODO: sync with master
 			"BUSY":1,
-			"READY":0
+			"READY":0,
+			"ERROR":2
 		}
 		self.status = {
 			"ERROR":1,
@@ -38,6 +39,9 @@ class OT2(Node):
 			"WARNING":2,
 			"FATAL":3
 		}
+
+		# State information
+		self.current_state = self.state['READY']
 
 		# Path setup
 		path = Path()
@@ -61,7 +65,11 @@ class OT2(Node):
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
-		#TODO: create service to unload and recieve items
+		self.get_id_service = self.create_service(GetId, "/OT_2/%s/get_id"%self.name, self.get_id_handler)
+
+		# Create subscribers
+		self.ot2_state_update_sub = self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%self.id, self.ot2_state_update_callback, 10)
+		self.ot2_state_update_sub # prevent unused warning
 
 		# Initialization Complete
 		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
@@ -174,6 +182,38 @@ class OT2(Node):
 			return response
 		finally:
 			self.run_lock.release() # Release lock no matter what
+
+
+	# Service to update the state of the ot2
+	def ot2_state_update_callback(self, msg):
+
+		# Recieve request
+		current_state = msg.state # TODO error checks
+
+#		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
+
+		# Update our state
+		self.current_state = current_state
+
+		# TODO: other stuff
+
+	# Service to retrieve ID of the robot
+	def get_id_handler(self, request, response):
+		# Retrieve id and node information
+		id = self.id
+		name = self.name
+		type = self.type
+
+		# create response
+		response = GetId.Response()
+		response.id = id
+		response.name = name
+		response.type = type
+
+		# Return response
+		return response
+
+
 #TODO: DELETE
 def work(ot2node, name):
 	args = []
@@ -183,14 +223,14 @@ def work(ot2node, name):
 		args.append("alex")
 		args.append("10")
 		args.append("army")
-		status = retry(ot2node, _transfer, 20, 4, args)
+		status = retry(ot2node, _load_transfer, 20, 4, args)
 	if(name == "alex"):
 		args.append(ot2node)
 		args.append("bob")
 		args.append("alex")
 		args.append("10")
 		args.append("army")
-		status = retry(ot2node, _transfer, 20, 4, args)
+		status = retry(ot2node, _load_transfer, 20, 4, args)
 
 def main(args=None):
 	rclpy.init(args=args)

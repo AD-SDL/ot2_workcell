@@ -15,6 +15,7 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 **armtalker_api/**  
 &nbsp;&nbsp;  **armtalker_api/**  
 &nbsp;&nbsp;&nbsp;&nbsp;    transfer_api.py (An api for other OT2s to use to transfer items)  
+&nbsp;&nbsp;&nbsp;&nbsp;    publish_arm_state_api.py (api to publish its state to a manager)  
 
 **mastertalker/**  
 &nbsp;&nbsp;  **mastertalker/**  
@@ -27,23 +28,35 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 &nbsp;&nbsp;&nbsp;&nbsp;    retry_api.py (api to allow users to run a function in an isolated manner)  
 &nbsp;&nbsp;&nbsp;&nbsp;    worker_info_api.py (api to allow workers to retrieve other worker info from the master)  
     
+**ot2talker/**  
+&nbsp;&nbsp;  **ot2talker/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    protocol_manager.py (removes items from the queue in manager)  
+
+**ot2talker_api/**  
+&nbsp;&nbsp;  **ot2talker_api/**  
+&nbsp;&nbsp;&nbsp;&nbsp;    load_run_api.py (TODO)  
+&nbsp;&nbsp;&nbsp;&nbsp;    publish_ot2_state_api.py (api to publish the state of the ot2 to manager)  
+
 **rostlalker2/**  
 &nbsp;&nbsp;  **rostalker2/**  
-&nbsp;&nbsp;&nbsp;&nbsp;    load_run_api.py (This will change)  
 &nbsp;&nbsp;&nbsp;&nbsp;    ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)  
  
 **rostalker2interface/**  
 &nbsp;&nbsp;  **srv/**  
 &nbsp;&nbsp;&nbsp;&nbsp;    Destroy.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    GetId.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    GetNextTransfer.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    GetNodeInfo.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    GetNodeList.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    LoadService.srv  
+&nbsp;&nbsp;&nbsp;&nbsp;    LoadTransfer.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    Register.srv  
 &nbsp;&nbsp;&nbsp;&nbsp;    Run.srv  
-&nbsp;&nbsp;&nbsp;&nbsp;    Transfer.srv  
 &nbsp;&nbsp;  **msg/**  
 &nbsp;&nbsp;&nbsp;&nbsp;    NodeEntry.msg  
+&nbsp;&nbsp;&nbsp;&nbsp;    ArmStateUpdate.msg  
+&nbsp;&nbsp;&nbsp;&nbsp;    CompletedTransfer.msg  
+&nbsp;&nbsp;&nbsp;&nbsp;    OT2StateUpdate.msg  
 
 # Install 
 This is for ubuntu 20.04 running ROS2 foxy  

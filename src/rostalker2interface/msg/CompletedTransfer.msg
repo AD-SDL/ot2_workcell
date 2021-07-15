@@ -1,0 +1,2 @@
+string identifier_cur
+string identifier_other
