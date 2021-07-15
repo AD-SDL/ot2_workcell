@@ -67,7 +67,7 @@ class OT2(Node):
 		# Create services: Have to wait until after registration this way we will have the id
 		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
-		self.send_service = self.create_service(SendFiles, "/OT_2/%s/send_files"%self.id, self.recieve_files)
+		self.send_service = self.create_service(SendFiles, "/OT_2/%s/send_files"%self.id, self.receive_files)
 		self.protocol_service = self.create_service(Protocol, "/OT_2/%s/protocol"%self.id, self.protocol_handler)
 		#TODO: create service to unload and recieve items
 
@@ -75,7 +75,7 @@ class OT2(Node):
 		self.get_logger().info("ID: %s name: %s initialization completed"%(self.id, self.name))
 
 	#Handles send_module service calls
-	def recieve_files(self, request, response):
+	def receive_files(self, request, response):
 
 		# Get request information
 		files = request.files
@@ -84,14 +84,6 @@ class OT2(Node):
 		# Create Response
 		response = SendFiles.Response()
 
-		# Warnings
-		if(path.exists(file) and request.replace == False):
-			self.get_logger().warning("File %s already exists on the system and replacement is false, upload terminating..."%name)
-			response.status = response.WARNING # Warning: in this context file already exists on system
-			return response
-		if(request.replace == True):
-			self.get_logger().warning("Replacement is set to True, file %s on this system will be replace with file from master"%name)
-		
 		# Begin reading file names
 		self.get_logger().info("Reading file names")
 
