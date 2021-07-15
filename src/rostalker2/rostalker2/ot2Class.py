@@ -100,7 +100,7 @@ class OT2(Node):
 			self.get_logger().error("Error occured: %r"%(e,))
 			response.status = response.ERROR # Error
 		else:
-			self.get_logger().info("File %s loaded to OT2"%name)
+			self.get_logger().info("Files %s loaded to OT2"%files)
 			response.status = response.SUCCESS # All good
 		finally:
 			# Exiting critical section
