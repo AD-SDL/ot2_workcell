@@ -447,7 +447,7 @@ class Master(Node):
 				entry = self.search_for_node(name_or_id) # get information about that node
 				id = entry['id']
 				self.get_logger().info("Node %s found"%name_or_id) # Found
-
+	
 			# Get files for the worker
 			try:
 				files = f.readline()
@@ -559,7 +559,7 @@ def main(args=None):
 		master.get_logger().fatal("Terminating...")
 
 	# End
-	# spin_thread.join()
+	spin_thread.join()
 	master.destroy_node()
 	rclpy.shutdown()
 

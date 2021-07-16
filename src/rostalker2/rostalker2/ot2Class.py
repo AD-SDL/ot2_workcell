@@ -259,24 +259,6 @@ class OT2(Node):
 		# Return response
 		return response
 
-
-#TODO: DELETE
-def work(ot2node, name):
-	args = []
-	if(name == "bob"):
-		args.append(ot2node)
-		args.append("bob")
-		args.append("alex")
-		args.append("10")
-		args.append("army")
-		status = retry(ot2node, _load_transfer, 20, 4, args)
-	if(name == "alex"):
-		args.append(ot2node)
-		args.append("bob")
-		args.append("alex")
-		args.append("10")
-		args.append("army")
-		status = retry(ot2node, _load_transfer, 20, 4, args)
 	
 	# handles protocol module service calls
 	def protocol_handler(self, request, response):
@@ -537,6 +519,24 @@ def work(ot2node, name):
 		else:
 			self.get_logger().info("Function ran to completion")
 			return self.status['SUCCESS'] # All Good
+
+#TODO: DELETE
+def work(ot2node, name):
+	args = []
+	if(name == "bob"):
+		args.append(ot2node)
+		args.append("bob")
+		args.append("alex")
+		args.append("10")
+		args.append("army")
+		status = retry(ot2node, _load_transfer, 20, 4, args)
+	if(name == "alex"):
+		args.append(ot2node)
+		args.append("bob")
+		args.append("alex")
+		args.append("10")
+		args.append("army")
+		status = retry(ot2node, _load_transfer, 20, 4, args)
 
 def setup_read_files(self, index):
 	status = self.read_files(self, index)
