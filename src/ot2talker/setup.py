@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'protocol_manager = ot2talker.protocol_manager:main',
+            'ot2_manager = ot2talker.ot2_manager:main',
         ],
     },
 )
