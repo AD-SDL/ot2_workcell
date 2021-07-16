@@ -101,6 +101,7 @@ class Master(Node):
 			return self.status['ERROR']
 
 		# Client setup    (client can't be in the class as it constantly changes)
+		#
 		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
@@ -114,7 +115,7 @@ class Master(Node):
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR'] # Error
 
-		self.get_logger().info("File %s read complete"%name)
+		self.get_logger().info("File %s read complete"%name) #Contents of file read
 
 		# Create a request
 		load_request = LoadService.Request()
@@ -146,6 +147,8 @@ class Master(Node):
 				else:
 					self.get_logger().info("Load succeeded")
 					return self.status['SUCCESS'] # All good
+
+	
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
@@ -302,6 +305,7 @@ class Master(Node):
 
 #TODO move outside of master class
 	# this will both load and run a file at the robot id 
+	#TODO: change to just load, transfer and run files onm OT-2s
 	def load_and_run(self, file, id):
 		# Load the module
 		args = []
@@ -353,13 +357,79 @@ class Master(Node):
 		else:
 			return self.status['SUCCESS']
 
+	# Creates client that sends files to worker OT-2 to create threads
+	def send_files(self, id, files): #self, id of robot, and files of current job
+
+		# Check node online?
+		args = []
+		args.append(id)
+		status = retry(self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args) # retry function
+		if(status == self.status['ERROR'] or status == self.status['FATAL']):
+			self.get_logger().error("Unable to find node %s"%id) # Node isn't registered
+			return self.status['ERROR']
+		else:
+			self.get_logger().info("Node %s found"%id) # Found
+
+		# Select a node
+		try:
+			# Get node information
+			target_node = self.search_for_node(id) # See if id robot exists
+
+			# Error checking
+			if(target_node['type'] == '-1'): # No such node
+				self.get_logger().error("id: %s doesn't exist"%id)
+				return self.status['ERROR']
+
+
+			type = target_node['type'] # These will be needed to acess the service
+			id = target_node['id']
+
+		except Exception as e: 
+			self.get_logger().error("Error occured: %r"%(e,))
+			return self.status['ERROR']
+
+		# create client that calls file handler service on OT-2 module
+
+		# Client setup
+		send_cli = self.create_client(SendFiles, "/%s/%s/send_files"%(type, id)) # format of service is /{type}/{id}/{service name}
+		while not send_cli.wait_for_service(timeout_sec=2.0):
+			self.get_logger().info("Service not available, trying again...")
+
+		# Client ready
+		#TODO: replacement parameter?
+		# Create a request
+		send_request = SendFiles.Request()
+		#send_request.numFiles = len(files) # number of files to be sent to worker node
+		send_request.files = files # string of file names list
+
+		# Call Service to load module
+		future = send_cli.call_async(send_request)
+		self.get_logger().info("Waiting for completion...")
+
+		# Waiting on future
+		while(future.done() == False):
+			time.sleep(1) # timeout 1 second
+		if(future.done()):
+			try:
+				response = future.result()
+			except Exception as e:
+				self.get_logger().error("Error occured %r"%(e,))
+				return self.status['ERROR'] # Error
+			else:
+				# Error checking
+				if(response.status == response.ERROR):
+					self.get_logger().error("Error occured when running file %s at id: %s"%(name, id))
+					return self.status['ERROR'] # Error
+				else:
+					self.get_logger().info("Module run succeeded")
+					return self.status['SUCCESS'] # All good
 
 	# Reads from a setup file to run a number of files on a specified robot 
 	def read_from_setup(self, file): #TODO: deadlock detection algorithm
 		# Read from setup file and distrubute to worker threads
 		# Read number of threads
 		f = open(self.module_location + file, "r") # Open up file "setup" in well-known directory
-		n = int(f.readline()) # First line should contain an integer 
+		n = int(f.readline()) # First line should contain an integer, corresponds to number of threads
 
 		# For each thread
 		for i in range(n): # Starts reading names and files to be run
@@ -375,36 +445,46 @@ class Master(Node):
 				return self.status['ERROR']
 			else:
 				entry = self.search_for_node(name_or_id) # get information about that node
+				id = entry['id']
 				self.get_logger().info("Node %s found"%name_or_id) # Found
 
 			# Get files for the worker
 			try:
-				files = f.readline().split()
+				files = f.readline()
+
 				self.files_for_threads.append(files) # should be the same index
 			except Exception as e:
 				self.get_logger().error("Reading from setup error: %r"%(e,))
 				return self.status['ERROR'] # Error
 
 			# Create thread
-			temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
-			self.threads_list.append(temp_thread) # Record information
+			# replace worker_class with send_files
+			#temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
+			#self.threads_list.append(temp_thread) # Record information
+
+			#files sent to worker OT-2 to become threads
+			self.send_files(id, files)
+
+			#TODO: set up lock? verify set up complete once files are sent
 
 			# Setup complete for this thread
 			self.get_logger().info("Setup complete for %s"%name_or_id)
 
+		#TODO: migrate all below to ot2 class
+
 		# New barrier for each thread (So we know when they all finish)
-		self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
+		# self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
 
 		# Start running each thread
-		for item in self.threads_list:
-			item.start()
+		# for item in self.threads_list:
+			# item.start()
 
 		# Waiting on finish
-		self.read_from_setup_barrier.wait()
+		# self.read_from_setup_barrier.wait()
 
 		# Join each thread
-		for item in self.threads_list:
-			item.join()
+		# for item in self.threads_list:
+			# item.join()
 
 		# Done
 		self.get_logger().info("Setup file read and run complete")
@@ -461,8 +541,10 @@ def main(args=None):
 	master = Master()
 
 	# Create a thread to run setup_thread
-#	spin_thread = Thread(target = setup_thread_work, args = (master,))
-#	spin_thread.start()
+	spin_thread = Thread(target = master.read_from_setup, args = ("setup",))
+	spin_thread.start()
+
+	#master.read_from_setup("setup")
 
 #	status = master.load("module_test.py", "O0",  False)
 #	status2 = master.run("module_test.py", "O0")
@@ -477,7 +559,7 @@ def main(args=None):
 		master.get_logger().fatal("Terminating...")
 
 	# End
-	spin_thread.join()
+	# spin_thread.join()
 	master.destroy_node()
 	rclpy.shutdown()
 

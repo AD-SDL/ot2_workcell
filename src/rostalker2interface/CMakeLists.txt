@@ -37,6 +37,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/OT2StateUpdate.msg"
   "msg/CompletedTransfer.msg"
   "srv/GetNextTransfer.srv"
+  "srv/SendFiles.srv"
+  "srv/Protocol.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)
