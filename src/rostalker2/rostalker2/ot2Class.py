@@ -14,8 +14,8 @@ import importlib.util
 from mastertalker_api.retry_api import *
 from mastertalker_api.register_api import *
 from mastertalker_api.register_api import _register, _deregister_node
-from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _load_transfer
+from arm_client.transfer_api import *
+from arm_client.transfer_api import _load_transfer
 
 class OT2(Node):
 
@@ -64,15 +64,15 @@ class OT2(Node):
 		# Register with master
 		args = []
 		args.append(self) # Self
-		args.append("OT_2") # Type 
+		args.append("OT_2") # Type
 		args.append(name) # Name
-		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
+		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying
 
 		# Create services: Have to wait until after registration this way we will have the id
-		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler) 
+		self.load_service = self.create_service(LoadService, "/OT_2/%s/load"%self.id, self.load_handler)
 		self.run_service = self.create_service(Run, "/OT_2/%s/run"%self.id, self.run_handler)
 		self.get_id_service = self.create_service(GetId, "/OT_2/%s/get_id"%self.name, self.get_id_handler)
 		self.send_service = self.create_service(SendFiles, "/OT_2/%s/send_files"%self.id, self.receive_files)
@@ -81,7 +81,7 @@ class OT2(Node):
 		# Create subscribers
 		self.ot2_state_update_sub = self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%self.id, self.ot2_state_update_callback, 10)
 		self.ot2_state_update_sub # prevent unused warning
-		
+
 		#TODO: create service to unload and recieve items
 
 		# Initialization Complete
@@ -259,7 +259,7 @@ class OT2(Node):
 		# Return response
 		return response
 
-	
+
 	# handles protocol module service calls
 	def protocol_handler(self, request, response):
 
@@ -299,7 +299,7 @@ class OT2(Node):
 		else:
 			self.get_logger().info("File %s handed to OT2"%name)
 			response.status = response.SUCCESS # All good
-		
+
 		finally:
 			# Exiting critical section
 			self.file_lock.release()
@@ -328,19 +328,19 @@ class OT2(Node):
 		#Start thread
 		for item in threads_list:
 			item.start()
-		
+
 		# Waiting on finish
 		self.read_from_setup_barrier.wait()
 
 		# Join each thread
 		for item in self.threads_list:
 			item.join()
-		
+
 		# Done
 		self.get_logger().info("Setup file read and run complete")
 		return self.status['SUCCESS']
-		
-	
+
+
 	def worker(self, files):
 		for file in files:
 			# Debug information
@@ -370,15 +370,15 @@ class OT2(Node):
 		try:
 			type = "OT_2"
 			id = self.id
-		except Exception as e: 
+		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
-		
+
 		# Client setup
 		load_cli = self.create_client(LoadService, "/%s/%s/load"%(type, id))
 		while not load_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
-		
+
 		# Client ready, read contents of file
 		try:
 			f = open(self.module_location+file, "r")
@@ -387,7 +387,7 @@ class OT2(Node):
 		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR'] # Error
-		
+
 		self.get_logger().info("File %s read complete"%name) #Contents of file read
 
 		# Create Request
@@ -431,15 +431,15 @@ class OT2(Node):
 		try:
 			type = "OT_2"
 			id = self.id
-		except Exception as e: 
+		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
-		
+
 		# Client setup
 		run_cli = self.create_client(Run, "/%s/%s/run"%(type, id)) # format of service is /{type}/{id}/{service name}
 		while not run_cli.wait_for_service(timeout_sec=2.0):
 			self.get_logger().info("Service not available, trying again...")
-		
+
 		# Create a request
 		req = Run.Request()
 		req.type = type
@@ -476,7 +476,7 @@ class OT2(Node):
 	def _run(self, args):
 		return self.run(args[0], args[1]) # File, id (self)
 
-	#load_and_run funtion using retry 
+	#load_and_run funtion using retry
 	def load_and_run_ot2(self, file):
 		# Load module
 		id = self.id

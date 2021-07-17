@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'armtalker_api'
+package_name = 'arm_client'
 
 setup(
     name=package_name,
@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'transfer_api = armtalker_api.transfer_api:main_null',
-            'publish_arm_state_api = armtalker_api.publish_arm_state_api:main_null',
+            'transfer_api = arm_client.transfer_api:main_null',
+            'publish_arm_state = arm_client.publish_arm_state:main_null',
         ],
     },
 )

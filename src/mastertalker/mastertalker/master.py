@@ -12,10 +12,10 @@ from mastertalker_api.retry_api import *
 from mastertalker.worker_thread import worker_class
 
 # Transfer api import
-from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _load_transfer
+from arm_client.transfer_api import *
+from arm_client.transfer_api import _load_transfer
 
-# Only one master node can be running at anytime, or else you will cause issues 
+# Only one master node can be running at anytime, or else you will cause issues
 class Master(Node):
 
 	def __init__(self):
@@ -57,21 +57,21 @@ class Master(Node):
 		self.type = 'master' # Of type master
 		self.name = 'master' # name is master
 
-		# Service setup 
+		# Service setup
 		self.register_service = self.create_service(Register, 'register', self.handle_register) # registration service
 		self.destroy_service = self.create_service(Destroy, 'destroy', self.handle_destroy_worker) # Destroy worker service
 		self.get_node_info_service = self.create_service(GetNodeInfo, 'get_node_info', self.handle_get_node_info) # Request is a name_or_id and returns all the information master has about that node
 		self.get_node_list_service = self.create_service(GetNodeList, 'get_node_list', self.handle_get_node_list) # Blank request returns a list of all the nodes the master knows about
 
 		# Client setup
-		# TODO: see if any clients can be setup here 
+		# TODO: see if any clients can be setup here
 
 		# Initialization Complete
 		self.get_logger().info("Master initialization complete")
 
 #TODO move outside of master class
 	# Loads filename to a worker node
-	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not? 
+	# parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not?
 	def load(self, name, id, replacement):
 		# Check node online?
 		args = []
@@ -96,7 +96,7 @@ class Master(Node):
 #			target_node = self.nodes_list[int(random()*len(self.nodes_list))] # Random load assignment
 			type = target_node['type'] # These will be needed to acess the service
 			id = target_node['id']
-		except Exception as e: 
+		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
 
@@ -148,7 +148,7 @@ class Master(Node):
 					self.get_logger().info("Load succeeded")
 					return self.status['SUCCESS'] # All good
 
-	
+
 
 	# Registers a worker with the master so modules can be distrubuted
 	def handle_register(self, request, response):
@@ -304,7 +304,7 @@ class Master(Node):
 		return self.run(args[0], args[1]) # File, id
 
 #TODO move outside of master class
-	# this will both load and run a file at the robot id 
+	# this will both load and run a file at the robot id
 	#TODO: change to just load, transfer and run files onm OT-2s
 	def load_and_run(self, file, id):
 		# Load the module
@@ -384,7 +384,7 @@ class Master(Node):
 			type = target_node['type'] # These will be needed to acess the service
 			id = target_node['id']
 
-		except Exception as e: 
+		except Exception as e:
 			self.get_logger().error("Error occured: %r"%(e,))
 			return self.status['ERROR']
 
@@ -424,7 +424,7 @@ class Master(Node):
 					self.get_logger().info("Module run succeeded")
 					return self.status['SUCCESS'] # All good
 
-	# Reads from a setup file to run a number of files on a specified robot 
+	# Reads from a setup file to run a number of files on a specified robot
 	def read_from_setup(self, file): #TODO: deadlock detection algorithm
 		# Read from setup file and distrubute to worker threads
 		# Read number of threads
@@ -447,7 +447,7 @@ class Master(Node):
 				entry = self.search_for_node(name_or_id) # get information about that node
 				id = entry['id']
 				self.get_logger().info("Node %s found"%name_or_id) # Found
-	
+
 			# Get files for the worker
 			try:
 				files = f.readline()
@@ -531,11 +531,11 @@ class Master(Node):
 		return response
 
 def setup_thread_work(master):
-	status = master.read_from_setup("setup") 
+	status = master.read_from_setup("setup")
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
-# This is just for testing, this class can be used anywhere 
+# This is just for testing, this class can be used anywhere
 def main(args=None):
 	rclpy.init(args=args)
 	master = Master()

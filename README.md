@@ -12,10 +12,10 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 		  **launch/**
 				    arm_bringup.launch.py (Launches the arm)
 
-**armtalker_api/**
-		  **armtalker_api/**
+**arm_client/**
+		  **arm_client/**
 				    transfer_api.py (An api for other OT2s to use to transfer items)
-				    publish_arm_state_api.py (api to publish its state to a manager)
+				    publish_arm_state.py (api to publish its state to a manager)
 
 **mastertalker/**
 		  **mastertalker/**

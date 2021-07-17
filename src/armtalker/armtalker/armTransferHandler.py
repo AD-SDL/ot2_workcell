@@ -16,8 +16,8 @@ from mastertalker_api.register_api import _get_id_name
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
-from armtalker_api.publish_arm_state_api import *
-from armtalker_api.publish_arm_state_api import _update_arm_state
+from arm_client.publish_arm_state import *
+from arm_client.publish_arm_state import _update_arm_state
 
 # TODO: figure out how to integrate arm code
 
@@ -26,7 +26,7 @@ class ArmTransferHandler(Node):
 		# Createa  temporary node so we can read in parameters
 		super().__init__("Temp" + str(int(random()*17237967)))
 
-		# Create parameters for name to be sent through 
+		# Create parameters for name to be sent through
 		self.declare_parameter('name', 'insert_arm_name_here') # 2nd arg is default value
 		while(name == 'temp'):
 			name = self.get_parameter('name').get_parameter_value().string_value

@@ -14,7 +14,7 @@
 
   <exec_depend>rostalker2interface</exec_depend>
   <exec_depend>mastertalker_api</exec_depend>
-  <exec_depend>armtalker_api</exec_depend>
+  <exec_depend>arm_client</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

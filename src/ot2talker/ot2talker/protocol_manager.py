@@ -16,20 +16,20 @@ from mastertalker_api.register_api import _get_id_name
 from mastertalker_api.worker_info_api import *
 from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
-from armtalker_api.transfer_api import *
-from armtalker_api.transfer_api import _load_transfer
+from arm_client.transfer_api import *
+from arm_client.transfer_api import _load_transfer
 #TODO: import ot2talker_api
 from ot2talker_api.publish_ot2_state_api import *
 from ot2talker_api.publish_ot2_state_api import _update_ot2_state
 from ot2talker_api.load_run_api import *
 
 class OT2ProtocolManager(Node):
-	
+
 	def __init__(self, name):
 		# Create a temporary node so we can read in parameters
 		super().__init__("Temp" + str(int(random()*17237967)))
 
-		# Create parameters for name to be sent through 
+		# Create parameters for name to be sent through
 		self.declare_parameter('name', 'insert_OT2_protocol_manager_name_here') # 2nd arg is default value
 		while(name == 'temp' or name == 'insert_OT2_protocol_manager_name_here'):
 			name = self.get_parameter('name').get_parameter_value().string_value
