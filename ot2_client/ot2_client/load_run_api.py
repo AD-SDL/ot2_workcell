@@ -10,8 +10,5 @@ from pathlib import Path
 from ot2_workcell_manager_client.retry_api import *
 
 
-
-
-
 def main_null():
-	print("This function isn't meant to have a main functino")
+    print("This function isn't meant to have a main functino")
