@@ -9,7 +9,7 @@ from rostalker2interface.srv import *
 from rostalker2interface.msg import *
 from pathlib import Path
 from ot2_workcell_manager_client.retry_api import *
-from mastertalker.worker_thread import worker_class
+from ot2_workcell_manager.worker_thread import worker_class
 
 # Transfer api import
 from arm_client.transfer_api import *

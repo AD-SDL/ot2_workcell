@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'mastertalker'
+package_name = 'ot2_workcell_manager'
 
 setup(
     name=package_name,
@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'master = mastertalker.master:main',
-            'worker_thread = mastertalker.worker_thread:main_null',
+            'master = ot2_workcell_manager.master:main',
+            'worker_thread = ot2_workcell_manager.worker_thread:main_null',
         ],
     },
 )

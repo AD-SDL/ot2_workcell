@@ -17,8 +17,8 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 				    transfer_api.py (An api for other OT2s to use to transfer items)
 				    publish_arm_state.py (api to publish its state to a manager)
 
-**mastertalker/**
-		  **mastertalker/**
+**ot2_workcell_manager/**
+		  **ot2_workcell_manager/**
 				    master.py (Controls the state of the system)
 
 **master_api/**
@@ -69,7 +69,7 @@ This is for ubuntu 20.04 running ROS2 foxy
 # Launching
 **Master**
 1. source ~/ros2tests/install/setup.bash
-2. ros2 run mastertalker master
+2. ros2 run ot2_workcell_manager master
 
 **Arm**
 1. source ~/ros2tests/install/setup.bash
