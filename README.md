@@ -5,8 +5,8 @@ Basic tests with ros2, repo for when learning ROS2, and repo for running basic r
 Rostalker2 is a project to connect 3 different moving parts in an automated biology lab a master, Opentron-2 robot, and robotic arm, with added equipment later on. A goal of rostalker2 is to set up a network between these different robotics parts using ROS 2 Foxy and have them able to syncronize each other and be fault tolerant. Another goal is to allow a user to run whatever they want concurrently on multiple different machines this goal is called the monolithic model. Another goal is to be able to run biology experiments in a HPC manner, where the user just specifies tasks and their dependencies and the system will automatically schedule the experiment, this theoritcallly should increase performance and efficiency dubbed the workflow model. Currently rostalker2 only supports the monolithic model, future plans will begin to add in the workflow model.
 
 # Rostalker2 Files
-**armtalker/**
-		  **armtalker/**
+**arm_controller/**
+		  **arm_controller/**
 				    armManager.py (Manages the state of the arm)
 				    armTransferHandler.py (Manages transfer service)
 		  **launch/**
@@ -74,7 +74,7 @@ This is for ubuntu 20.04 running ROS2 foxy
 
 **Arm**
 1. source ~/ros2tests/install/setup.bash
-2. ros2 launch armtalker arm_bringup.launch.py
+2. ros2 launch arm_controller arm_bringup.launch.py
 
 **Opentron-2s**
 1. source ~/ros2tests/install/setup.bash

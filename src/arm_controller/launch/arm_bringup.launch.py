@@ -4,13 +4,13 @@ from launch_ros.actions import Node
 def generate_launch_description():
     ld = LaunchDescription()
     arm_manager = Node(
-        package="armtalker",
+        package="arm_controller",
         executable="arm_manager",
         parameters=[ {'name': 'army'} ],
         emulate_tty=True,
     )
     arm_transfer_handler = Node(
-        package="armtalker",
+        package="arm_controller",
         executable="arm_transfer_handler",
         parameters=[ {'name': 'army'} ],
         emulate_tty=True,
