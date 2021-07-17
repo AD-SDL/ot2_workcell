@@ -10,11 +10,11 @@ from os import path
 from pathlib import Path
 import importlib.util
 from random import random
-from mastertalker_api.retry_api import *
-from mastertalker_api.register_api import *
-from mastertalker_api.register_api import _register, _deregister_node
-from mastertalker_api.worker_info_api import *
-from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from ot2_workcell_manager_client.retry_api import *
+from ot2_workcell_manager_client.register_api import *
+from ot2_workcell_manager_client.register_api import _register, _deregister_node
+from ot2_workcell_manager_client.worker_info_api import *
+from ot2_workcell_manager_client.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 # TODO: figure out how to integrate arm code
 
@@ -68,7 +68,7 @@ class ArmManager(Node):
 		args.append(self) # Self
 		args.append("arm") # Type
 		args.append(name) # Name
-		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments 
+		status = retry(self, _register, 10, 1, args) # Setups up a retry system for a function, args is empty as we don't want to feed arguments
 		if(status == self.status['ERROR'] or status == self.status['FATAL']):
 			self.get_logger().fatal("Unable to register with master, exiting...")
 			sys.exit(1) # Can't register node even after retrying

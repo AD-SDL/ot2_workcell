@@ -11,9 +11,9 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
-from mastertalker_api.retry_api import *
-from mastertalker_api.register_api import *
-from mastertalker_api.register_api import _register, _deregister_node
+from ot2_workcell_manager_client.retry_api import *
+from ot2_workcell_manager_client.register_api import *
+from ot2_workcell_manager_client.register_api import _register, _deregister_node
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 

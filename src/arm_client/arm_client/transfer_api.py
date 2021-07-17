@@ -5,8 +5,8 @@ from threading import Thread, Lock
 import time
 from rostalker2interface.srv import *
 from rostalker2interface.msg import *
-from mastertalker_api.worker_info_api import *
-from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from ot2_workcell_manager_client.worker_info_api import *
+from ot2_workcell_manager_client.worker_info_api import _get_node_info, _get_node_list, get_node_info
 
 #TODO: DELETE
 def load_transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): # TODO do something with item
@@ -44,7 +44,7 @@ def load_transfer(self, from_name_or_id, to_name_or_id, item, arm_name_or_id): #
 	request.to_name = to_name
 	request.item = item
 	if(self.type == 'master'):
-		# Bypass restrictions on who does what transfer 
+		# Bypass restrictions on who does what transfer
 		request.cur_name = "master" # Only the master can remove it from the queue
 		request.other_name = "master"
 	else:

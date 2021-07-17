@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'mastertalker_api'
+package_name = 'ot2_workcell_manager_client'
 
 setup(
     name=package_name,
@@ -20,9 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'retry_api = mastertalker_api.retry_api:main_null',
-            'register_api = mastertalker_api.register_api:main_null',
-            'worker_info_api = mastertalker_api.worker_info_api:main_null',
+            'retry_api = ot2_workcell_manager_client.retry_api:main_null',
+            'register_api = ot2_workcell_manager_client.register_api:main_null',
+            'worker_info_api = ot2_workcell_manager_client.worker_info_api:main_null',
         ],
     },
 )

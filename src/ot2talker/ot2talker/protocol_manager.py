@@ -10,11 +10,11 @@ from pathlib import Path
 import importlib.util
 from rostalker2interface.srv import *
 from rostalker2interface.msg import *
-from mastertalker_api.retry_api import *
-from mastertalker_api.register_api import *
-from mastertalker_api.register_api import _get_id_name
-from mastertalker_api.worker_info_api import *
-from mastertalker_api.worker_info_api import _get_node_info, _get_node_list, get_node_info
+from ot2_workcell_manager_client.retry_api import *
+from ot2_workcell_manager_client.register_api import *
+from ot2_workcell_manager_client.register_api import _get_id_name
+from ot2_workcell_manager_client.worker_info_api import *
+from ot2_workcell_manager_client.worker_info_api import _get_node_info, _get_node_list, get_node_info
 from random import random
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
