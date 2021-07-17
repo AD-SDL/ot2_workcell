@@ -36,11 +36,11 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 				    load_run_api.py (TODO)
 				    publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
 
-**rostlalker2/**
+**rostalker2/**
 		  **rostalker2/**
 				    ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)
 
-**rostalker2interface/**
+**workcell_interfaces/**
 		  **srv/**
 				    Destroy.srv
 				    GetId.srv

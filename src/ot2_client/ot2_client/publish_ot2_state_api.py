@@ -3,8 +3,8 @@ from rclpy.node import Node
 import threading
 from threading import Thread, Lock
 import time
-from rostalker2interface.srv import *
-from rostalker2interface.msg import *
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 
 # Calls a service created by the ot2 manager to udpate the state of the ot2
 def update_ot2_state(self, current_state):

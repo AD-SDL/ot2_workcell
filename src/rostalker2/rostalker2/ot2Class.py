@@ -4,8 +4,8 @@ import threading
 from threading import Thread, Lock
 import sys
 import time
-from rostalker2interface.srv import *
-from rostalker2interface.msg import *
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 import os
 import os.path
 from os import path

@@ -3,7 +3,7 @@ from rclpy.node import Node
 from threading import Thread, Lock
 import sys
 import time
-from rostalker2interface.srv import *
+from workcell_interfaces.srv import *
 import os
 import os.path
 from os import path

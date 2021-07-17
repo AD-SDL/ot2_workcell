@@ -8,8 +8,8 @@ import os.path
 from os import path
 from pathlib import Path
 import importlib.util
-from rostalker2interface.srv import *
-from rostalker2interface.msg import *
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _get_id_name

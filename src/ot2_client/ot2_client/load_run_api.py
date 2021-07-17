@@ -5,7 +5,7 @@ from threading import Thread, Lock
 import sys
 import time
 from random import random
-from rostalker2interface.srv import *
+from workcell_interfaces.srv import *
 from pathlib import Path
 from ot2_workcell_manager_client.retry_api import *
 

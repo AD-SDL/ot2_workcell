@@ -3,8 +3,8 @@ from rclpy.node import Node
 import threading
 from threading import Thread, Lock
 import time
-from rostalker2interface.srv import *
-from rostalker2interface.msg import *
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 from ot2_workcell_manager_client.worker_info_api import *
 from ot2_workcell_manager_client.worker_info_api import _get_node_info, _get_node_list, get_node_info
 

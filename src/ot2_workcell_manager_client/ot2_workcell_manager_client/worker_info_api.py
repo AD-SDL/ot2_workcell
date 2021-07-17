@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
 import time
-from rostalker2interface.srv import *
-from rostalker2interface.msg import *
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 
 # Get master manager entry about the specific node
 def get_node_info(self, name_or_id):
@@ -45,7 +45,7 @@ def _get_node_info(args):
 # Service call to retrieve information about all the workers registered with master
 def get_node_list(self): # TODO: testing
 
-	# Create a request 
+	# Create a request
 	request = GetNodeList.Request()
 
 	# Client setup
@@ -81,9 +81,9 @@ def get_node_list(self): # TODO: testing
 				nodes_list.append(entry)
 	return nodes_list
 
-# Middleman to segway from retry functions or others to the get_node_list 
+# Middleman to segway from retry functions or others to the get_node_list
 def _get_node_list(args):
-	return get_node_list(args[0]) # Self TODO: Current retry_api do not support this type of output 
+	return get_node_list(args[0]) # Self TODO: Current retry_api do not support this type of output
 
 def main_null():
 	print("This is not meant to have a main function")

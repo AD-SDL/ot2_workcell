@@ -1,5 +1,5 @@
 import time
-from rostalker2interface.srv import *
+from workcell_interfaces.srv import *
 
 
 # Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
@@ -32,7 +32,7 @@ def retry(self, function, max_attempts, timeout, args):
 		time.sleep(timeout)
 
 	# Error checking
-	if(attempts == max_attempts): # If the loop is exited and we have a max attempt 
+	if(attempts == max_attempts): # If the loop is exited and we have a max attempt
 		return self.status['ERROR'] # Fatal error stopping attempts
 	elif(status == self.status['SUCCESS'] or status == self.status['WARNING']):
 		return status # Returns a success or warning status to caller
