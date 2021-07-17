@@ -31,8 +31,8 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 		  **ot2talker/**
 				    protocol_manager.py (removes items from the queue in manager)
 
-**ot2talker_api/**
-		  **ot2talker_api/**
+**ot2_client/**
+		  **ot2_client/**
 				    load_run_api.py (TODO)
 				    publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
 

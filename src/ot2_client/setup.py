@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'ot2talker_api'
+package_name = 'ot2_client'
 
 setup(
     name=package_name,
@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'load_run_api = ot2talker_api.load_run_api:main_null',
-            'publish_ot2_state_api = ot2talker_api.publish_ot2_state_api:main_null',
+            'load_run_api = ot2_client.load_run_api:main_null',
+            'publish_ot2_state_api = ot2_client.publish_ot2_state_api:main_null',
         ],
     },
 )
