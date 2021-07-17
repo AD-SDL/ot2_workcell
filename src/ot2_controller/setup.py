@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'ot2talker'
+package_name = 'ot2_controller'
 
 setup(
     name=package_name,
@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'protocol_manager = ot2talker.protocol_manager:main',
-            'ot2_manager = ot2talker.ot2_manager:main',
+            'protocol_manager = ot2_controller.protocol_manager:main',
+            'ot2_controller = ot2_controller.ot2_controller:main',
         ],
     },
 )
