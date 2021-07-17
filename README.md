@@ -20,7 +20,6 @@ Rostalker2 is a project to connect 3 different moving parts in an automated biol
 **mastertalker/**
 		  **mastertalker/**
 				    master.py (Controls the state of the system)
-				    worker_thread.py (No longer needed)
 
 **master_api/**
 		  **master_api/**
