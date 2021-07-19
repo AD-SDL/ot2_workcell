@@ -117,7 +117,7 @@ class OT2(Node):
             # Append files to work list
             # TODO: change, maybe run worker function?
             self.work_list.append(files)
-            self.work_index = self.work_index + 1
+            self.work_index = self.work_index + 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
@@ -304,59 +304,61 @@ class OT2(Node):
         # Create response
         response = Protocol.Response()
 
-        # Warnings / Errors
-        if not id == self.id:  # Wrong ID
-            self.get_logger().error(
-                "Request id: %s doesn't match node id: %s" % (id, self.id)
-            )
-            response.status = response.ERROR
-            return response
-        elif not type == "OT_2":  # Wrong type
-            self.get_logger().warning(
-                "The requested node type: %s doesn't match the node type of id: %s, but will still proceed"
-                % (type, self.id)
-            )
-        elif path.exists(file) == False:  # File doesn't exist
-            self.get_logger().error("File: %s doesn't exist" % (file))
-            response.status = response.ERROR
-            return response
+        # Selecting job
+        temp_list = self.work_list[0]
 
-        # Get lock
-        self.file_lock.acquire()
+        # Remove entry from work list
+        self.work_list.pop(0)
 
-        # obtain file containing protocol
-        self.get_logger().info("Handing over file")
+        
 
-        try:
-            # Extract file name from list
-            name = self.work_list[0]
-            response.file = name
+        # Range through files in current job
+        for file in temp_list:
 
-            # clear work_list
-            self.work_list.clear()
-        except Exception as e:
-            self.get_logger().error("Error occured: %r" % (e,))
-            response.status = response.ERROR  # Error
-        else:
-            self.get_logger().info("File %s handed to OT2" % name)
-            response.status = response.SUCCESS  # All good
+            # Error check
+            
+            elif path.exists(file) == False:  # File doesn't exist
+                self.get_logger().error("File: %s doesn't exist" % (file))
+                response.status = response.ERROR
+                return response
 
-        finally:
-            # Exiting critical section
-            self.file_lock.release()
-            return response
+            # Get lock
+            self.file_lock.acquire()
+
+            # obtain file containing protocol
+            self.get_logger().info("Handing over file")
+
+            try:
+                # Extract file name from temp list
+                name = file
+                response.file = name
+
+
+            except Exception as e:
+                self.get_logger().error("Error occured: %r" % (e,))
+                response.status = response.ERROR  # Error
+            else:
+                self.get_logger().info("File %s handed to OT2" % name)
+                response.status = response.SUCCESS  # All good
+
+            finally:
+                # Exiting critical section
+                self.file_lock.release()
+                return response
+        
+        # Clear temp list
+        temp_list.clear()
 
     # Overarching function. Parses through files in a job, loads and runs files
-    def read_files(self, index):
-        # TODO: retrieve files from work list using method other than index
-        files = self.work_list[self.work_index - 1]
+    def read_files(self):
+        files = self.work_list[0]
 
         # thread created and files loaded and ran in worker function
         temp_thread = worker(self, files)
         self.threads_list.append(temp_thread)  # Record information
 
         # Setup complete for this thread
-        self.get_logger().info("Setup complete for jo b number %s" % index)
+        self.get_logger().info("Setup complete for job number %s" % self.work_index)
 
         # TODO: Barrier?
         # New barrier for each thread (So we know when they all finish)
@@ -602,8 +604,8 @@ def work(ot2node, name):
         status = retry(ot2node, _load_transfer, 20, 4, args)
 
 
-def setup_read_files(self, index):
-    status = self.read_files(self, index)
+def setup_read_files(self):
+    status = self.read_files(self)
 
 
 def main(args=None):
