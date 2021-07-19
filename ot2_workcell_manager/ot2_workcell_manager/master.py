@@ -9,7 +9,6 @@ from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 from pathlib import Path
 from ot2_workcell_manager_client.retry_api import *
-from ot2_workcell_manager.worker_thread import worker_class
 
 # Transfer api import
 from arm_client.transfer_api import *
@@ -47,7 +46,7 @@ class Master(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ros2tests/src/OT2_Modules/"
+        self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
 
         # Basic informaton
         self.id = "M-1"  # Ultimate position, before 0

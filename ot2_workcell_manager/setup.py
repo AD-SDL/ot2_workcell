@@ -20,7 +20,6 @@ setup(
     entry_points={
         "console_scripts": [
             "master = ot2_workcell_manager.master:main",
-            "worker_thread = ot2_workcell_manager.worker_thread:main_null",
         ],
     },
 )
