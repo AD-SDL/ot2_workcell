@@ -21,7 +21,7 @@ def update_ot2_state(self, current_state):
     ot2_state_update_pub = self.create_publisher(
         OT2StateUpdate, "/OT_2/%s/ot2_state_update" % self.id, 10
     )
-    time.sleep(2)  # wait for it to start
+    time.sleep(1)  # wait for it to start
 
     # Call client
     # 	self.get_logger().info("Updating state")

@@ -21,7 +21,7 @@ def update_arm_state(self, current_state):
     arm_state_update_pub = self.create_publisher(
         ArmStateUpdate, "/arm/%s/arm_state_update" % self.id, 10
     )
-    time.sleep(2)  # wait for it to start
+    time.sleep(1)  # wait for it to start
 
     # Call client
     # 	self.get_logger().info("Updating state")
