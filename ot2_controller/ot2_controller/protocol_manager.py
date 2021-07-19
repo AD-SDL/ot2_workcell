@@ -1,3 +1,4 @@
+from typing import Protocol
 import rclpy
 from rclpy.node import Node
 from threading import Thread, Lock
@@ -88,8 +89,71 @@ class OT2ProtocolManager(Node):
     # retrieves next script to run in the queue
     def get_next_protocol(self):
         # Get the next protocol
-        # TODO: add in api
+        # TODO: add in api, protocol client goes here
         self.get_logger().info("Got item from queue")
+        file_name = []
+
+        # Client setup
+
+        # Check to see if node is online
+
+        args = []
+        args.append(self.id)
+        status = retry(
+            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
+        )  # retry function
+        if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            self.get_logger().error(
+                "Unable to find node %s" % self.id
+            )  # Node isn't registered
+            return self.status["ERROR"]
+        else:
+            self.get_logger().info("Node %s found" % self.id)  # Found
+
+        # Set node info
+        type = "OT_2"
+        id = self.id
+
+        # Create client
+        protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
+        while not protocol_cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("Service not available, trying again...")
+        
+        # Client ready, get name of file
+        # No request info needed
+        protocol_request = Protocol.Request()
+
+        # Call service to protocol
+        future = protocol_cli.call_async(protocol_request)
+        self.get_logger().info("Waiting for completion...")
+
+        # Waiting on future
+        while future.done() == False:
+            time.sleep(1)  # timeout 1 second
+        if future.done():
+            try:
+                response = future.result()
+            except Exception as e:
+                self.get_logger().error("Error occured %r" % (e,))
+                return self.status["ERROR"]  # Error
+            else:
+                # Get file name
+                file_name.append(response.file)
+                # Error handling
+                if response.status == response.ERROR:
+                    self.get_logger().error(
+                        "Error occured in protocol client %s for file %s" % (id, file)
+                    )
+                    return self.status["ERROR"]  # Error
+                elif response.status == response.WARNING:
+                    self.get_logger().warning(
+                        "Warning: File %s already exists on system %s" % (file, id)
+                    )
+                    return self.status["WARNING"]  # Warning
+                else:
+                    self.get_logger().info("Load succeeded")
+                    return self.status["SUCCESS"]  # All good
+
 
         # Begin running the next protocol
         # TODO: actually incorporate runs
