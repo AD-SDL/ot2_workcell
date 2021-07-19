@@ -232,14 +232,14 @@ def main(args=None):
     # Spin
     try:
         # TODO: DELETE
-#        spin_thread = Thread(
-#            target=work,
-#            args=(
-#                ot2node,
-#                name,
-#            ),
-#        )
-#        spin_thread.start()
+        spin_thread = Thread(
+            target=work,
+            args=(
+                ot2node,
+                name,
+            ),
+        )
+        spin_thread.start()
 
         rclpy.spin(ot2node)
     except:
@@ -249,7 +249,7 @@ def main(args=None):
         args = []
         args.append(ot2node)  # Self
         status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-#        spin_thread.join()
+        spin_thread.join()
         ot2node.destroy_node()
         rclpy.shutdown()
 

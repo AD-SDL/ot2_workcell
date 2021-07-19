@@ -82,6 +82,10 @@ class ArmTransferHandler(Node):
 
         # Create services
 
+        # Sub to topics
+        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
+
         # Initialization Complete
         self.get_logger().info(
             "Arm Transfer handler for ID: %s name: %s initialization completed"
@@ -162,7 +166,7 @@ class ArmTransferHandler(Node):
             self.current_state = self.state["ERROR"]  # ERROR state
             return self.status["ERROR"]
         else:
-            self.current_state = self.state["READY"]
+            self.current_state = self.state["ERROR"] # TODO change
         finally:  # No matter what after this the army is no longer busy
             self.set_state()
 
@@ -182,7 +186,7 @@ class ArmTransferHandler(Node):
         # Publish
         completed_transfer_pub.publish(msg)
 
-        return self.status["ERROR"]
+        return self.status["SUCCESS"]
 
     # Helper function
     def set_state(self):
@@ -195,10 +199,17 @@ class ArmTransferHandler(Node):
                 "Unable to update state with manager, continuing but the state of the arm may be incorrect"
             )
 
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+        self.current_state = msg.state
+
     # Function to constantly poll manager queue for transfers
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
+            while(self.current_state == self.state['ERROR']):
+                time.sleep(5) # 5 second timeout
             status = self.get_next_transfer()
             time.sleep(3)
 

@@ -127,6 +127,17 @@ class OT2ProtocolManager(Node):
             time.sleep(3)
 
 
+    # Function to setup transfer
+    def transfer(self, from_name, to_name, arm_name, item):
+        args = []
+        args.append(self)
+        args.append(from_name)
+        args.append(to_name)
+        args.append(item)
+        args.append(arm_name)
+        status = retry(ot2node, _load_transfer, 20, 4, args)
+        return status
+
 def main(args=None):
     rclpy.init(args=args)
 

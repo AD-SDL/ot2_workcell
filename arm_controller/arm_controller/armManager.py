@@ -238,18 +238,47 @@ class ArmManager(Node):
         # 		self.get_logger().info("Load transfer " + str(self.completed_queue)) #TODO: DELETE
         return response
 
+    # Publisher to reset the state of the transferhandler 
+    def arm_state_reset(self, new_state):
+        # reset out state
+        self.current_state = new_state
+
+        # Create msg
+        msg = ArmReset()
+        msg.state = self.current_state
+
+        # Create topic pub
+        arm_reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset", 10)
+        time.sleep(1) # Sleep 1 second to wait for the publisher to finish
+
+        # Pub
+        arm_reset_state_pub.publish(msg)
+
+        return self.status['SUCCESS'] #TODO: Error handling
+
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
 
         # Recieve request
-        current_state = msg.state  # TODO error checks
+        self.current_state = msg.state  # TODO error checks
 
         # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
 
-        # Update our state
-        self.current_state = current_state
-
-        # TODO: other stuff
+        # Error handling
+        if(self.current_state == msg.ERROR):
+            # TODO: discord / slack pings
+            while(self.current_state == self.state['ERROR']):
+                self.get_logger().error("Arm is in shutdown, human intervention required")
+                self.get_logger().error("Is the error resolved? (Y/N) (CASE SENSITIVE)")
+                answer = input("Y/N: ") #TODO make this a separate fixer node to do this
+                self.get_logger().info("test") # TODO: DELETE
+                if(answer.strip() == 'Y'):
+                    self.get_logger().info("Beginning recovery...")
+                    self.arm_state_reset(self.state['READY'])
+                else:
+                    self.get_logger().info("Error is not resolved....")
+                    self.arm_state_reset(self.state['ERROR'])
+                    time.sleep(5) # 5 second timeout
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):

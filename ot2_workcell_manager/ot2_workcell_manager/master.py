@@ -255,7 +255,6 @@ class Master(Node):
 
         # Call Service to load module
         future = send_cli.call_async(send_request)
-        self.get_logger().info("Waiting for completion...")
 
         # Waiting on future
         while future.done() == False:
@@ -274,7 +273,7 @@ class Master(Node):
                     )
                     return self.status["ERROR"]  # Error
                 else:
-                    self.get_logger().info("Module run succeeded")
+                    self.get_logger().info("Files loaded")
                     return self.status["SUCCESS"]  # All good
 
     # Reads from a setup file to run a number of files on a specified robot
