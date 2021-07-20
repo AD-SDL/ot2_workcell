@@ -171,7 +171,7 @@ def main(args=None):
         protocol_manager.get_logger().error("Terminating...")
 
     # End
-    spin_thread.join()
+#    spin_thread.join()
     protocol_manager.destroy_node()
     rclpy.shutdown()
 
