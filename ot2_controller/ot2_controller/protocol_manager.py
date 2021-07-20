@@ -164,7 +164,18 @@ class OT2ProtocolManager(Node):
 
         # run protocol, use load_and_run function
         self.get_logger().info("Running protocol")
-        time.sleep(2)
+        #time.sleep(2)
+        status = load_and_run(file_name[0])
+        
+
+        # Check to see if run was success
+        if status == "ERROR":
+            self.get_logger().error("Error: protocol %s was not run successfully" % file_name[0])
+        elif status == "SUCCESS":
+            self.get_logger().info("Protocol %s was run successfully" % file_name[0])
+        
+        # Remove file from file_name list
+        file_name.pop(0)
 
         # set state to ready
         self.current_state = self.state["READY"]
@@ -201,7 +212,7 @@ class OT2ProtocolManager(Node):
         except Exception as e:
             # Error
             self.get_logger().error("Error occured when trying to load module %s: %r" % (filepath, e,))
-            # Return error?
+            return "ERROR"
         else:
             self.get_logger().info("Module %s successfully loaded and attached to the program" % filepath)
 
@@ -212,6 +223,7 @@ class OT2ProtocolManager(Node):
         except Exception as e:
             # Error
             self.get_logger().error("Error occured when trying to run module %s: %r" % (filepath, e))
+            return "ERROR"
         else:
             self.get_logger().info("Module %s successfully ran to completion" % filepath)
             return "SUCCESS"
