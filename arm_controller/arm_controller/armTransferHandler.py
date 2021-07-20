@@ -166,7 +166,7 @@ class ArmTransferHandler(Node):
             self.current_state = self.state["ERROR"]  # ERROR state
             return self.status["ERROR"]
         else:
-            self.current_state = self.state["ERROR"] # TODO change
+            self.current_state = self.state["READY"]
         finally:  # No matter what after this the army is no longer busy
             self.set_state()
 
@@ -208,8 +208,6 @@ class ArmTransferHandler(Node):
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
-            while(self.current_state == self.state['ERROR']):
-                time.sleep(5) # 5 second timeout
             status = self.get_next_transfer()
             time.sleep(3)
 

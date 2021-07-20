@@ -40,6 +40,7 @@ class ArmManager(Node):
 
         # Lock creation
         self.arm_lock = Lock()  # Only one can access arm at a time
+        self.state_lock = Lock() # Only one can access the state at a time
 
         # Queues
         self.transfer_queue = []
@@ -104,6 +105,8 @@ class ArmManager(Node):
             10,
         )
         self.completed_transfer_sub  # prevent unused warning
+        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -128,6 +131,9 @@ class ArmManager(Node):
         self.transfer_queue.remove(identifier_cur)
         self.transfer_queue.remove(identifier_other)
 
+        # Remove from run queue (TODO: assertion check, the popped is the same as the completed)
+        self.run_queue.pop(0) # The one that was being worked on was the first one
+
         self.get_logger().info(
             "Completed transfer " + str(self.completed_queue)
         )  # TODO: DELETE
@@ -137,17 +143,36 @@ class ArmManager(Node):
 
     # Allows the transfer handler to get the next transfer (service call)
     def get_next_transfer_handler(self, request, response):
-        # Get lock
-        self.arm_lock.acquire()
 
         # create response
         response = GetNextTransfer.Response()
+
+        # get state (lock)
+        self.state_lock.acquire()
+
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Arm in error state")
+            response.status = response.WAITING # Tell it to wait until error is resolved (TODO: switch to error)
+            self.state_lock.release() # Release lock
+            return response
+        elif(self.current_state == self.state['BUSY']): # This should never happen, as it won't call this service until the state is ready
+            self.get_logger().error("Arm in busy state")
+            response.status = response.WAITING # wait for state not to be busy TODO: switch to error
+            self.state_lock.release() # Release lock
+            return response
+
+        # release lock
+        self.state_lock.release()
+
+        # Get lock
+        self.arm_lock.acquire()
+
         # 		self.get_logger().info("Get next transfer " + str(self.run_queue)) #TODO: DELETE
         # 		self.get_logger().info("Get next transfer " + str(self.transfer_queue)) #TODO: DELETE
 
         # Retrieve next item in queue
         if len(self.run_queue) > 0:
-            response.next_transfer = self.run_queue.pop(0)  # Get the first in the queue
+            response.next_transfer = self.run_queue[0]  # Get the first in the queue (don't remove it, upon completion it is removed)
             response.status = response.SUCCESS
         else:
             response.status = response.WAITING  # Waiting on things to run
@@ -256,29 +281,37 @@ class ArmManager(Node):
 
         return self.status['SUCCESS'] #TODO: Error handling
 
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+
+        # Get state lock
+        self.state_lock.acquire()
+
+        self.current_state = msg.state
+
+        # Release lock
+        self.state_lock.release()
+
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
+        # Lock the state
+        self.state_lock.acquire()
+
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.state_lock.release() # release lock
+            return # exit out of function
 
         # Recieve request
         self.current_state = msg.state  # TODO error checks
 
-        # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
+        # TODO: sync with master
 
-        # Error handling
-        if(self.current_state == msg.ERROR):
-            # TODO: discord / slack pings
-            while(self.current_state == self.state['ERROR']):
-                self.get_logger().error("Arm is in shutdown, human intervention required")
-                self.get_logger().error("Is the error resolved? (Y/N) (CASE SENSITIVE)")
-                answer = input("Y/N: ") #TODO make this a separate fixer node to do this
-                self.get_logger().info("test") # TODO: DELETE
-                if(answer.strip() == 'Y'):
-                    self.get_logger().info("Beginning recovery...")
-                    self.arm_state_reset(self.state['READY'])
-                else:
-                    self.get_logger().info("Error is not resolved....")
-                    self.arm_state_reset(self.state['ERROR'])
-                    time.sleep(5) # 5 second timeout
+        # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
+        self.state_lock.release() # release lock
+
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):
