@@ -79,6 +79,10 @@ class OT2ProtocolManager(Node):
 
         # Create services
 
+        # Create subs
+        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
+
         # Initialization Complete
         self.get_logger().info(
             "OT2 protocol manager for ID: %s name: %s initialization completed"
@@ -107,6 +111,11 @@ class OT2ProtocolManager(Node):
         self.set_state()
 
         # TODO: error checking
+
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+        self.current_state = msg.state
 
     # Helper function
     def set_state(self):

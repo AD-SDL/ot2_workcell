@@ -35,6 +35,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetId.srv"
   "msg/ArmStateUpdate.msg"
   "msg/ArmReset.msg"
+  "msg/OT2Reset.msg"
   "msg/OT2StateUpdate.msg"
   "msg/CompletedTransfer.msg"
   "srv/GetNextTransfer.srv"

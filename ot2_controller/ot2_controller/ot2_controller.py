@@ -28,6 +28,7 @@ class OT2(Node):
         self.file_lock = Lock()  # Access to the file system
         self.run_lock = Lock()  # Only one can access this OT-2 as a resource
         self.work_list_lock = Lock() # Access to the work list
+        self.state_lock = Lock() # Access to the state
 
         # readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: sync with master
@@ -83,6 +84,8 @@ class OT2(Node):
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
+        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
 
         # TODO: create service to unload and recieve items
 
@@ -122,6 +125,18 @@ class OT2(Node):
             self.work_list_lock.release()
             return response
 
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+
+        # Get state lock
+        self.state_lock.acquire()
+
+        self.current_state = msg.state
+
+        # Release lock
+        self.state_lock.release()
+
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
 
@@ -153,6 +168,23 @@ class OT2(Node):
 
     # handles protocol module service calls
     def protocol_handler(self, request, response):
+
+        # get state lock
+        self.state_lock.acquire()
+
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("OT2 in error state")
+            response.status = response.WAITING # Tell it to wait until error is resolved (TODO: switch to error)
+            self.state_lock.release() # Release lock
+            return response
+        elif(self.current_state == self.state['BUSY']): # This should never happen, as it won't call this service until the state is ready
+            self.get_logger().error("OT2 in busy state")
+            response.status = response.WAITING # wait for state not to be busy TODO: switch to error
+            self.state_lock.release() # Release lock
+            return response
+
+        # release lock
+        self.state_lock.release()
 
         # No request information
 

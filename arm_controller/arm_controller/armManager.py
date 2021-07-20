@@ -263,24 +263,6 @@ class ArmManager(Node):
         # 		self.get_logger().info("Load transfer " + str(self.completed_queue)) #TODO: DELETE
         return response
 
-    # Publisher to reset the state of the transferhandler 
-    def arm_state_reset(self, new_state):
-        # reset out state
-        self.current_state = new_state
-
-        # Create msg
-        msg = ArmReset()
-        msg.state = self.current_state
-
-        # Create topic pub
-        arm_reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset", 10)
-        time.sleep(1) # Sleep 1 second to wait for the publisher to finish
-
-        # Pub
-        arm_reset_state_pub.publish(msg)
-
-        return self.status['SUCCESS'] #TODO: Error handling
-
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
         self.get_logger().warning("Resetting state...")

@@ -60,31 +60,46 @@ class StateResetHandler(Node):
             % (self.id, self.name)
         )
 
-    # Publisher to reset the state of the transferhandler 
-    def arm_state_reset(self, new_state, arm_name_or_id):
+    # Publisher to reset the state of the transferhandler
+    def node_state_reset(self, new_state, name_or_id):
         self.get_logger().info("Resetting arm state...")
 
-        # Create msg
-        msg = ArmReset()
-        msg.state = new_state
-
         # Get Node info
-        arm_entry = get_node_info(self, arm_name_or_id)
+        entry = get_node_info(self, name_or_id)
 
         # Error checking
-        if(not arm_entry['type'] == 'arm'):
-            self.get_logger().error("Arm doesn't exist or listed robot isn't of type arm")
+        if(not (entry['type'] == 'arm' or entry['type'] == 'OT_2')):
+            self.get_logger().error("Node doesn't exist or listed robot isn't a known type")
             return self.status['ERROR']
+        # TODO: Provide warning if the state isn't in an error state
 
         # Get information from entry
-        id = arm_entry['id']
+        id = entry['id']
+        type = entry['type']
 
-        # Create topic pub
-        arm_reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset"%id, 10)
-        time.sleep(1) # Sleep 1 second to wait for the publisher to finish
+        # Create msg and pub
+        if(type == 'arm'):
+            msg = ArmReset()
+            reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset"%id, 10)
+            time.sleep(1) # Sleep 1 second to wait for the publisher to finish
+        elif(type == 'OT_2'):
+            reset_state_pub = self.create_publisher(OT2Reset, "/OT_2/%s/ot2_state_reset"%id, 10)
+            time.sleep(1) # Sleep 1 second to wait for the publisher to finish
+            msg = OT2Reset()
+        msg.state = new_state
+
+        # Confirm
+        confirmation = 'a'
+        while(not (confirmation == 'Y' or confirmation == 'N')):
+            confirmation = input("Confirmation required (Y/N): ")
+
+        if(confirmation.strip() == 'N'):
+            return self.status['WARNING']
 
         # Pub
-        arm_reset_state_pub.publish(msg)
+        reset_state_pub.publish(msg)
+
+        self.get_logger().info("State reset")
 
         return self.status['SUCCESS'] #TODO: Error handling
 
@@ -94,7 +109,7 @@ def work(self):
         temp = input("Y/N/Q for resetting arm state: ")
         if(temp.strip() == 'Y'):
             arm_name_or_id = input("Please enter arm name or id: ")
-            status = self.arm_state_reset(self.state['READY'], arm_name_or_id.strip()) # TODO: maybe do something with status
+            status = self.node_state_reset(self.state['READY'], arm_name_or_id.strip()) # TODO: maybe do something with status
 
 def main(args=None):
     rclpy.init(args=args)
