@@ -31,9 +31,12 @@ class ArmManager(Node):
         self.declare_parameter(
             "name", "insert_arm_name_here"
         )  # 2nd arg is default value
-        while name == "temp":
+        time.sleep(2) # Wait for the launch file to hand in names
+        name = self.get_parameter("name").get_parameter_value().string_value
+        while name == "temp" or name == "insert_arm_name_here":
+            self.get_logger().info("Please enter parameter node name")
+            rclpy.spin_once(self) # spin self once for parameter
             name = self.get_parameter("name").get_parameter_value().string_value
-            time.sleep(1)  # 1 second timeout
 
         # Node creation
         super().__init__("arm_manager_" + name)  # User specifies name

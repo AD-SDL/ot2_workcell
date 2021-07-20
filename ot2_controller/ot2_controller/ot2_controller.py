@@ -16,10 +16,22 @@ from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _register, _deregister_node
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
-
+from random import random
 
 class OT2(Node):
     def __init__(self, name):
+        super().__init__("Temp" + str(int(random() * 17237534)))
+
+        # Parameters before we register with master
+        self.declare_parameter(
+            "name", "insert_ot2_name_here"
+        )  # 2nd arg is default value
+        time.sleep(2) # Wait for the launch file to hand in names
+        name = self.get_parameter("name").get_parameter_value().string_value
+        while name == "temp" or name == "insert_ot2_name_here":
+            self.get_logger().info("Please enter name parameter")
+            rclpy.spin_once(self)
+            name = self.get_parameter("name").get_parameter_value().string_value
 
         # Node creation
         super().__init__("ot2_" + name)  # Users specifies name
@@ -234,16 +246,17 @@ class OT2(Node):
             return response
 
 # TODO: DELETE
-def work(ot2node, name):
+def work(ot2node):
+
     args = []
-    if name == "bob":
+    if ot2node.name == "bob":
         args.append(ot2node)
         args.append("bob")
         args.append("alex")
         args.append("10")
         args.append("army")
         status = retry(ot2node, _load_transfer, 20, 4, args)
-    if name == "alex":
+    if ot2node.name == "alex":
         args.append(ot2node)
         args.append("bob")
         args.append("alex")
@@ -254,13 +267,11 @@ def work(ot2node, name):
 def main(args=None):
     rclpy.init(args=args)
 
-    if len(sys.argv) != 2:
-        print("need 1 arguments")
-        sys.exit(1)
-    name = str(sys.argv[1])
+    name = "temp" #TODO: delete
 
     ot2node = OT2(name)
 
+    ot2node.get_logger().info("init done") 
     # Spin
     try:
         # TODO: DELETE
@@ -268,7 +279,6 @@ def main(args=None):
             target=work,
             args=(
                 ot2node,
-                name,
             ),
         )
         spin_thread.start()

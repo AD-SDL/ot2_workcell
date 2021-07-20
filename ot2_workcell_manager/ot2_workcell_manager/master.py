@@ -373,9 +373,6 @@ class Master(Node):
         return response
 
 
-def setup_thread_work(self):
-    status = self.read_from_setup("setup")
-
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
