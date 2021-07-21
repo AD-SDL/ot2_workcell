@@ -7,3 +7,4 @@ int64 WAITING = 10
 int64 UNKOWN = 15
 
 int64 state
+string id

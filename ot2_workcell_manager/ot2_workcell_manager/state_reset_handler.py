@@ -87,6 +87,7 @@ class StateResetHandler(Node):
             time.sleep(1) # Sleep 1 second to wait for the publisher to finish
             msg = OT2Reset()
         msg.state = new_state
+        msg.id = id
 
         # Confirm
         confirmation = 'a'

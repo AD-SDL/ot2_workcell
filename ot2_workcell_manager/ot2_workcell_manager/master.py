@@ -32,6 +32,7 @@ class Master(Node):
         self.nodes_list = []  # Information about all nodes registered: type, id, state
         self.node_wait_timeout = 2  # 2 seconds
         self.node_wait_attempts = 10  # 10 attempts before error thrown
+        self.sub_list = []
 
         # Thread setup
         self.files_for_threads = (
@@ -40,7 +41,7 @@ class Master(Node):
         self.threads_list = []  # Maintains all the thread objects
 
         # Readability
-        self.states = {"BUSY": "1", "READY": "0"}  # TODO: more states
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3}
 
         # Path setup
@@ -87,9 +88,14 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.states["READY"],  # TODO: implement states
+                "state": self.state["READY"],  # TODO: implement states
                 "name": request.name,
             }
+
+            # Add to sub list
+            self.sub_list.append(self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%dict['id'], self.node_state_update_callback, 10))
+            self.sub_list.append(self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%dict['id'], self.state_reset_callback, 10))
+
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -101,9 +107,14 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.states["READY"],  # TODO: implement states
+                "state": self.state["READY"],  # TODO: implement states
                 "name": request.name,
             }
+
+            # Add to sub list
+            self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
+            self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
+
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -191,7 +202,7 @@ class Master(Node):
         self.node_lock.release()
 
         # Not found
-        dict = {"type": "-1", "name": "-1", "state": "-1", "id": "-1"}
+        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1"}
         return dict
 
     # Checks to see if the node/worker is ready (registered with the master)
@@ -366,13 +377,48 @@ class Master(Node):
             entry = NodeEntry()
             entry.id = item["id"]
             entry.name = item["name"]
-            entry.sate = item["state"]
+            entry.state = item["state"]
             entry.type = item["type"]
             response.node_list.append(entry)
         response.status = response.SUCCESS
         return response
 
+    # Service to update the state of the arm
+    def node_state_update_callback(self, msg):
+        # Find node
+        entry = self.search_for_node(msg.id)
+        current_state = entry['state']
 
+        # Prevent changing state when in an error state
+        if(current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            return # exit out of function
+
+        # set state
+        self.node_lock.acquire()
+        entry['state'] = msg.state
+        self.node_lock.release()
+
+        # Debug
+        entry = self.search_for_node(msg.id)
+        self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
+
+   # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state of id: %s..."%msg.id)
+
+        # Find node
+        entry = self.search_for_node(msg.id)
+        current_state = entry['state']
+
+        # set state
+        self.node_lock.acquire()
+        entry['state'] = msg.state
+        self.node_lock.release()
+
+        # Debug 
+        entry = self.search_for_node(msg.id)
+        self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 

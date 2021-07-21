@@ -16,6 +16,7 @@ def update_ot2_state(self, current_state):
     # Create a request
     msg = OT2StateUpdate()
     msg.state = current_state
+    msg.id = self.id
 
     # Create client and wait for service
     ot2_state_update_pub = self.create_publisher(
