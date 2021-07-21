@@ -317,7 +317,7 @@ class OT2(Node):
 
             # Error check
             
-            elif path.exists(file) == False:  # File doesn't exist
+            if path.exists(file) == False:  # File doesn't exist
                 self.get_logger().error("File: %s doesn't exist" % (file))
                 response.status = response.ERROR
                 return response
