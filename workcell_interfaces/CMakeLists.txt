@@ -38,6 +38,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/OT2Reset.msg"
   "msg/OT2StateUpdate.msg"
   "msg/CompletedTransfer.msg"
+  "msg/CompletedOT2.msg"
   "srv/GetNextTransfer.srv"
   "srv/SendFiles.srv"
   "srv/Protocol.srv"
