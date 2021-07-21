@@ -17,8 +17,6 @@ def load_transfer(
     self, from_name_or_id, to_name_or_id, item, arm_name_or_id
 ):  # TODO do something with item
 
-    self.get_logger().info("Running")
-
     # Get destination node info
     to_entry = get_node_info(self, to_name_or_id)
     from_entry = get_node_info(self, from_name_or_id)
