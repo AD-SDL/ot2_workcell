@@ -42,10 +42,6 @@ This workcell will eventually support:
 		* load_run_api.py (TODO)
 		* publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
 
-* **rostalker2/ (TODO: Deprecate)**
-	* **rostalker2/**
-		* ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)
-
 * **workcell_interfaces/**
 	* **srv/**
 		* Destroy.srv
