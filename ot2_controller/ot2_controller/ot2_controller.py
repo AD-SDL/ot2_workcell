@@ -347,14 +347,15 @@ class OT2(Node):
             except Exception as e:
                 self.get_logger().error("Error occured: %r" % (e,))
                 response.status = response.ERROR  # Error
+                return response
             else:
                 self.get_logger().info("File %s handed to OT2" % name)
                 response.status = response.SUCCESS  # All good
+                return response
 
             finally:
                 # Exiting critical section
                 self.file_lock.release()
-                return response
                 
         
         # Clear temp list
