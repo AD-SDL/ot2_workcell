@@ -95,20 +95,6 @@ class OT2ProtocolManager(Node):
 
         # Client setup
 
-        # Check to see if node is online
-
-        args = []
-        args.append(self.id)
-        status = retry(
-            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
-        )  # retry function
-        if status == self.status["ERROR"] or status == self.status["FATAL"]:
-            self.get_logger().error(
-                "Unable to find node %s" % self.id
-            )  # Node isn't registered
-            return self.status["ERROR"]
-        else:
-            self.get_logger().info("Node %s found" % self.id)  # Found
 
         # Set node info
         type = "OT_2"
