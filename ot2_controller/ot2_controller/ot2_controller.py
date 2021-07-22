@@ -317,7 +317,7 @@ class OT2(Node):
 
             # Error check
             
-            if path.exists(file) == False:  # File doesn't exist
+            if path.exists(self.module_location + file) == False:  # File doesn't exist
                 self.get_logger().error("File: %s doesn't exist" % (file))
                 response.status = response.ERROR
                 return response
@@ -354,7 +354,7 @@ class OT2(Node):
         files = self.work_list[0]
 
         # thread created and files loaded and ran in worker function
-        temp_thread = worker(self, files)
+        temp_thread = self.worker(files)
         self.threads_list.append(temp_thread)  # Record information
 
         # Setup complete for this thread
@@ -367,7 +367,7 @@ class OT2(Node):
         )  # This thread plus the main thread
 
         # Start thread
-        for item in threads_list:
+        for item in self.threads_list:
             item.start()
 
         # Waiting on finish
@@ -617,34 +617,16 @@ def main(args=None):
     name = str(sys.argv[1])
 
     ot2node = OT2(name)
+    
+    rclpy.spin(ot2node)
 
-    # Create thread to run read_files
-    spin_thread = Thread(target=setup_read_files, args=(ot2node,))
-    spin_thread.start
-
-    # Spin
-    try:
-        # TODO: DELETE
-        spin_thread = Thread(
-            target=work,
-            args=(
-                ot2node,
-                name,
-            ),
-        )
-        spin_thread.start()
-
-        rclpy.spin(ot2node)
-    except:
-        ot2node.get_logger().error("Terminating...")
-
-        # Setup args and end
-        args = []
-        args.append(ot2node)  # Self
-        status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-        spin_thread.join()
-        ot2node.destroy_node()
-        rclpy.shutdown()
+    # Setup args and end
+    args = []
+    args.append(ot2node)  # Self
+    status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
+    spin_thread.join()
+    ot2node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":
