@@ -400,8 +400,8 @@ class Master(Node):
         self.node_lock.release()
 
         # Debug
-        entry = self.search_for_node(msg.id)
-        self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
+  #      entry = self.search_for_node(msg.id)
+   #     self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
 
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
@@ -417,8 +417,8 @@ class Master(Node):
         self.node_lock.release()
 
         # Debug 
-        entry = self.search_for_node(msg.id)
-        self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
+#        entry = self.search_for_node(msg.id)
+ #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
