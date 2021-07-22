@@ -301,19 +301,29 @@ class OT2(Node):
 
         # No request information
 
-        # Create response
-        response = Protocol.Response()
+        # Check to see if work list is empty
+        if len(self.work_list) == 0:
+            self.get_logger().info("No more current work for OT-2 %s" % self.name)
+            response = Protocol.Response()
+            response.status = response.SUCCESS
+            return response
+
+        
 
         # Selecting job
         temp_list = self.work_list[0]
 
-        # Remove entry from work list
+        # Remove entry from work
+        #  list
         self.work_list.pop(0)
 
         
 
         # Range through files in current job
         for file in temp_list:
+
+            # Create response
+            response = Protocol.Response()
 
             # Error check
             
@@ -345,9 +355,11 @@ class OT2(Node):
                 # Exiting critical section
                 self.file_lock.release()
                 return response
+                
         
         # Clear temp list
         temp_list.clear()
+        
 
     # Overarching function. Parses through files in a job, loads and runs files
     def read_files(self):

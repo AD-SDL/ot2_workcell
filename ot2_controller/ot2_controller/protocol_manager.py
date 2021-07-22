@@ -151,7 +151,7 @@ class OT2ProtocolManager(Node):
         # run protocol, use load_and_run function
         self.get_logger().info("Running protocol")
         #time.sleep(2)
-        status = load_and_run(file_name[0])
+        status = self.load_and_run(file_name[0])
         
 
         # Check to see if run was success
