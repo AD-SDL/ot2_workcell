@@ -7,12 +7,14 @@ def generate_launch_description():
     arm_manager = Node(
         package="arm_controller",
         executable="arm_manager",
+        output='screen',
         parameters=[{"name": "army"}],
         emulate_tty=True,
     )
     arm_transfer_handler = Node(
         package="arm_controller",
         executable="arm_transfer_handler",
+        output='screen',
         parameters=[{"name": "army"}],
         emulate_tty=True,
     )

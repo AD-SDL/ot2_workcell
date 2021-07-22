@@ -16,12 +16,13 @@ def update_arm_state(self, current_state):
     # Create a request
     msg = ArmStateUpdate()
     msg.state = current_state
+    msg.id = self.id
 
     # Create client and wait for service
     arm_state_update_pub = self.create_publisher(
         ArmStateUpdate, "/arm/%s/arm_state_update" % self.id, 10
     )
-    time.sleep(2)  # wait for it to start
+    time.sleep(1)  # wait for it to start
 
     # Call client
     # 	self.get_logger().info("Updating state")

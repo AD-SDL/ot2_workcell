@@ -4,6 +4,7 @@ from workcell_interfaces.srv import *
 
 # Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
 def retry(self, function, max_attempts, timeout, args):
+
     attempts = 0
     status = 1  # Only works for functions that return a standard status signal
     while (

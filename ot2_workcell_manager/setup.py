@@ -20,6 +20,7 @@ setup(
     entry_points={
         "console_scripts": [
             "master = ot2_workcell_manager.master:main",
+            "state_reset_handler = ot2_workcell_manager.state_reset_handler:main",
         ],
     },
 )
