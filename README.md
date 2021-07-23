@@ -26,9 +26,10 @@ This workcell will eventually support:
 * **ot2_workcell_manager/**
 	* **ot2_workcell_manager/**
 		* master.py (Controls the state of the system)
+		* state_reset_handler.py (resets the state of nodes in an error state)
 
-* **master_api/**
-	* **master_api/**
+* **ot2_workcell_manager_client/**
+	* **ot2_workcell_manager_client/**
 		* register_api.py (registration to the master api)
 		* retry_api.py (api to allow users to run a function in an isolated manner)
 		* worker_info_api.py (api to allow workers to retrieve other worker info from the master)
@@ -42,10 +43,6 @@ This workcell will eventually support:
 		* load_run_api.py (TODO)
 		* publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
 
-* **rostalker2/ (TODO: Deprecate)**
-	* **rostalker2/**
-		* ot2class.py (Contains the state of the OT2 class planned to split it up into 3 different files)
-
 * **workcell_interfaces/**
 	* **srv/**
 		* Destroy.srv
@@ -55,13 +52,19 @@ This workcell will eventually support:
 		* GetNodeList.srv
 		* LoadService.srv
 		* LoadTransfer.srv
+		* Protocol.srv
 		* Register.srv
 		* Run.srv
+		* SendFiles.srv
 	* **msg/**
 		* NodeEntry.msg
 		* ArmStateUpdate.msg
 		* CompletedTransfer.msg
+		* ArmReset.msg
+		* CompletedOT2.msg
+		* OT2Reset.msg
 		* OT2StateUpdate.msg
+
 
 # Development
 
