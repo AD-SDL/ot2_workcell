@@ -4,8 +4,8 @@
   <name>ot2_workcell_manager_client</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="alan.linghao.wang@gmail.com">nerra</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
+  <license>MIT License</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
