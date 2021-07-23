@@ -317,12 +317,17 @@ class OT2(Node):
             self.work_list.pop(0)
 
         # Check state of OT-2, wait for READY state
-            if self.current_state == "BUSY":
-                time.sleep(5) # Protocol running, wait 5 seconds
-            elif self.current_state == "READY":
-                self.get_logger().info("OT-2 ready for new protocol")
-            else:
-                self.get_logger().error("Error: unexpected state: %s" % self.current_state)
+        if self.current_state == 1:
+            time.sleep(5) # Protocol running, wait 5 seconds
+        elif self.current_state == 0:
+            self.get_logger().info("OT-2 ready for new protocol")
+        elif self.current_state == 2: #Error
+            self.get_logger().error("OT-2 in error state")
+            response = Protocol.Response()
+            response.status = response.ERROR
+            return response
+        else:
+            self.get_logger().error("Error: unexpected state: %s" % self.current_state)
         
         # Hand over temp_list[0], wai for completion, then delete file
     
