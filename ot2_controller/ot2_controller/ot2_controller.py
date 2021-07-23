@@ -369,6 +369,7 @@ class OT2(Node):
         
         # Clear temp list
         self.temp_list.pop(0)
+        return response
         
 
     # Overarching function. Parses through files in a job, loads and runs files
