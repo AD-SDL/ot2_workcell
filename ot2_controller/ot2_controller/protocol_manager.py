@@ -171,18 +171,6 @@ class OT2ProtocolManager(Node):
 
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
-        #TODO: Return error statements
-        # Error checking, make sure file exists
-
-        # Extract contents of file # Set permissions?
-        # Don't think we need this, as long as file is already on node
-        # try:
-        #     f = open(self.module_location + file, "r")
-        #     contents = f.read()
-        #     f.close()
-        # except Exception as e:
-        #     self.get_logger().error("Error occured: %r" % (e,))
-        #     return self.status["ERROR"]  # Error
 
         # Set variable with file path
         filepath = (self.module_location + file)

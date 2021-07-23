@@ -43,6 +43,7 @@ class OT2(Node):
         self.work_list = []  # list of files list recieved from jobs
         self.work_index = 0  # location of recently added files in work_list
         self.threads_list = []  # list of all worker threads
+        self.temp_list = [] # List that stores individual jobs for the protocol handler
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
@@ -302,64 +303,67 @@ class OT2(Node):
         # No request information
 
         # Check to see if work list is empty
-        if len(self.work_list) == 0:
+        if len(self.temp_list) != 0:
+            self.get_logger().info("More work in current job") # Still more files to run in temp_list
+        elif len(self.work_list) == 0 and len(self.temp_list) == 0: # Both temp_list and work_list empty, wait for more jobs
             self.get_logger().info("No more current work for OT-2 %s" % self.name)
             response = Protocol.Response()
             response.status = response.SUCCESS
             return response
+        else:
+            # Selecting job
+            self.temp_list = self.work_list[0] #Adds new job (set of files) to the temp_list
+            # Remove entry from work list
+            self.work_list.pop(0)
 
-        
-
-        # Selecting job
-        temp_list = self.work_list[0]
-
-        # Remove entry from work
-        #  list
-        self.work_list.pop(0)
-
-        
-
-        # Range through files in current job
-        for file in temp_list:
-
-            # Create response
-            response = Protocol.Response()
-
-            # Error check
-            
-            if path.exists(self.module_location + file) == False:  # File doesn't exist
-                self.get_logger().error("File: %s doesn't exist" % (file))
-                response.status = response.ERROR
-                return response
-
-            # Get lock
-            self.file_lock.acquire()
-
-            # obtain file containing protocol
-            self.get_logger().info("Handing over file")
-
-            try:
-                # Extract file name from temp list
-                name = file
-                response.file = name
-
-
-            except Exception as e:
-                self.get_logger().error("Error occured: %r" % (e,))
-                response.status = response.ERROR  # Error
-                return response
+        # Check state of OT-2, wait for READY state
+            if self.current_state == "BUSY":
+                time.sleep(5) # Protocol running, wait 5 seconds
+            elif self.current_state == "READY":
+                self.get_logger().info("OT-2 ready for new protocol")
             else:
-                self.get_logger().info("File %s handed to OT2" % name)
-                response.status = response.SUCCESS  # All good
-                return response
+                self.get_logger().error("Error: unexpected state: %s" % self.current_state)
+        
+        # Hand over temp_list[0], wai for completion, then delete file
+    
+        # Create response
+        response = Protocol.Response()
 
-            finally:
-                # Exiting critical section
-                self.file_lock.release()
+        # Error check
+            
+        if path.exists(self.module_location + self.temp_list[0]) == False:  # File doesn't exist
+            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
+            response.status = response.ERROR
+            return response
+
+        # Get lock
+        self.file_lock.acquire()
+
+        # obtain file containing protocol
+        self.get_logger().info("Handing over file")
+
+        try:
+            # Extract file name from temp list
+            name = self.temp_list[0]
+            response.file = name
+
+
+        except Exception as e:
+            self.get_logger().error("Error occured: %r" % (e,))
+            response.status = response.ERROR  # Error
+            return response
+        else:
+            self.get_logger().info("File %s handed to OT2" % name)
+            response.status = response.SUCCESS  # All good
+
+        finally:
+
+            # Exiting critical section
+            self.file_lock.release()
                 
         
         # Clear temp list
-        temp_list.clear()
+        self.temp_list.pop(0)
         
 
     # Overarching function. Parses through files in a job, loads and runs files
