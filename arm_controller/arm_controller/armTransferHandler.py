@@ -35,9 +35,12 @@ class ArmTransferHandler(Node):
         self.declare_parameter(
             "name", "insert_arm_name_here"
         )  # 2nd arg is default value
-        while name == "temp":
+        time.sleep(2) # Wait for the launch file to hand in names
+        name = self.get_parameter("name").get_parameter_value().string_value
+        while name == "temp" or name == "insert_arm_name_here":
+            self.get_logger().info("Please enter parameter node name")
+            rclpy.spin_once(self)
             name = self.get_parameter("name").get_parameter_value().string_value
-            time.sleep(1)  # 1 second timeout
 
         # Node creation
         super().__init__("arm_transfer_handler_" + name)  # User specifies name
@@ -81,6 +84,10 @@ class ArmTransferHandler(Node):
             self.set_state()
 
         # Create services
+
+        # Sub to topics
+        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -182,7 +189,7 @@ class ArmTransferHandler(Node):
         # Publish
         completed_transfer_pub.publish(msg)
 
-        return self.status["ERROR"]
+        return self.status["SUCCESS"]
 
     # Helper function
     def set_state(self):
@@ -195,12 +202,17 @@ class ArmTransferHandler(Node):
                 "Unable to update state with manager, continuing but the state of the arm may be incorrect"
             )
 
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+        self.current_state = msg.state
+
     # Function to constantly poll manager queue for transfers
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
-            status = self.get_next_transfer()
             time.sleep(3)
+            status = self.get_next_transfer()
 
 
 def main(args=None):
@@ -224,6 +236,7 @@ def main(args=None):
         arm_transfer_node.get_logger().error("Terminating...")
 
     # End
+#    spin_thread.join()
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 

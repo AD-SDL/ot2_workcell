@@ -32,6 +32,7 @@ class Master(Node):
         self.nodes_list = []  # Information about all nodes registered: type, id, state
         self.node_wait_timeout = 2  # 2 seconds
         self.node_wait_attempts = 10  # 10 attempts before error thrown
+        self.sub_list = []
 
         # Thread setup
         self.files_for_threads = (
@@ -40,7 +41,7 @@ class Master(Node):
         self.threads_list = []  # Maintains all the thread objects
 
         # Readability
-        self.states = {"BUSY": "1", "READY": "0"}  # TODO: more states
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3}
 
         # Path setup
@@ -57,7 +58,7 @@ class Master(Node):
         self.register_service = self.create_service(
             Register, "register", self.handle_register
         )  # registration service
-        self.destroy_service = self.create_service(
+        self.destroy_service_master = self.create_service(
             Destroy, "destroy", self.handle_destroy_worker
         )  # Destroy worker service
         self.get_node_info_service = self.create_service(
@@ -73,97 +74,6 @@ class Master(Node):
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
 
-    # TODO move outside of master class
-    # Loads filename to a worker node
-    # parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not?
-    def load(self, name, id, replacement):
-        # Check node online?
-        args = []
-        args.append(id)
-        status = retry(
-            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
-        )  # retry function
-        if status == self.status["ERROR"] or status == self.status["FATAL"]:
-            self.get_logger().error(
-                "Unable to find node %s" % id
-            )  # Node isn't registered
-            return self.status["ERROR"]
-        else:
-            self.get_logger().info("Node %s found" % id)  # Found
-
-        # Select a node
-        try:
-            # Get node information
-            target_node = self.search_for_node(
-                id
-            )  # See if id robot exists and the data
-
-            # Error checking
-            if target_node["type"] == "-1":  # No such node
-                self.get_logger().error("id: %s doesn't exist" % id)
-                return self.status["ERROR"]
-
-            # 			target_node = self.nodes_list[int(random()*len(self.nodes_list))] # Random load assignment
-            type = target_node["type"]  # These will be needed to acess the service
-            id = target_node["id"]
-        except Exception as e:
-            self.get_logger().error("Error occured: %r" % (e,))
-            return self.status["ERROR"]
-
-        # Client setup    (client can't be in the class as it constantly changes)
-        #
-        load_cli = self.create_client(
-            LoadService, "/%s/%s/load" % (type, id)
-        )  # format of service is /{type}/{id}/{service name}
-        while not load_cli.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("Service not available, trying again...")
-
-        # Client ready
-        try:
-            f = open(self.module_location + name, "r")
-            contents = f.read()
-            f.close()
-        except Exception as e:
-            self.get_logger().error("Error occured: %r" % (e,))
-            return self.status["ERROR"]  # Error
-
-        self.get_logger().info("File %s read complete" % name)  # Contents of file read
-
-        # Create a request
-        load_request = LoadService.Request()
-        load_request.name = name  # File path: insert file name, the file path even though the same is given to the client to set up
-        load_request.contents = contents  # File string contents
-        load_request.replace = replacement  # If the file exists do we overwrite it?
-
-        # Call service to load module
-        future = load_cli.call_async(load_request)
-        self.get_logger().info("Waiting for completion...")
-
-        # Waiting on future
-        while future.done() == False:
-            time.sleep(1)  # timeout 1 second
-        if future.done():
-            try:
-                response = future.result()
-            except Exception as e:
-                self.get_logger().error("Error occured %r" % (e,))
-                return self.status["ERROR"]  # Error
-            else:
-                # Error handling
-                if response.status == response.ERROR:
-                    self.get_logger().error(
-                        "Error occured in loading at %s for file %s" % (id, name)
-                    )
-                    return self.status["ERROR"]  # Error
-                elif response.status == response.WARNING:
-                    self.get_logger().warning(
-                        "Warning: File %s already exists on system %s" % (name, id)
-                    )
-                    return self.status["WARNING"]  # Warning
-                else:
-                    self.get_logger().info("Load succeeded")
-                    return self.status["SUCCESS"]  # All good
-
     # Registers a worker with the master so modules can be distrubuted
     def handle_register(self, request, response):
 
@@ -178,9 +88,14 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.states["READY"],  # TODO: implement states
+                "state": self.state["READY"],  # TODO: implement states
                 "name": request.name,
             }
+
+            # Add to sub list
+            self.sub_list.append(self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%dict['id'], self.node_state_update_callback, 10))
+            self.sub_list.append(self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%dict['id'], self.state_reset_callback, 10))
+
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -192,9 +107,14 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.states["READY"],  # TODO: implement states
+                "state": self.state["READY"],  # TODO: implement states
                 "name": request.name,
             }
+
+            # Add to sub list
+            self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
+            self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
+
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -282,135 +202,8 @@ class Master(Node):
         self.node_lock.release()
 
         # Not found
-        dict = {"type": "-1", "name": "-1", "state": "-1", "id": "-1"}
+        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1"}
         return dict
-
-    # TODO move outside of master class
-    # Runs a module on the node (id)
-    def run(self, file, id):
-        # Check node online?
-        args = []
-        args.append(id)
-        status = retry(
-            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
-        )  # retry function
-        if status == self.status["ERROR"] or status == self.status["FATAL"]:
-            self.get_logger().error(
-                "Unable to find node %s" % id
-            )  # Node isn't registered
-            return self.status["ERROR"]
-        else:
-            self.get_logger().info("Node %s found" % id)  # Found
-
-        # Get type
-        node = self.search_for_node(id)
-        type = node["type"]
-
-        # Client setup
-        run_cli = self.create_client(
-            Run, "/%s/%s/run" % (type, id)
-        )  # format of service is /{type}/{id}/{service name}
-        while not run_cli.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("Service not available, trying again...")
-
-        # Create a request
-        req = Run.Request()
-        req.type = type
-        req.id = id
-        req.file = file
-
-        # Call service
-        future = run_cli.call_async(req)
-        self.get_logger().info("Waiting for completion...")
-
-        # Waiting on future
-        while future.done() == False:
-            time.sleep(1)  # timeout 1 second
-        if future.done():
-            try:
-                response = future.result()
-            except Exception as e:
-                self.get_logger().error("Error occured %r" % (e,))
-                return self.status["ERROR"]  # Error
-            else:
-                # Error checking
-                if response.status == response.ERROR:
-                    self.get_logger().error(
-                        "Error occured when running file %s at id: %s" % (name, id)
-                    )
-                    return self.status["ERROR"]  # Error
-                else:
-                    self.get_logger().info("Module run succeeded")
-                    return self.status["SUCCESS"]  # All good
-
-    # Function to segway to main function call
-    def _load(self, args):
-        return self.load(args[0], args[1], args[2])  # File, id, replacement
-
-    # Function to segway to main function call
-    def _run(self, args):
-        return self.run(args[0], args[1])  # File, id
-
-    # TODO move outside of master class
-    # this will both load and run a file at the robot id
-    # TODO: change to just load, transfer and run files onm OT-2s
-    def load_and_run(self, file, id):
-        # Load the module
-        args = []
-        args.append(file)
-        args.append(id)
-        args.append(True)  # Auto update
-        status = retry(
-            self, self._load, 1, 0, args
-        )  # Calling retry function with 1 attempt, just want output information
-
-        # Status check
-        if status == self.status["FATAL"]:
-            self.get_logger().fatal(
-                "Major error occured when attempting to run function"
-            )
-            return self.status["FATAL"]  # Fatal error
-        elif status == self.status["ERROR"]:
-            self.get_logger().error(
-                "Retry function stopped, either due to too many attempts or a bad status returned"
-            )
-            return self.status["ERROR"]  # Error
-        elif status == self.status["WARNING"]:
-            self.get_logger().warning(
-                "Warning thrown by retry function during execution, but ran to completion"
-            )
-            # Continue
-        else:
-            self.get_logger().info("Function ran to completion")
-            # Continue
-
-        # Run the module
-        args = []
-        args.append(file)
-        args.append(id)
-        status = retry(
-            self, self._run, 1, 0, args
-        )  # Calling retry function with 1 attempt to get output messages
-
-        # Status check
-        if status == self.status["FATAL"]:
-            self.get_logger().fatal(
-                "Major error occured when attempting to run function"
-            )
-            return self.status["FATAL"]  # Fatal error
-        elif status == self.status["ERROR"]:
-            self.get_logger().error(
-                "Retry function stopped, either due to too many attempts or a bad status returned"
-            )
-            return self.status["ERROR"]  # Error
-        elif status == self.status["WARNING"]:
-            self.get_logger().warning(
-                "Warning thrown by retry function during execution, but ran to completion"
-            )
-            return self.status["WARNING"]  # Warnning thrown
-        else:
-            self.get_logger().info("Function ran to completion")
-            return self.status["SUCCESS"]  # All Good
 
     # Checks to see if the node/worker is ready (registered with the master)
     def node_ready(self, args):
@@ -473,7 +266,6 @@ class Master(Node):
 
         # Call Service to load module
         future = send_cli.call_async(send_request)
-        self.get_logger().info("Waiting for completion...")
 
         # Waiting on future
         while future.done() == False:
@@ -492,7 +284,7 @@ class Master(Node):
                     )
                     return self.status["ERROR"]  # Error
                 else:
-                    self.get_logger().info("Module run succeeded")
+                    self.get_logger().info("Files loaded")
                     return self.status["SUCCESS"]  # All good
 
     # Reads from a setup file to run a number of files on a specified robot
@@ -542,36 +334,12 @@ class Master(Node):
                 self.get_logger().error("Reading from setup error: %r" % (e,))
                 return self.status["ERROR"]  # Error
 
-            # Create thread
-            # replace worker_class with send_files
-            # temp_thread = worker_class(entry['name'], entry['id'], self, i) #name, id, master, index
-            # self.threads_list.append(temp_thread) # Record information
-
             # files sent to worker OT-2 to become threads
             self.send_files(id, files)
-
-            # TODO: set up lock? verify set up complete once files are sent
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
 
-        # TODO: migrate all below to ot2 class
-
-        # New barrier for each thread (So we know when they all finish)
-        # self.read_from_setup_barrier = threading.Barrier(n+1) # one for each thread and one for the main thread
-
-        # Start running each thread
-        # for item in self.threads_list:
-        # item.start()
-
-        # Waiting on finish
-        # self.read_from_setup_barrier.wait()
-
-        # Join each thread
-        # for item in self.threads_list:
-        # item.join()
-
-        # Done
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
 
@@ -609,26 +377,58 @@ class Master(Node):
             entry = NodeEntry()
             entry.id = item["id"]
             entry.name = item["name"]
-            entry.sate = item["state"]
+            entry.state = item["state"]
             entry.type = item["type"]
             response.node_list.append(entry)
         response.status = response.SUCCESS
         return response
 
+    # Service to update the state of the arm
+    def node_state_update_callback(self, msg):
+        # Find node
+        entry = self.search_for_node(msg.id)
+        current_state = entry['state']
 
-def setup_thread_work(master):
-    status = master.read_from_setup("setup")
+        # Prevent changing state when in an error state
+        if(current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            return # exit out of function
 
+        # set state
+        self.node_lock.acquire()
+        entry['state'] = msg.state
+        self.node_lock.release()
+
+        # Debug
+  #      entry = self.search_for_node(msg.id)
+   #     self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
+
+   # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state of id: %s..."%msg.id)
+
+        # Find node
+        entry = self.search_for_node(msg.id)
+        current_state = entry['state']
+
+        # set state
+        self.node_lock.acquire()
+        entry['state'] = msg.state
+        self.node_lock.release()
+
+        # Debug 
+#        entry = self.search_for_node(msg.id)
+ #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):
     rclpy.init(args=args)
-    master = Master()
+    master_controller = Master()
 
     # Create a thread to run setup_thread
-    spin_thread = Thread(target=master.read_from_setup, args=("setup",))
+    spin_thread = Thread(target=master_controller.read_from_setup, args=("setup",))
     spin_thread.start()
 
     # master.read_from_setup("setup")
@@ -639,17 +439,17 @@ def main(args=None):
 
     # Spin
     try:
-        rclpy.spin(master)
+        rclpy.spin(master_controller)
     except Exception as e:
-        master.get_logger().fatal(
+        master_controller.get_logger().fatal(
             "rclpy.spin failed, system in volatile state %r" % (e,)
         )
     except:
-        master.get_logger().fatal("Terminating...")
+        master_controller.get_logger().fatal("Terminating...")
 
     # End
     spin_thread.join()
-    master.destroy_node()
+    master_controller.destroy_node()
     rclpy.shutdown()
 
 

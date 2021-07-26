@@ -39,10 +39,12 @@ class OT2ProtocolManager(Node):
         self.declare_parameter(
             "name", "insert_OT2_protocol_manager_name_here"
         )  # 2nd arg is default value
+        time.sleep(2) # Wait for the launch file to hand in names
+        name = self.get_parameter("name").get_parameter_value().string_value
         while name == "temp" or name == "insert_OT2_protocol_manager_name_here":
             name = self.get_parameter("name").get_parameter_value().string_value
+            rclpy.spin_once(self)
             self.get_logger().info("Please enter the name parameter to this node")
-            time.sleep(1)  # 1 second timeout
 
         # Node creation
         super().__init__("OT2_protocol_manager_" + name)  # User specifies name
@@ -79,6 +81,10 @@ class OT2ProtocolManager(Node):
             sys.exit(1)  # TODO: alert manager of error
 
         # Create services
+
+        # Create subs
+        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -145,8 +151,9 @@ class OT2ProtocolManager(Node):
         # TODO: actually incorporate runs
 
         # set state to busy
-        self.current_state = self.state["BUSY"]
-        self.set_state()
+        try:
+            self.current_state = self.state["BUSY"]
+            self.set_state()
 
         # run protocol, use load_and_run function
         self.get_logger().info("Running protocol")
@@ -163,11 +170,19 @@ class OT2ProtocolManager(Node):
         # Remove file from file_name list
         file_name.pop(0)
 
-        # set state to ready
-        self.current_state = self.state["READY"]
-        self.set_state()
+            # set state to ready
+            self.current_state = self.state["READY"]
+            self.set_state()
 
-        # TODO: error checking
+            return self.status['SUCCESS']
+            # TODO: error checking
+        except:
+            return self.status['ERROR']
+
+    # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state...")
+        self.current_state = msg.state
 
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
@@ -216,9 +231,20 @@ class OT2ProtocolManager(Node):
     def run(self):
         # Run get_protocol every 3 seconds
         while rclpy.ok():
-            self.get_next_protocol()  # Full finish before waiting
             time.sleep(3)
+            status = self.get_next_protocol()  # Full finish before waiting
 
+
+    # Function to setup transfer
+    def transfer(self, from_name, to_name, arm_name, item):
+        args = []
+        args.append(self)
+        args.append(from_name)
+        args.append(to_name)
+        args.append(item)
+        args.append(arm_name)
+        status = retry(ot2node, _load_transfer, 20, 4, args)
+        return status
 
 def main(args=None):
     rclpy.init(args=args)
@@ -238,6 +264,7 @@ def main(args=None):
         protocol_manager.get_logger().error("Terminating...")
 
     # End
+#    spin_thread.join()
     protocol_manager.destroy_node()
     rclpy.shutdown()
 

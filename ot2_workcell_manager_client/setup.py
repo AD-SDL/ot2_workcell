@@ -12,10 +12,10 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="nerra",
-    maintainer_email="alan.linghao.wang@gmail.com",
+    maintainer="Alan Wang",
+    maintainer_email="alan.wang@anl.gov",
     description="TODO: Package description",
-    license="TODO: License declaration",
+    license="MIT License",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
