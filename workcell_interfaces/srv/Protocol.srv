@@ -7,3 +7,5 @@ int64 FATAL = 3
 int64 WAITING = 10
 
 int64 status
+
+string file

@@ -1,3 +1,4 @@
+from typing import Protocol
 import rclpy
 from rclpy.node import Node
 from threading import Thread, Lock
@@ -94,9 +95,58 @@ class OT2ProtocolManager(Node):
     # retrieves next script to run in the queue
     def get_next_protocol(self):
         # Get the next protocol
-        # TODO: add in api
+        # TODO: add in api, protocol client goes here
         self.get_logger().info("Got item from queue")
+        file_name = []
 
+        # Client setup
+
+
+        # Set node info
+        type = "OT_2"
+        id = self.id
+
+        # Create client
+        protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
+        while not protocol_cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("Service not available, trying again...")
+        
+        # Client ready, get name of file
+        # No request info needed
+        protocol_request = Protocol.Request()
+
+        # Call service to protocol
+        future = protocol_cli.call_async(protocol_request)
+        self.get_logger().info("Waiting for completion...")
+
+        # Waiting on future
+        while future.done() == False:
+            time.sleep(1)  # timeout 1 second
+        if future.done():
+            try:
+                response = future.result()
+            except Exception as e:
+                self.get_logger().error("Error occured %r" % (e,))
+                return self.status["ERROR"]  # Error
+            else:
+                # Get file name
+                file_name.append(response.file)
+                # Error handling
+                if response.status == response.ERROR:
+                    self.get_logger().error(
+                        "Error occured in protocol client %s for file %s" % (id, response.file)
+                    )
+                    return self.status["ERROR"]  # Error
+                elif response.status == response.WARNING:
+                    self.get_logger().warning(
+                        "Warning: File %s already exists on system %s" % (response.file, id)
+                    )
+                    return self.status["WARNING"]  # Warning
+                else:
+                    self.get_logger().info("Load succeeded")
+                    self.status["SUCCESS"]  # All good
+                    #TODO need break here?
+                    
         # Begin running the next protocol
         # TODO: actually incorporate runs
 
@@ -105,9 +155,20 @@ class OT2ProtocolManager(Node):
             self.current_state = self.state["BUSY"]
             self.set_state()
 
-            # run protocol
-            self.get_logger().info("Running protocol")
-            time.sleep(2)
+        # run protocol, use load_and_run function
+        self.get_logger().info("Running protocol")
+        #time.sleep(2)
+        status = self.load_and_run(file_name[0])
+        
+
+        # Check to see if run was success
+        if status == "ERROR":
+            self.get_logger().error("Error: protocol %s was not run successfully" % file_name[0])
+        elif status == "SUCCESS":
+            self.get_logger().info("Protocol %s was run successfully" % file_name[0])
+        
+        # Remove file from file_name list
+        file_name.pop(0)
 
             # set state to ready
             self.current_state = self.state["READY"]
@@ -123,6 +184,38 @@ class OT2ProtocolManager(Node):
         self.get_logger().warning("Resetting state...")
         self.current_state = msg.state
 
+    # Takes filename, unpacks script from file, and runs the script
+    def load_and_run(self, file):
+
+        # Set variable with file path
+        filepath = (self.module_location + file)
+
+        # Import file as module
+        self.get_logger().info("Importing module...")
+
+        try:
+            # Load and attach module to program
+            spec = importlib.util.spec_from_file_location(file, filepath)
+            ot2Module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ot2Module)
+        except Exception as e:
+            # Error
+            self.get_logger().error("Error occured when trying to load module %s: %r" % (filepath, e,))
+            return "ERROR"
+        else:
+            self.get_logger().info("Module %s successfully loaded and attached to the program" % filepath)
+
+        # Run work() function in module
+        self.get_logger().info("Running module...")
+        try:
+            ot2Module.work()
+        except Exception as e:
+            # Error
+            self.get_logger().error("Error occured when trying to run module %s: %r" % (filepath, e))
+            return "ERROR"
+        else:
+            self.get_logger().info("Module %s successfully ran to completion" % filepath)
+            return "SUCCESS"
     # Helper function
     def set_state(self):
         args = []

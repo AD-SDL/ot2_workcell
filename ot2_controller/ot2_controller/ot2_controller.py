@@ -55,7 +55,9 @@ class OT2(Node):
         self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
 
         self.work_list = []  # list of files list recieved from jobs
-#        self.threads_list = []  # list of all worker threads
+        self.work_index = 0  # location of recently added files in work_list
+        self.threads_list = []  # list of all worker threads
+        self.temp_list = [] # List that stores individual jobs for the protocol handler
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
@@ -124,8 +126,9 @@ class OT2(Node):
             self.work_list_lock.acquire()
 
             # Append files to work list
-            for item in files:
-                self.work_list.append(item)
+            # TODO: change, maybe run worker function?
+            self.work_list.append(files)
+            self.work_index = self.work_index + 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
@@ -200,23 +203,42 @@ class OT2(Node):
 
         # No request information
 
+        # Check to see if work list is empty
+        if len(self.temp_list) != 0:
+            self.get_logger().info("More work in current job") # Still more files to run in temp_list
+        elif len(self.work_list) == 0 and len(self.temp_list) == 0: # Both temp_list and work_list empty, wait for more jobs
+            self.get_logger().info("No more current work for OT-2 %s" % self.name)
+            response = Protocol.Response()
+            response.status = response.SUCCESS
+            return response
+        else:
+            # Selecting job
+            self.temp_list = self.work_list[0] #Adds new job (set of files) to the temp_list
+            # Remove entry from work list
+            self.work_list.pop(0)
+
+        # Check state of OT-2, wait for READY state
+        if self.current_state == 1:
+            time.sleep(5) # Protocol running, wait 5 seconds
+        elif self.current_state == 0:
+            self.get_logger().info("OT-2 ready for new protocol")
+        elif self.current_state == 2: #Error
+            self.get_logger().error("OT-2 in error state")
+            response = Protocol.Response()
+            response.status = response.ERROR
+            return response
+        else:
+            self.get_logger().error("Error: unexpected state: %s" % self.current_state)
+        
+        # Hand over temp_list[0], wai for completion, then delete file
+    
         # Create response
         response = Protocol.Response()
 
-        # Warnings / Errors
-        if not id == self.id:  # Wrong ID
-            self.get_logger().error(
-                "Request id: %s doesn't match node id: %s" % (id, self.id)
-            )
-            response.status = response.ERROR
-            return response
-        elif not type == "OT_2":  # Wrong type
-            self.get_logger().warning(
-                "The requested node type: %s doesn't match the node type of id: %s, but will still proceed"
-                % (type, self.id)
-            )
-        elif path.exists(file) == False:  # File doesn't exist
-            self.get_logger().error("File: %s doesn't exist" % (file))
+        # Error check
+            
+        if path.exists(self.module_location + self.temp_list[0]) == False:  # File doesn't exist
+            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
             response.status = response.ERROR
             return response
 
@@ -227,23 +249,25 @@ class OT2(Node):
         self.get_logger().info("Handing over file")
 
         try:
-            # Extract file name from list
-            name = self.work_list.pop(0)
+            # Extract file name from temp list
+            name = self.temp_list[0]
             response.file = name
-
-            # clear work_list
-#            self.work_list.clear()
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
+            return response
         else:
             self.get_logger().info("File %s handed to OT2" % name)
             response.status = response.SUCCESS  # All good
-
         finally:
             # Exiting critical section
+            self.file_lock.release()
             self.work_list_lock.release()
-            return response
+
+        
+        # Clear temp list
+        self.temp_list.pop(0)
+        return response
 
 # TODO: DELETE
 def work(ot2node):
@@ -270,8 +294,19 @@ def main(args=None):
     name = "temp" #TODO: delete
 
     ot2node = OT2(name)
+    
+    rclpy.spin(ot2node)
 
+    # Setup args and end
+    args = []
+    args.append(ot2node)  # Self
+    status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
+    spin_thread.join()
+    ot2node.destroy_node()
+    rclpy.shutdown()
     ot2node.get_logger().info("init done") 
+
+'''
     # Spin
     try:
         # TODO: DELETE
@@ -294,7 +329,7 @@ def main(args=None):
         spin_thread.join()
         ot2node.destroy_node()
         rclpy.shutdown()
-
+'''
 
 if __name__ == "__main__":
     main()
