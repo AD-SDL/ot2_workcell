@@ -203,6 +203,9 @@ class OT2(Node):
 
         # No request information
 
+        # Get lock
+        self.work_list_lock.acquire()
+
         # Check to see if work list is empty
         if len(self.temp_list) != 0:
             self.get_logger().info("More work in current job") # Still more files to run in temp_list
@@ -229,21 +232,17 @@ class OT2(Node):
             return response
         else:
             self.get_logger().error("Error: unexpected state: %s" % self.current_state)
-        
+
         # Hand over temp_list[0], wai for completion, then delete file
-    
+
         # Create response
         response = Protocol.Response()
 
         # Error check
-            
         if path.exists(self.module_location + self.temp_list[0]) == False:  # File doesn't exist
             self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
             response.status = response.ERROR
             return response
-
-        # Get lock
-        self.work_list_lock.acquire()
 
         # obtain file containing protocol
         self.get_logger().info("Handing over file")
@@ -261,10 +260,8 @@ class OT2(Node):
             response.status = response.SUCCESS  # All good
         finally:
             # Exiting critical section
-            self.file_lock.release()
             self.work_list_lock.release()
 
-        
         # Clear temp list
         self.temp_list.pop(0)
         return response
@@ -294,17 +291,18 @@ def main(args=None):
     name = "temp" #TODO: delete
 
     ot2node = OT2(name)
-    
-    rclpy.spin(ot2node)
+    try:
+        rclpy.spin(ot2node)
+    except:
+        ot2node.get_logger().fatal("Terminating...")
 
     # Setup args and end
     args = []
     args.append(ot2node)  # Self
     status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-    spin_thread.join()
+#    spin_thread.join()
     ot2node.destroy_node()
     rclpy.shutdown()
-    ot2node.get_logger().info("init done") 
 
 '''
     # Spin

@@ -110,7 +110,7 @@ class OT2ProtocolManager(Node):
         protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
         while not protocol_cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("Service not available, trying again...")
-        
+
         # Client ready, get name of file
         # No request info needed
         protocol_request = Protocol.Request()
@@ -146,7 +146,7 @@ class OT2ProtocolManager(Node):
                     self.get_logger().info("Load succeeded")
                     self.status["SUCCESS"]  # All good
                     #TODO need break here?
-                    
+
         # Begin running the next protocol
         # TODO: actually incorporate runs
 
@@ -155,20 +155,20 @@ class OT2ProtocolManager(Node):
             self.current_state = self.state["BUSY"]
             self.set_state()
 
-        # run protocol, use load_and_run function
-        self.get_logger().info("Running protocol")
-        #time.sleep(2)
-        status = self.load_and_run(file_name[0])
-        
+            # run protocol, use load_and_run function
+            self.get_logger().info("Running protocol")
 
-        # Check to see if run was success
-        if status == "ERROR":
-            self.get_logger().error("Error: protocol %s was not run successfully" % file_name[0])
-        elif status == "SUCCESS":
-            self.get_logger().info("Protocol %s was run successfully" % file_name[0])
-        
-        # Remove file from file_name list
-        file_name.pop(0)
+            #time.sleep(2)
+            status = self.load_and_run(file_name[0])
+
+            # Check to see if run was success
+            if status == "ERROR":
+                self.get_logger().error("Error: protocol %s was not run successfully" % file_name[0])
+            elif status == "SUCCESS":
+                self.get_logger().info("Protocol %s was run successfully" % file_name[0])
+
+            # Remove file from file_name list
+            file_name.pop(0)
 
             # set state to ready
             self.current_state = self.state["READY"]
