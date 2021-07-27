@@ -233,7 +233,7 @@ class OT2(Node):
         else:
             self.get_logger().error("Error: unexpected state: %s" % self.current_state)
 
-        # Hand over temp_list[0], wai for completion, then delete file
+        # Hand over temp_list[0], wait for completion, then delete file
 
         # Create response
         response = Protocol.Response()
@@ -265,25 +265,6 @@ class OT2(Node):
         # Clear temp list
         self.temp_list.pop(0)
         return response
-
-# TODO: DELETE
-def work(ot2node):
-
-    args = []
-    if ot2node.name == "bob":
-        args.append(ot2node)
-        args.append("bob")
-        args.append("alex")
-        args.append("10")
-        args.append("army")
-        status = retry(ot2node, _load_transfer, 20, 4, args)
-    if ot2node.name == "alex":
-        args.append(ot2node)
-        args.append("bob")
-        args.append("alex")
-        args.append("10")
-        args.append("army")
-        status = retry(ot2node, _load_transfer, 20, 4, args)
 
 def main(args=None):
     rclpy.init(args=args)

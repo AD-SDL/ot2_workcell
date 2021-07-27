@@ -6,7 +6,7 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Calls a service created by the ot2 manager to udpate the state of the ot2
+# Calls a service created by the ot2 manager to update the state of the ot2
 def update_ot2_state(self, current_state):
 
     # Error checking
