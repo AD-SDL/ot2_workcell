@@ -60,7 +60,7 @@ class OT2ProtocolManager(Node):
             "READY": 0,
             "ERROR": 2,
         }
-        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3}
+        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
         # State of the ot2
         self.current_state = self.state["READY"]
@@ -68,7 +68,7 @@ class OT2ProtocolManager(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
+        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         # Create clients
 
@@ -94,13 +94,6 @@ class OT2ProtocolManager(Node):
 
     # retrieves next script to run in the queue
     def get_next_protocol(self):
-        # Get the next protocol
-        # TODO: add in api, protocol client goes here
-        self.get_logger().info("Got item from queue")
-        file_name = []
-
-        # Client setup
-
 
         # Set node info
         type = "OT_2"
@@ -110,6 +103,9 @@ class OT2ProtocolManager(Node):
         protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
         while not protocol_cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("Service not available, trying again...")
+
+        # Get the next protocol
+        file_name = ""
 
         # Client ready, get name of file
         # No request info needed
@@ -130,13 +126,15 @@ class OT2ProtocolManager(Node):
                 return self.status["ERROR"]  # Error
             else:
                 # Get file name
-                file_name.append(response.file)
+                file_name = response.file
                 # Error handling
                 if response.status == response.ERROR:
                     self.get_logger().error(
                         "Error occured in protocol client %s for file %s" % (id, response.file)
                     )
                     return self.status["ERROR"]  # Error
+                elif response.status == response.WAITING: # Waiting for jobs
+                    return self.status['WAITING']
                 elif response.status == response.WARNING:
                     self.get_logger().warning(
                         "Warning: File %s already exists on system %s" % (response.file, id)
@@ -145,7 +143,6 @@ class OT2ProtocolManager(Node):
                 else:
                     self.get_logger().info("Load succeeded")
                     self.status["SUCCESS"]  # All good
-                    #TODO need break here?
 
         # Begin running the next protocol
         # TODO: actually incorporate runs
@@ -155,29 +152,31 @@ class OT2ProtocolManager(Node):
             self.current_state = self.state["BUSY"]
             self.set_state()
 
+            # Conducting a transfer
+            if(file_name.split(":")[0] == "transfer"):
+                temp = file_name.split(":")
+                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) #from, to , item arm
             # run protocol, use load_and_run function
-            self.get_logger().info("Running protocol")
-
-            #time.sleep(2)
-            status = self.load_and_run(file_name[0])
+            else:
+                self.get_logger().info("Running protocol")
+                status = self.load_and_run(file_name)
 
             # Check to see if run was success
-            if status == "ERROR":
-                self.get_logger().error("Error: protocol %s was not run successfully" % file_name[0])
-            elif status == "SUCCESS":
-                self.get_logger().info("Protocol %s was run successfully" % file_name[0])
-
-            # Remove file from file_name list
-            file_name.pop(0)
-
-            # set state to ready
+            if status == self.status['ERROR']:
+                self.get_logger().error("Error: protocol %s was not run successfully" % file_name)
+                raise Exception
+            elif status == self.status['SUCCESS']:
+                self.get_logger().info("Protocol %s was run successfully" % file_name)
+        except Exception as e:
+            self.get_logger().error("Error occured: %r"%(e,))
+            self.current_state = self.state["ERROR"]
+            return self.status['ERROR']
+        else:
             self.current_state = self.state["READY"]
+            return self.status['SUCCESS']
+        finally:
             self.set_state()
 
-            return self.status['SUCCESS']
-            # TODO: error checking
-        except:
-            return self.status['ERROR']
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
@@ -190,6 +189,11 @@ class OT2ProtocolManager(Node):
         # Set variable with file path
         filepath = (self.module_location + file)
 
+        # Error check
+        if path.exists(filepath) == False:  # File doesn't exist
+            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
+            return self.status['ERROR']
+
         # Import file as module
         self.get_logger().info("Importing module...")
 
@@ -201,7 +205,7 @@ class OT2ProtocolManager(Node):
         except Exception as e:
             # Error
             self.get_logger().error("Error occured when trying to load module %s: %r" % (filepath, e,))
-            return "ERROR"
+            return self.status['ERROR']
         else:
             self.get_logger().info("Module %s successfully loaded and attached to the program" % filepath)
 
@@ -212,10 +216,11 @@ class OT2ProtocolManager(Node):
         except Exception as e:
             # Error
             self.get_logger().error("Error occured when trying to run module %s: %r" % (filepath, e))
-            return "ERROR"
+            return self.status['ERROR']
         else:
             self.get_logger().info("Module %s successfully ran to completion" % filepath)
-            return "SUCCESS"
+            return self.status['SUCCESS']
+
     # Helper function
     def set_state(self):
         args = []
@@ -236,14 +241,14 @@ class OT2ProtocolManager(Node):
 
 
     # Function to setup transfer
-    def transfer(self, from_name, to_name, arm_name, item):
+    def transfer(self, from_name, to_name, item, arm_name):
         args = []
         args.append(self)
         args.append(from_name)
         args.append(to_name)
         args.append(item)
         args.append(arm_name)
-        status = retry(ot2node, _load_transfer, 20, 4, args)
+        status = retry(self, _load_transfer, 20, 4, args)
         return status
 
 def main(args=None):
