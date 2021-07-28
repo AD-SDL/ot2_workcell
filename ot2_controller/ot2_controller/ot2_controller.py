@@ -52,7 +52,7 @@ class OT2(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
+        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         self.work_list = []  # list of files list recieved from jobs
         self.work_index = 0  # location of recently added files in work_list
@@ -207,28 +207,26 @@ class OT2(Node):
         self.work_list_lock.acquire()
 
         # Check to see if work list is empty
-        if len(self.temp_list) != 0:
-            self.get_logger().info("More work in current job") # Still more files to run in temp_list
-        elif len(self.work_list) == 0 and len(self.temp_list) == 0: # Both temp_list and work_list empty, wait for more jobs
+        if len(self.work_list) == 0 and len(self.temp_list) == 0: # Both temp_list and work_list empty, wait for more jobs
             self.get_logger().info("No more current work for OT-2 %s" % self.name)
             response = Protocol.Response()
-            response.status = response.SUCCESS
+            response.status = response.WAITING
+            self.work_list_lock.release() # Release lock
             return response
-        else:
+        elif(len(self.temp_list) == 0):
             # Selecting job
-            self.temp_list = self.work_list[0] #Adds new job (set of files) to the temp_list
-            # Remove entry from work list
-            self.work_list.pop(0)
+            self.temp_list = self.work_list.pop(0) #Adds new job (set of files) to the temp_list and removes
 
         # Check state of OT-2, wait for READY state
-        if self.current_state == 1:
+        if self.current_state == self.state['BUSY']:
             time.sleep(5) # Protocol running, wait 5 seconds
-        elif self.current_state == 0:
+        elif self.current_state == self.state['READY']:
             self.get_logger().info("OT-2 ready for new protocol")
-        elif self.current_state == 2: #Error
+        elif self.current_state == self.state['ERROR']: #Error
             self.get_logger().error("OT-2 in error state")
             response = Protocol.Response()
             response.status = response.ERROR
+            self.work_list_lock.release()
             return response
         else:
             self.get_logger().error("Error: unexpected state: %s" % self.current_state)
@@ -237,12 +235,6 @@ class OT2(Node):
 
         # Create response
         response = Protocol.Response()
-
-        # Error check
-        if path.exists(self.module_location + self.temp_list[0]) == False:  # File doesn't exist
-            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
-            response.status = response.ERROR
-            return response
 
         # obtain file containing protocol
         self.get_logger().info("Handing over file")

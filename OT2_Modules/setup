@@ -1,7 +1,5 @@
-3
+2
 bob
-item1.py item1.py item1.py item1.py item1.py item1.py item1.py item1.py
+transfer:bob:alex:10:army
 alex
-item2.py item2.py item2.py item2.py
-bob
-item2.py item2.py item2.py item1.py
+transfer:bob:alex:10:army
