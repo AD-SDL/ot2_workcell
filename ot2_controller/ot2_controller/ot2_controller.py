@@ -130,7 +130,25 @@ class OT2(Node):
             self.create_file_lock.acquire()
 
             # TODO: Create file
-        
+            # Check if file already exists
+            filepath = Path(self.module_location + name)
+
+            if filepath.is_file(): # file already exists
+                if replace == True: # request says to replace file
+                    os.remove(self.module_location + name) # delete preexisting file
+                    f = open(self.module_location + name, "x") # create new file with name
+                    f.write(contents) # write contents into file
+                    f.close()
+                    self.get_logger().info("File %s created and loaded" % name)
+                else: # request says don't replce file
+                    self.get_logger().info("File already exists, did not replace")
+            else: #file does not exist
+                f = open(self.module_location + name, "x") # create new file with name
+                f.write(contents) # write contents into file
+                f.close()
+                self.get_logger.info("File %s created and loaded" % name)
+
+
         except Exception as e:
             self.get_logger().error("Error occurred: %r" % (e,))
             response.status = response.ERROR

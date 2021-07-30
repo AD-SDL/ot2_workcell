@@ -339,7 +339,8 @@ class Master(Node):
 
             split_files = files.split()
 
-            # TODO: send_scripts function that creates client that sends contents of files to worker OT-2
+            # files get split and have their contents sent one by one to OT-2 controller
+            self.send_scripts(id, split_files)
             # include status check?
 
             # Setup complete for this thread
