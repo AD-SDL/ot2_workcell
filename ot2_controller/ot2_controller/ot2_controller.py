@@ -127,7 +127,7 @@ class OT2(Node):
 
         try:
             # Get lock
-            self.create_file_lock.acquire()
+            self.file_lock.acquire()
 
             # TODO: Create file
             # Check if file already exists
@@ -157,7 +157,7 @@ class OT2(Node):
             response.status = response.SUCCESS
         finally:
             # release lock
-            self.create_file_lock.release()
+            self.file_lock.release()
             return response
 
 
