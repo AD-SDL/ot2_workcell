@@ -337,7 +337,10 @@ class Master(Node):
             # files sent to worker OT-2 to become threads
             self.send_files(id, files)
 
+            split_files = files.split()
+
             # TODO: send_scripts function that creates client that sends contents of files to worker OT-2
+            # include status check?
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
@@ -346,7 +349,7 @@ class Master(Node):
         return self.status["SUCCESS"]
     
     # Creates client that sends contents of files to OT-2
-    def send_scripts(self, id, files):
+    def send_scripts(self, id, split_files):
 
         # Check node online?
         args = []
@@ -386,12 +389,42 @@ class Master(Node):
         while not script_cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("Service not available, trying again...")
 
-        # extract name and contents of each file in files
+        # extract name and contents of each first file in list
+        name = split_files[0]
+        with open(self.module_location + name, 'r') as file:
+            contents = file.read().replace('\n', '')
+        
+        # remove script from job list
+        split_files.pop(0)
 
         # Client ready
-        send_request = SendFiles.Request()
-        # name
-        # contents
+        script_request = SendScripts.Request()
+        script_request.name = name # name of file
+        script_request.contents = contents # contents of file
+        script_request.replace = True # Replace file of same name (default true)
+
+        # Call service
+        future = script_cli.call_async(script_request)
+
+        # Waiting on future
+        while future.done() == False:
+            time.sleep(1)  # timeout 1 second
+        if future.done():
+            try:
+                response = future.result()
+            except Exception as e:
+                self.get_logger().error("Error occured %r" % (e,))
+                return self.status["ERROR"]  # Error
+            else:
+                # Error checking
+                if response.status == response.ERROR:
+                    self.get_logger().error(
+                        "Error occured when sending script %s at id: %s" % (name, id)
+                    )
+                    return self.status["ERROR"]  # Error
+                else:
+                    self.get_logger().info("File %s contents loaded" % name)
+                    return self.status["SUCCESS"]  # All good
 
 
     # Handles get node info service call
