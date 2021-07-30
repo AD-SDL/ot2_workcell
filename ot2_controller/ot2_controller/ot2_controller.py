@@ -89,6 +89,9 @@ class OT2(Node):
         self.protocol_service = self.create_service(
             Protocol, "/OT_2/%s/protocol" % self.id, self.protocol_handler
         )
+        self.script_service = self.create_service(
+            SendScripts, "/OT_2/%s/send_scripts" % self.id, self.load_scripts_handler
+        )
 
         # Create subscribers
         self.ot2_state_update_sub = self.create_subscription(
@@ -107,6 +110,39 @@ class OT2(Node):
         self.get_logger().info(
             "ID: %s name: %s initialization completed" % (self.id, self.name)
         )
+    
+    # Handles send_scripts service calls, creates files and loads contents into them
+    def load_scripts_handler(self, request, response):
+
+        # Get request information
+        name = request.name # name of file to be created
+        contents = request.contents # contents of file
+        replace = request.replace # bool whether or not to replace file of same name
+
+        # Create response
+        response = SendScripts.Response()
+
+        # Create file
+        self.get_logger().info("Creating file %s" % name)
+
+        try:
+            # Get lock
+            self.create_file_lock.acquire()
+
+            # TODO: Create file
+        
+        except Exception as e:
+            self.get_logger().error("Error occurred: %r" % (e,))
+            response.status = response.ERROR
+        else:
+            self.get_logger().info("File %s created and loaded" % name)
+            response.status = response.SUCCESS
+        finally:
+            # release lock
+            self.create_file_lock.release()
+            return response
+
+
 
     # Handles send_module service calls
     def receive_files_handler(self, request, response):
@@ -126,7 +162,6 @@ class OT2(Node):
             self.work_list_lock.acquire()
 
             # Append files to work list
-            # TODO: change, maybe run worker function?
             self.work_list.append(files)
             self.work_index = self.work_index + 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
