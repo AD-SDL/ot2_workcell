@@ -23,6 +23,21 @@ This workcell will eventually support:
 		* transfer_api.py (An api for other OT2s to use to transfer items)
 		* publish_arm_state.py (api to publish its state to a manager)
 
+* **json_schema/**
+	* **hardware/**
+		* arm.json (defines a JSON object for the robotic arms in the workcell)
+		* OT2.json (defines a JSON object for the OT2)
+	* **steps/**
+		* ot2_command.json (defines a JSON object for the "ot2_command" step)
+		* ot2_protocol.json (defines a JSON object for the "ot2_protocol" step)
+		* plate_transfer.json (defines a JSON object for the "plate_transfer" step)
+		* step_batch.json (defines a JSON object for a batch of steps)
+	* generate_valid_schema.py (Converts workflow.json into schema.json, resolving all the $refs to create one complete json specification)
+	* metadata.json (defines a common metadata JSON object)
+	* schema.json (the entire JSON schema for our workflows)
+	* validate_against_schema.py (takes a JSON file as an argument and validates it against schema.json)
+	* workflow.json (the base JSON object schema for our JSON specification)
+
 * **ot2_workcell_manager/**
 	* **ot2_workcell_manager/**
 		* master.py (Controls the state of the system)

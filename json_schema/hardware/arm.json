@@ -1,0 +1,20 @@
+{
+    "title": "Schema for including a robotic arm in a workflow",
+    "type": "object",
+    "properties": {
+        "hardware_type": {
+            "const": "Arm"
+        },
+        "metadata": {
+            "$ref": "../metadata.json"
+        },
+        "name": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "hardware_type",
+        "name"
+    ],
+    "additionalProperties": false
+}

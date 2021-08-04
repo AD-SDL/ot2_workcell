@@ -1,0 +1,551 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "properties": {
+        "hardware": {
+            "additionalItems": false,
+            "items": {
+                "anyOf": [
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "hardware_type": {
+                                "const": "OT2"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "hardware_type",
+                            "name"
+                        ],
+                        "title": "Schema for including an OT-2 in the workflow",
+                        "type": "object"
+                    },
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "hardware_type": {
+                                "const": "Arm"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "hardware_type",
+                            "name"
+                        ],
+                        "title": "Schema for including a robotic arm in a workflow",
+                        "type": "object"
+                    }
+                ]
+            },
+            "minItems": 1,
+            "type": "array"
+        },
+        "metadata": {
+            "additionalProperties": true,
+            "properties": {
+                "comments": {
+                    "additionalItems": false,
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "tags": {
+                    "additionalItems": false,
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "version": {
+                    "type": "string"
+                }
+            },
+            "title": "Schema for metadata",
+            "type": "object"
+        },
+        "steps": {
+            "additionalItems": false,
+            "items": {
+                "anyOf": [
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "filepath": {
+                                "type": "string"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "ot2_name": {
+                                "type": "string"
+                            },
+                            "prereq_steps": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "step_name": {
+                                "type": "string"
+                            },
+                            "step_type": {
+                                "const": "ot2_protocol"
+                            }
+                        },
+                        "required": [
+                            "step_type",
+                            "step_name",
+                            "ot2_name",
+                            "filepath"
+                        ],
+                        "title": "Schema for an individual OT-2 protocol run step",
+                        "type": "object"
+                    },
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "arm_name": {
+                                "type": "string"
+                            },
+                            "dest_name": {
+                                "type": "string"
+                            },
+                            "dest_position": {
+                                "type": "integer"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "prereq_steps": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "src_name": {
+                                "type": "string"
+                            },
+                            "src_position": {
+                                "type": "integer"
+                            },
+                            "step_name": {
+                                "type": "string"
+                            },
+                            "step_type": {
+                                "const": "plate_transfer"
+                            }
+                        },
+                        "required": [
+                            "step_type",
+                            "step_name",
+                            "arm_name",
+                            "src_name",
+                            "dest_name",
+                            "src_position",
+                            "dest_position"
+                        ],
+                        "title": "Schema for an individual plate transfer step",
+                        "type": "object"
+                    },
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "command": {
+                                "type": "object"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "ot2_name": {
+                                "type": "string"
+                            },
+                            "prereq_steps": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "step_name": {
+                                "type": "string"
+                            },
+                            "step_type": {
+                                "const": "ot2_command"
+                            }
+                        },
+                        "required": [
+                            "step_type",
+                            "step_name",
+                            "ot2_name",
+                            "command"
+                        ],
+                        "title": "Schema for an individual OT-2 command step",
+                        "type": "object"
+                    },
+                    {
+                        "additionalProperties": false,
+                        "properties": {
+                            "batch_name": {
+                                "type": "string"
+                            },
+                            "metadata": {
+                                "additionalProperties": true,
+                                "properties": {
+                                    "comments": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "tags": {
+                                        "additionalItems": false,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "title": "Schema for metadata",
+                                "type": "object"
+                            },
+                            "prereq_steps": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "step_type": {
+                                "const": "step_batch"
+                            },
+                            "steps": {
+                                "additionalItems": false,
+                                "items": {
+                                    "anyOf": [
+                                        {
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "filepath": {
+                                                    "type": "string"
+                                                },
+                                                "metadata": {
+                                                    "additionalProperties": true,
+                                                    "properties": {
+                                                        "comments": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "tags": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "version": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "title": "Schema for metadata",
+                                                    "type": "object"
+                                                },
+                                                "ot2_name": {
+                                                    "type": "string"
+                                                },
+                                                "prereq_steps": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "step_name": {
+                                                    "type": "string"
+                                                },
+                                                "step_type": {
+                                                    "const": "ot2_protocol"
+                                                }
+                                            },
+                                            "required": [
+                                                "step_type",
+                                                "step_name",
+                                                "ot2_name",
+                                                "filepath"
+                                            ],
+                                            "title": "Schema for an individual OT-2 protocol run step",
+                                            "type": "object"
+                                        },
+                                        {
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "arm_name": {
+                                                    "type": "string"
+                                                },
+                                                "dest_name": {
+                                                    "type": "string"
+                                                },
+                                                "dest_position": {
+                                                    "type": "integer"
+                                                },
+                                                "metadata": {
+                                                    "additionalProperties": true,
+                                                    "properties": {
+                                                        "comments": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "tags": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "version": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "title": "Schema for metadata",
+                                                    "type": "object"
+                                                },
+                                                "prereq_steps": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "src_name": {
+                                                    "type": "string"
+                                                },
+                                                "src_position": {
+                                                    "type": "integer"
+                                                },
+                                                "step_name": {
+                                                    "type": "string"
+                                                },
+                                                "step_type": {
+                                                    "const": "plate_transfer"
+                                                }
+                                            },
+                                            "required": [
+                                                "step_type",
+                                                "step_name",
+                                                "arm_name",
+                                                "src_name",
+                                                "dest_name",
+                                                "src_position",
+                                                "dest_position"
+                                            ],
+                                            "title": "Schema for an individual plate transfer step",
+                                            "type": "object"
+                                        },
+                                        {
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "command": {
+                                                    "type": "object"
+                                                },
+                                                "metadata": {
+                                                    "additionalProperties": true,
+                                                    "properties": {
+                                                        "comments": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "tags": {
+                                                            "additionalItems": false,
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "type": "array"
+                                                        },
+                                                        "version": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "title": "Schema for metadata",
+                                                    "type": "object"
+                                                },
+                                                "ot2_name": {
+                                                    "type": "string"
+                                                },
+                                                "prereq_steps": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "step_name": {
+                                                    "type": "string"
+                                                },
+                                                "step_type": {
+                                                    "const": "ot2_command"
+                                                }
+                                            },
+                                            "required": [
+                                                "step_type",
+                                                "step_name",
+                                                "ot2_name",
+                                                "command"
+                                            ],
+                                            "title": "Schema for an individual OT-2 command step",
+                                            "type": "object"
+                                        }
+                                    ]
+                                },
+                                "minItems": 1,
+                                "type": "array"
+                            }
+                        },
+                        "required": [
+                            "step_type",
+                            "batch_name",
+                            "steps"
+                        ],
+                        "title": "Schema for a batch of steps within a workflow's step array",
+                        "type": "object"
+                    }
+                ]
+            },
+            "minItems": 1,
+            "type": "array"
+        },
+        "workflow_name": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "workflow_name",
+        "hardware",
+        "steps"
+    ],
+    "title": "Schema for the OT-2 Workcell's JSON-based workflow specification",
+    "type": "object"
+}

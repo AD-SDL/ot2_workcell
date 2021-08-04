@@ -1,0 +1,20 @@
+{
+    "title": "Schema for including an OT-2 in the workflow",
+    "type": "object",
+    "properties": {
+        "hardware_type": {
+            "const": "OT2"
+        },
+        "metadata": {
+            "$ref": "../metadata.json"
+        },
+        "name": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "hardware_type",
+        "name"
+    ],
+    "additionalProperties": false
+}
