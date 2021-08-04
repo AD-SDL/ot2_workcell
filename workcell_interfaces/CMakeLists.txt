@@ -42,6 +42,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetNextTransfer.srv"
   "srv/SendFiles.srv"
   "srv/Protocol.srv"
+  "srv/Submitter.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)
