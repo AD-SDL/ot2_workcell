@@ -36,6 +36,7 @@ This workcell will eventually support:
 
 * **ot2_controller/**
 	* **ot2_controller/**
+		* ot2_controller.py (Controls the OT2 )
 		* protocol_manager.py (removes items from the queue in manager)
 
 * **ot2_client/**
