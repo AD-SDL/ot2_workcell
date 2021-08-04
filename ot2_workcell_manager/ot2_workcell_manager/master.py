@@ -64,6 +64,9 @@ class Master(Node):
         self.get_node_info_service = self.create_service(
             GetNodeInfo, "get_node_info", self.handle_get_node_info
         )  # Request is a name_or_id and returns all the information master has about that node
+        self.get_node_list_service = self.create_service(
+            GetNodeList, "get_node_list", self.handle_get_node_list
+        )  # Blank request returns a list of all the nodes the master knows about
         self.submitter_service = self.create_service(
             Submitter, "submitter", self.handle_submitter
         )  # Requests to submit a workload file
@@ -432,7 +435,7 @@ class Master(Node):
 
         # Error handling
         if(status == self.status['ERROR']):
-            self.get_logger().error("Something went wrong wtih read_from_setup")
+            self.get_logger().error("Something went wrong with read_from_setup")
 
         # Return response
         response.status = status
