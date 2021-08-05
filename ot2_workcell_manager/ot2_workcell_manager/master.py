@@ -340,8 +340,8 @@ class Master(Node):
             split_files = files.split()
 
             # files get split and have their contents sent one by one to OT-2 controller
-            self.send_scripts(id, split_files)
-            # include status check?
+            for i in range(len(split_files)):
+                self.send_scripts(id, split_files[i])
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
@@ -350,7 +350,7 @@ class Master(Node):
         return self.status["SUCCESS"]
     
     # Creates client that sends contents of files to OT-2
-    def send_scripts(self, id, split_files):
+    def send_scripts(self, id, name):
 
         # Check node online?
         args = []
@@ -391,12 +391,9 @@ class Master(Node):
             self.get_logger().info("Service not available, trying again...")
 
         # extract name and contents of each first file in list
-        name = split_files[0]
         with open(self.module_location + name, 'r') as file:
             contents = file.readlines()
         
-        # remove script from job list
-        split_files.pop(0)
 
         # Client ready
         script_request = SendScripts.Request()
