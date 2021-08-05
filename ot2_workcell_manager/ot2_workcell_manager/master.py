@@ -337,14 +337,15 @@ class Master(Node):
                 self.get_logger().error("Reading from setup error: %r" % (e,))
                 return self.status["ERROR"]  # Error
 
-            # files sent to worker OT-2 to become threads
-            self.send_files(id, files)
-
             split_files = files.split()
 
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
-                self.send_scripts(id, split_files[i])
+                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                    self.send_scripts(id, split_files[i])
+
+            # files sent to worker OT-2 to become threads
+            self.send_files(id, files)
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
@@ -395,7 +396,7 @@ class Master(Node):
 
         # extract name and contents of each first file in list
         with open(self.module_location + name, 'r') as file:
-            contents = file.readlines()
+            contents = file.read()
         
 
         # Client ready
