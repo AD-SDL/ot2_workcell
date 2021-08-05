@@ -42,6 +42,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetNextTransfer.srv"
   "srv/SendFiles.srv"
   "srv/Protocol.srv"
+  "srv/SendScripts.srv"
   "srv/Submitter.srv"
  )
 
