@@ -47,7 +47,7 @@ class Master(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
+        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         # Basic informaton
         self.id = "M-1"  # Ultimate position, before 0
@@ -67,6 +67,9 @@ class Master(Node):
         self.get_node_list_service = self.create_service(
             GetNodeList, "get_node_list", self.handle_get_node_list
         )  # Blank request returns a list of all the nodes the master knows about
+        self.submitter_service = self.create_service(
+            Submitter, "submitter", self.handle_submitter
+        )  # Requests to submit a workload file
 
         # Client setup
         # TODO: see if any clients can be setup here
@@ -504,6 +507,24 @@ class Master(Node):
         # Debug 
 #        entry = self.search_for_node(msg.id)
  #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
+
+
+    # Service to read items from the submitter node
+    def handle_submitter(self, request, response):
+
+        # Create response
+        response = Submitter.Response()
+
+        # Handing over to read from setup
+        status = self.read_from_setup(request.workload)
+
+        # Error handling
+        if(status == self.status['ERROR']):
+            self.get_logger().error("Something went wrong with read_from_setup")
+
+        # Return response
+        response.status = status
+        return response
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 

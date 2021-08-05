@@ -52,7 +52,7 @@ class StateResetHandler(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ros2tests/OT2_Modules/"
+        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         # Initialization Complete
         self.get_logger().info(
