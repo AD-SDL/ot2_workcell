@@ -393,7 +393,7 @@ class Master(Node):
         # extract name and contents of each first file in list
         name = split_files[0]
         with open(self.module_location + name, 'r') as file:
-            contents = file.read().replace('\n', '')
+            contents = file.readlines()
         
         # remove script from job list
         split_files.pop(0)
