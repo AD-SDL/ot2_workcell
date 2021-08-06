@@ -23,13 +23,13 @@
                     "step_type": "ot2_protocol",
                     "step_name": "1st alex item1.py",
                     "ot2_name": "alex",
-                    "filepath": "../OT_Modules/item1.py"
+                    "filepath": "item1.py"
                 },
                 {
                     "step_type": "ot2_protocol",
                     "step_name": "1st alex item2.py",
                     "ot2_name": "alex",
-                    "filepath": "../OT_Modules/item1.py"
+                    "filepath": "item1.py"
                 }
             ]
         },
@@ -41,19 +41,19 @@
                     "step_type": "ot2_protocol",
                     "step_name": "1st bob item1.py",
                     "ot2_name": "bob",
-                    "filepath": "../OT_Modules/item1.py"
+                    "filepath": "item1.py"
                 },
                 {
                     "step_type": "ot2_protocol",
                     "step_name": "2nd bob item1.py",
                     "ot2_name": "bob",
-                    "filepath": "../OT_Modules/item1.py"
+                    "filepath": "item1.py"
                 },
                 {
                     "step_type": "ot2_protocol",
                     "step_name": "1st bob item2.py",
                     "ot2_name": "bob",
-                    "filepath": "../OT_Modules/item2.py"
+                    "filepath": "item2.py"
                 }
             ]
         },
@@ -78,8 +78,11 @@
                     "step_type": "ot2_protocol",
                     "step_name": "2nd alex item2.py",
                     "ot2_name": "alex",
-                    "filepath": "../OT_Modules/item2.py"
+                    "filepath": "item2.py"
                 }
+            ],
+            "prereq_steps": [
+                "Transfer from bob to alex"
             ]
         }
     ]
