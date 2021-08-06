@@ -67,6 +67,9 @@ class Master(Node):
         self.get_node_list_service = self.create_service(
             GetNodeList, "get_node_list", self.handle_get_node_list
         )  # Blank request returns a list of all the nodes the master knows about
+        self.submitter_service = self.create_service(
+            Submitter, "submitter", self.handle_submitter
+        )  # Requests to submit a workload file
 
         # Client setup
         # TODO: see if any clients can be setup here
@@ -334,6 +337,13 @@ class Master(Node):
                 self.get_logger().error("Reading from setup error: %r" % (e,))
                 return self.status["ERROR"]  # Error
 
+            split_files = files.split()
+
+            # files get split and have their contents sent one by one to OT-2 controller
+            for i in range(len(split_files)):
+                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                    self.send_scripts(id, split_files[i])
+
             # files sent to worker OT-2 to become threads
             self.send_files(id, files)
 
@@ -342,6 +352,82 @@ class Master(Node):
 
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
+    
+    # Creates client that sends contents of files to OT-2
+    def send_scripts(self, id, name):
+
+        # Check node online?
+        args = []
+        args.append(id)
+        status = retry(
+            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
+        )  # retry function
+        if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            self.get_logger().error(
+                "Unable to find node %s" % id
+            )  # Node isn't registered
+            return self.status["ERROR"]
+        else:
+            self.get_logger().info("Node %s found" % id)  # Found
+
+        # Select a node
+        try:
+            # Get node information
+            target_node = self.search_for_node(id)  # See if id robot exists
+
+            # Error checking
+            if target_node["type"] == "-1":  # No such node
+                self.get_logger().error("id: %s doesn't exist" % id)
+                return self.status["ERROR"]
+
+            type = target_node["type"]  # These will be needed to acess the service
+            id = target_node["id"]
+
+        except Exception as e:
+            self.get_logger().error("Error occured: %r" % (e,))
+            return self.status["ERROR"]
+        
+
+        # Create client that calls send_scripts servive on controller
+
+        script_cli = self.create_client(SendScripts, "/%s/%s/send_scripts" % (type, id))  # format of service is /{type}/{id}/{service name}
+        while not script_cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("Service not available, trying again...")
+
+        # extract name and contents of each first file in list
+        with open(self.module_location + name, 'r') as file:
+            contents = file.read()
+        
+
+        # Client ready
+        script_request = SendScripts.Request()
+        script_request.name = name # name of file
+        script_request.contents = contents # contents of file
+        script_request.replace = True # Replace file of same name (default true)
+
+        # Call service
+        future = script_cli.call_async(script_request)
+
+        # Waiting on future
+        while future.done() == False:
+            time.sleep(1)  # timeout 1 second
+        if future.done():
+            try:
+                response = future.result()
+            except Exception as e:
+                self.get_logger().error("Error occured %r" % (e,))
+                return self.status["ERROR"]  # Error
+            else:
+                # Error checking
+                if response.status == response.ERROR:
+                    self.get_logger().error(
+                        "Error occured when sending script %s at id: %s" % (name, id)
+                    )
+                    return self.status["ERROR"]  # Error
+                else:
+                    self.get_logger().info("File %s contents loaded" % name)
+                    return self.status["SUCCESS"]  # All good
+
 
     # Handles get node info service call
     def handle_get_node_info(self, request, response):
@@ -419,6 +505,24 @@ class Master(Node):
         # Debug 
 #        entry = self.search_for_node(msg.id)
  #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
+
+
+    # Service to read items from the submitter node
+    def handle_submitter(self, request, response):
+
+        # Create response
+        response = Submitter.Response()
+
+        # Handing over to read from setup
+        status = self.read_from_setup(request.workload)
+
+        # Error handling
+        if(status == self.status['ERROR']):
+            self.get_logger().error("Something went wrong with read_from_setup")
+
+        # Return response
+        response.status = status
+        return response
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
