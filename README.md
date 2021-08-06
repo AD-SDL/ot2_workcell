@@ -90,23 +90,21 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 
 ## Launching
 
-TODO: Update this to match new architecture
-
 **Workcell Manager**
-1. source ~/ros2tests/install/setup.bash
-1. ros2 run ot2_workcell_manager master
+1. source ~/ot2_ws/install/setup.bash
+2. ros2 run ot2_workcell_manager master
 
 **Arm**
-1. source ~/ros2tests/install/setup.bash
-1. ros2 launch arm_controller arm_bringup.launch.py
+1. source ~/ot2_ws/install/setup.bash
+2. ros2 launch arm_controller arm_bringup.launch.py
 
 **Opentrons OT-2 bob**
-1. source ~/ros2tests/install/setup.bash
-1. ros2 run rostalker2 OT2 bob
+1. source ~/ot2_ws/install/setup.bash
+2. ros2 launch ot2_controller ot2_bob_bringup.launch.py
 
 **Opentrons OT-2 alex**
-1. source ~/ros2tests/install/setup.bash
-1. ros2 run rostalker2 OT2 alex
+1. source ~/ot2_ws/install/setup.bash
+2. ros2 launch ot2_controller ot2_alex_bringup.launch.py
 
 This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
 
