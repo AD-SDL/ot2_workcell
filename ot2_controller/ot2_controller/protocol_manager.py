@@ -186,40 +186,68 @@ class OT2ProtocolManager(Node):
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
 
-        # Set variable with file path
-        filepath = (self.module_location + file)
+        # Implement command line commands here
 
-        # Error check
-        if path.exists(filepath) == False:  # File doesn't exist
-            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
-            return self.status['ERROR']
+        # cd to location of file?
+        # os.system(cd)
+        # os.system(cd ot2_workcell)
+        # os.system(cd OT2_Modules)
 
-        # Import file as module
-        self.get_logger().info("Importing module...")
-
+        # simulate, set conditional to continue if no collision
         try:
-            # Load and attach module to program
-            spec = importlib.util.spec_from_file_location(file, filepath)
-            ot2Module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(ot2Module)
+            os.system(python -m opentrons.simulate self.module_location + file)
         except Exception as e:
-            # Error
-            self.get_logger().error("Error occured when trying to load module %s: %r" % (filepath, e,))
+            self.get_logger().error("Error occured during simulation: %r"%(e,))
             return self.status['ERROR']
+        # if simulation success, execute
         else:
-            self.get_logger().info("Module %s successfully loaded and attached to the program" % filepath)
-
-        # Run work() function in module
-        self.get_logger().info("Running module...")
+            self.get_logger().info("Simulation successful, executing protocol %s" % file)
+        
+        # Execute module
         try:
-            ot2Module.work()
+            os.system(opentrons.execute.execute(TODO)) # Get people who have been working with APIs help
         except Exception as e:
-            # Error
-            self.get_logger().error("Error occured when trying to run module %s: %r" % (filepath, e))
-            return self.status['ERROR']
-        else:
-            self.get_logger().info("Module %s successfully ran to completion" % filepath)
+            self.get_logger().error("Error occurred during execution of protocol: %r"%(e,))
+            return self.status['ERROR'] # error occurred while trying to run script
+        else: # execution of script was a success
+            self.get_logger().info("Protocol %s run successfully" % file)
             return self.status['SUCCESS']
+        
+
+        # # Set variable with file path
+        # filepath = (self.module_location + file)
+
+        # # Error check
+        # if path.exists(filepath) == False:  # File doesn't exist
+        #     self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
+        #     return self.status['ERROR']
+
+        # # Import file as module
+        # self.get_logger().info("Importing module...")
+
+        # try:
+        #     # Load and attach module to program
+        #     spec = importlib.util.spec_from_file_location(file, filepath)
+        #     ot2Module = importlib.util.module_from_spec(spec)
+        #     spec.loader.exec_module(ot2Module)
+        # except Exception as e:
+        #     # Error
+        #     self.get_logger().error("Error occured when trying to load module %s: %r" % (filepath, e,))
+        #     return self.status['ERROR']
+        # else:
+        #     self.get_logger().info("Module %s successfully loaded and attached to the program" % filepath)
+
+        # # Run work() function in module
+        # self.get_logger().info("Running module...")
+        # try:
+        #     ot2Module.work()
+        # except Exception as e:
+        #     # Error
+        #     self.get_logger().error("Error occured when trying to run module %s: %r" % (filepath, e))
+        #     return self.status['ERROR']
+        # else:
+        #     self.get_logger().info("Module %s successfully ran to completion" % filepath)
+        #     return self.status['SUCCESS']
 
     # Helper function
     def set_state(self):
