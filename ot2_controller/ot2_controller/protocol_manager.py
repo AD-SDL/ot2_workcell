@@ -186,16 +186,36 @@ class OT2ProtocolManager(Node):
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
 
+        # Set variable with file path
+        filepath = (self.module_location + file)
+
+        # Error check
+        if path.exists(filepath) == False:  # File doesn't exist
+            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
+            return self.status['ERROR']
+
         # Implement command line commands here
 
-        # cd to location of file?
-        # os.system(cd)
-        # os.system(cd ot2_workcell)
-        # os.system(cd OT2_Modules)
+        # cd to location of file? TODO: add trys and excepts
+        try:
+            os.system(cd)
+        except Exception as e:
+            self.get_logger().error("Error returning to home: %r"%(e,))
+            return self.status['ERROR']
+        try:
+            os.system(cd ot2_workcell) #TODO: probably change
+        except Exception as e:
+            self.get_logger().error("Error changing to ot2_workcell directory: %r"%(e,))
+            return self.status['ERROR']
+        try:
+            os.system(cd OT2_Modules)
+        except Exception as e:
+            self.get_logger().error("Error changing to OT2_Modules directory: %r"%(e,))
+            return self.status['ERROR']
 
         # simulate, set conditional to continue if no collision
         try:
-            os.system(python -m opentrons.simulate self.module_location + file)
+            os.system(opentrons.simulate.simulate(file))
         except Exception as e:
             self.get_logger().error("Error occured during simulation: %r"%(e,))
             return self.status['ERROR']
@@ -205,7 +225,7 @@ class OT2ProtocolManager(Node):
         
         # Execute module
         try:
-            os.system(opentrons.execute.execute(TODO)) # Get people who have been working with APIs help
+            os.system(opentrons.execute.execute(file))
         except Exception as e:
             self.get_logger().error("Error occurred during execution of protocol: %r"%(e,))
             return self.status['ERROR'] # error occurred while trying to run script
