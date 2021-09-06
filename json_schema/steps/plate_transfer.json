@@ -1,0 +1,46 @@
+{
+    "title": "Schema for an individual plate transfer step",
+    "type": "object",
+    "properties": {
+        "step_type": {
+            "const": "plate_transfer"
+        },
+        "step_name": {
+            "type": "string"
+        },
+        "arm_name": {
+            "type": "string"
+        },
+        "src_name": {
+            "type": "string"
+        },
+        "dest_name": {
+            "type": "string"
+        },
+        "src_position": {
+            "type": "integer"
+        },
+        "dest_position": {
+            "type": "integer"
+        },
+        "prereq_steps": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "metadata": {
+            "$ref": "../metadata.json"
+        }
+    },
+    "required": [
+        "step_type",
+        "step_name",
+        "arm_name",
+        "src_name",
+        "dest_name",
+        "src_position",
+        "dest_position"
+    ],
+    "additionalProperties": false
+}

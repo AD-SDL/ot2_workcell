@@ -7,14 +7,14 @@ def generate_launch_description():
     ot2_controller = Node(
         package="ot2_controller",
         executable="ot2_controller",
-        output='screen',
+        output="screen",
         parameters=[{"name": "alex"}],
         emulate_tty=True,
     )
     protocol_handler = Node(
         package="ot2_controller",
         executable="protocol_manager",
-        output='screen',
+        output="screen",
         parameters=[{"name": "alex"}],
         emulate_tty=True,
     )

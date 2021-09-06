@@ -1,0 +1,45 @@
+{
+    "title": "Schema for a batch of steps within a workflow's step array",
+    "type": "object",
+    "properties": {
+        "step_type": {
+            "const": "step_batch"
+        },
+        "batch_name": {
+            "type": "string"
+        },
+        "steps": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "$ref": "./ot2_protocol.json"
+                    },
+                    {
+                        "$ref": "./plate_transfer.json"
+                    },
+                    {
+                        "$ref": "./ot2_command.json"
+                    }
+                ]
+            },
+            "additionalItems": false,
+            "minItems": 1
+        },
+        "prereq_steps": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "metadata": {
+            "$ref": "../metadata.json"
+        }
+    },
+    "required": [
+        "step_type",
+        "batch_name",
+        "steps"
+    ],
+    "additionalProperties": false
+}

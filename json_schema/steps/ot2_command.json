@@ -1,0 +1,34 @@
+{
+    "title": "Schema for an individual OT-2 command step",
+    "type": "object",
+    "properties": {
+        "step_type": {
+            "const": "ot2_command"
+        },
+        "step_name": {
+            "type": "string"
+        },
+        "ot2_name": {
+            "type": "string"
+        },
+        "command": {
+            "type": "object"
+        },
+        "prereq_steps": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "metadata": {
+            "$ref": "../metadata.json"
+        }
+    },
+    "required": [
+        "step_type",
+        "step_name",
+        "ot2_name",
+        "command"
+    ],
+    "additionalProperties": false
+}

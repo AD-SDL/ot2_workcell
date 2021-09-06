@@ -35,7 +35,7 @@ class ArmTransferHandler(Node):
         self.declare_parameter(
             "name", "insert_arm_name_here"
         )  # 2nd arg is default value
-        time.sleep(2) # Wait for the launch file to hand in names
+        time.sleep(2)  # Wait for the launch file to hand in names
         name = self.get_parameter("name").get_parameter_value().string_value
         while name == "temp" or name == "insert_arm_name_here":
             self.get_logger().info("Please enter parameter node name")
@@ -69,7 +69,9 @@ class ArmTransferHandler(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        self.module_location = (
+            self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        )
 
         # Create clients
 
@@ -86,8 +88,10 @@ class ArmTransferHandler(Node):
         # Create services
 
         # Sub to topics
-        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
-        self.state_reset_sub # prevent unused variable warning
+        self.state_reset_sub = self.create_subscription(
+            ArmReset, "/arm/%s/arm_state_reset" % self.id, self.state_reset_callback, 10
+        )
+        self.state_reset_sub  # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -236,7 +240,7 @@ def main(args=None):
         arm_transfer_node.get_logger().error("Terminating...")
 
     # End
-#    spin_thread.join()
+    #    spin_thread.join()
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 

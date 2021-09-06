@@ -31,11 +31,11 @@ class ArmManager(Node):
         self.declare_parameter(
             "name", "insert_arm_name_here"
         )  # 2nd arg is default value
-        time.sleep(2) # Wait for the launch file to hand in names
+        time.sleep(2)  # Wait for the launch file to hand in names
         name = self.get_parameter("name").get_parameter_value().string_value
         while name == "temp" or name == "insert_arm_name_here":
             self.get_logger().info("Please enter parameter node name")
-            rclpy.spin_once(self) # spin self once for parameter
+            rclpy.spin_once(self)  # spin self once for parameter
             name = self.get_parameter("name").get_parameter_value().string_value
 
         # Node creation
@@ -43,7 +43,7 @@ class ArmManager(Node):
 
         # Lock creation
         self.arm_lock = Lock()  # Only one can access arm at a time
-        self.state_lock = Lock() # Only one can access the state at a time
+        self.state_lock = Lock()  # Only one can access the state at a time
 
         # Queues
         self.transfer_queue = []
@@ -64,7 +64,9 @@ class ArmManager(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        self.module_location = (
+            self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        )
 
         # Create clients
 
@@ -108,8 +110,10 @@ class ArmManager(Node):
             10,
         )
         self.completed_transfer_sub  # prevent unused warning
-        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
-        self.state_reset_sub # prevent unused variable warning
+        self.state_reset_sub = self.create_subscription(
+            ArmReset, "/arm/%s/arm_state_reset" % self.id, self.state_reset_callback, 10
+        )
+        self.state_reset_sub  # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -135,7 +139,7 @@ class ArmManager(Node):
         self.transfer_queue.remove(identifier_other)
 
         # Remove from run queue (TODO: assertion check, the popped is the same as the completed)
-        self.run_queue.pop(0) # The one that was being worked on was the first one
+        self.run_queue.pop(0)  # The one that was being worked on was the first one
 
         self.get_logger().info(
             "Completed transfer " + str(self.completed_queue)
@@ -153,15 +157,21 @@ class ArmManager(Node):
         # get state (lock)
         self.state_lock.acquire()
 
-        if(self.current_state == self.state['ERROR']):
+        if self.current_state == self.state["ERROR"]:
             self.get_logger().error("Arm in error state")
-            response.status = response.WAITING # Tell it to wait until error is resolved (TODO: switch to error)
-            self.state_lock.release() # Release lock
+            response.status = (
+                response.WAITING
+            )  # Tell it to wait until error is resolved (TODO: switch to error)
+            self.state_lock.release()  # Release lock
             return response
-        elif(self.current_state == self.state['BUSY']): # This should never happen, as it won't call this service until the state is ready
+        elif (
+            self.current_state == self.state["BUSY"]
+        ):  # This should never happen, as it won't call this service until the state is ready
             self.get_logger().error("Arm in busy state")
-            response.status = response.WAITING # wait for state not to be busy TODO: switch to error
-            self.state_lock.release() # Release lock
+            response.status = (
+                response.WAITING
+            )  # wait for state not to be busy TODO: switch to error
+            self.state_lock.release()  # Release lock
             return response
 
         # release lock
@@ -175,7 +185,9 @@ class ArmManager(Node):
 
         # Retrieve next item in queue
         if len(self.run_queue) > 0:
-            response.next_transfer = self.run_queue[0]  # Get the first in the queue (don't remove it, upon completion it is removed)
+            response.next_transfer = self.run_queue[
+                0
+            ]  # Get the first in the queue (don't remove it, upon completion it is removed)
             response.status = response.SUCCESS
         else:
             response.status = response.WAITING  # Waiting on things to run
@@ -284,10 +296,12 @@ class ArmManager(Node):
         self.state_lock.acquire()
 
         # Prevent changing state when in an error state
-        if(self.current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of the arm is already error")
-            self.state_lock.release() # release lock
-            return # exit out of function
+        if self.current_state == self.state["ERROR"]:
+            self.get_logger().error(
+                "Can't change state, the state of the arm is already error"
+            )
+            self.state_lock.release()  # release lock
+            return  # exit out of function
 
         # Recieve request
         self.current_state = msg.state  # TODO error checks
@@ -295,8 +309,7 @@ class ArmManager(Node):
         # TODO: sync with master
 
         # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
-        self.state_lock.release() # release lock
-
+        self.state_lock.release()  # release lock
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):

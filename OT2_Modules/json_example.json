@@ -1,0 +1,89 @@
+{
+    "workflow_name": "Example Workflow",
+    "hardware": [
+        {
+            "hardware_type": "Arm",
+            "name": "army"
+        },
+        {
+            "hardware_type": "OT2",
+            "name": "bob"
+        },
+        {
+            "hardware_type": "OT2",
+            "name": "alex"
+        }
+    ],
+    "steps": [
+        {
+            "step_type": "step_batch",
+            "batch_name": "1st Alex Batch",
+            "steps": [
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "1st alex item1.py",
+                    "ot2_name": "alex",
+                    "filepath": "item1.py"
+                },
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "1st alex item2.py",
+                    "ot2_name": "alex",
+                    "filepath": "item1.py"
+                }
+            ]
+        },
+        {
+            "step_type": "step_batch",
+            "batch_name": "1st Bob Batch",
+            "steps": [
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "1st bob item1.py",
+                    "ot2_name": "bob",
+                    "filepath": "item1.py"
+                },
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "2nd bob item1.py",
+                    "ot2_name": "bob",
+                    "filepath": "item1.py"
+                },
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "1st bob item2.py",
+                    "ot2_name": "bob",
+                    "filepath": "item2.py"
+                }
+            ]
+        },
+        {
+            "step_type": "plate_transfer",
+            "step_name": "Transfer from bob to alex",
+            "src_name": "bob",
+            "dest_name": "alex",
+            "arm_name": "army",
+            "src_position": 10,
+            "dest_position": 10,
+            "prereq_steps": [
+                "1st Alex Batch",
+                "1st Bob Batch"
+            ]
+        },
+        {
+            "step_type": "step_batch",
+            "batch_name": "2nd Alex Batch",
+            "steps": [
+                {
+                    "step_type": "ot2_protocol",
+                    "step_name": "2nd alex item2.py",
+                    "ot2_name": "alex",
+                    "filepath": "item2.py"
+                }
+            ],
+            "prereq_steps": [
+                "Transfer from bob to alex"
+            ]
+        }
+    ]
+}
