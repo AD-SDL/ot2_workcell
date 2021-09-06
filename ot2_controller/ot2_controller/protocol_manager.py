@@ -198,17 +198,17 @@ class OT2ProtocolManager(Node):
 
         # cd to location of file? TODO: add trys and excepts
         try:
-            os.system(cd)
+            os.system('cd')
         except Exception as e:
             self.get_logger().error("Error returning to home: %r"%(e,))
             return self.status['ERROR']
         try:
-            os.system(cd ot2_workcell) #TODO: probably change
+            os.system('cd ot2_workcell') #TODO: probably change
         except Exception as e:
             self.get_logger().error("Error changing to ot2_workcell directory: %r"%(e,))
             return self.status['ERROR']
         try:
-            os.system(cd OT2_Modules)
+            os.system('cd OT2_Modules')
         except Exception as e:
             self.get_logger().error("Error changing to OT2_Modules directory: %r"%(e,))
             return self.status['ERROR']
@@ -222,7 +222,7 @@ class OT2ProtocolManager(Node):
         # if simulation success, execute
         else:
             self.get_logger().info("Simulation successful, executing protocol %s" % file)
-        
+
         # Execute module
         try:
             os.system(opentrons.execute.execute(file))
@@ -232,7 +232,7 @@ class OT2ProtocolManager(Node):
         else: # execution of script was a success
             self.get_logger().info("Protocol %s run successfully" % file)
             return self.status['SUCCESS']
-        
+
 
         # # Set variable with file path
         # filepath = (self.module_location + file)
