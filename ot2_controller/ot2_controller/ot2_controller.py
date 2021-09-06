@@ -18,6 +18,7 @@ from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 from random import random
 
+
 class OT2(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))
@@ -26,7 +27,7 @@ class OT2(Node):
         self.declare_parameter(
             "name", "insert_ot2_name_here"
         )  # 2nd arg is default value
-        time.sleep(2) # Wait for the launch file to hand in names
+        time.sleep(2)  # Wait for the launch file to hand in names
         name = self.get_parameter("name").get_parameter_value().string_value
         while name == "temp" or name == "insert_ot2_name_here":
             self.get_logger().info("Please enter name parameter")
@@ -39,8 +40,8 @@ class OT2(Node):
         # Lock creation
         self.file_lock = Lock()  # Access to the file system
         self.run_lock = Lock()  # Only one can access this OT-2 as a resource
-        self.work_list_lock = Lock() # Access to the work list
-        self.state_lock = Lock() # Access to the state
+        self.work_list_lock = Lock()  # Access to the work list
+        self.state_lock = Lock()  # Access to the state
 
         # readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: sync with master
@@ -52,12 +53,14 @@ class OT2(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        self.module_location = (
+            self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        )
 
         self.work_list = []  # list of files list recieved from jobs
         self.work_index = 0  # location of recently added files in work_list
         self.threads_list = []  # list of all worker threads
-        self.temp_list = [] # List that stores individual jobs for the protocol handler
+        self.temp_list = []  # List that stores individual jobs for the protocol handler
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
@@ -101,8 +104,13 @@ class OT2(Node):
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
-        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
-        self.state_reset_sub # prevent unused variable warning
+        self.state_reset_sub = self.create_subscription(
+            OT2Reset,
+            "/OT_2/%s/ot2_state_reset" % self.id,
+            self.state_reset_callback,
+            10,
+        )
+        self.state_reset_sub  # prevent unused variable warning
 
         # TODO: create service to unload and recieve items
 
@@ -110,14 +118,14 @@ class OT2(Node):
         self.get_logger().info(
             "ID: %s name: %s initialization completed" % (self.id, self.name)
         )
-    
+
     # Handles send_scripts service calls, creates files and loads contents into them
     def load_scripts_handler(self, request, response):
 
         # Get request information
-        name = request.name # name of file to be created
-        contents = request.contents # contents of file
-        replace = request.replace # bool whether or not to replace file of same name
+        name = request.name  # name of file to be created
+        contents = request.contents  # contents of file
+        replace = request.replace  # bool whether or not to replace file of same name
 
         # Create response
         response = SendScripts.Response()
@@ -133,21 +141,22 @@ class OT2(Node):
             # Check if file already exists
             filepath = Path(self.module_location + name)
 
-            if filepath.is_file(): # file already exists
-                if replace == True: # request says to replace file
-                    os.remove(self.module_location + name) # delete preexisting file
-                    f = open(self.module_location + name, "x") # create new file with name
-                    f.write(contents) # write contents into file
+            if filepath.is_file():  # file already exists
+                if replace == True:  # request says to replace file
+                    os.remove(self.module_location + name)  # delete preexisting file
+                    f = open(
+                        self.module_location + name, "x"
+                    )  # create new file with name
+                    f.write(contents)  # write contents into file
                     f.close()
                     self.get_logger().info("File %s created and loaded" % name)
-                else: # request says don't replce file
+                else:  # request says don't replce file
                     self.get_logger().info("File already exists, did not replace")
-            else: #file does not exist
-                f = open(self.module_location + name, "x") # create new file with name
-                f.write(contents) # write contents into file
+            else:  # file does not exist
+                f = open(self.module_location + name, "x")  # create new file with name
+                f.write(contents)  # write contents into file
                 f.close()
                 self.get_logger.info("File %s created and loaded" % name)
-
 
         except Exception as e:
             self.get_logger().error("Error occurred: %r" % (e,))
@@ -159,8 +168,6 @@ class OT2(Node):
             # release lock
             self.file_lock.release()
             return response
-
-
 
     # Handles send_module service calls
     def receive_files_handler(self, request, response):
@@ -181,7 +188,9 @@ class OT2(Node):
 
             # Append files to work list
             self.work_list.append(files)
-            self.work_index = self.work_index + 1 # Counts total number of jobs given to this OT-2
+            self.work_index = (
+                self.work_index + 1
+            )  # Counts total number of jobs given to this OT-2
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
@@ -240,15 +249,21 @@ class OT2(Node):
         # get state lock
         self.state_lock.acquire()
 
-        if(self.current_state == self.state['ERROR']):
+        if self.current_state == self.state["ERROR"]:
             self.get_logger().error("OT2 in error state")
-            response.status = response.WAITING # Tell it to wait until error is resolved (TODO: switch to error)
-            self.state_lock.release() # Release lock
+            response.status = (
+                response.WAITING
+            )  # Tell it to wait until error is resolved (TODO: switch to error)
+            self.state_lock.release()  # Release lock
             return response
-        elif(self.current_state == self.state['BUSY']): # This should never happen, as it won't call this service until the state is ready
+        elif (
+            self.current_state == self.state["BUSY"]
+        ):  # This should never happen, as it won't call this service until the state is ready
             self.get_logger().error("OT2 in busy state")
-            response.status = response.WAITING # wait for state not to be busy TODO: switch to error
-            self.state_lock.release() # Release lock
+            response.status = (
+                response.WAITING
+            )  # wait for state not to be busy TODO: switch to error
+            self.state_lock.release()  # Release lock
             return response
 
         # release lock
@@ -260,22 +275,26 @@ class OT2(Node):
         self.work_list_lock.acquire()
 
         # Check to see if work list is empty
-        if len(self.work_list) == 0 and len(self.temp_list) == 0: # Both temp_list and work_list empty, wait for more jobs
+        if (
+            len(self.work_list) == 0 and len(self.temp_list) == 0
+        ):  # Both temp_list and work_list empty, wait for more jobs
             self.get_logger().info("No more current work for OT-2 %s" % self.name)
             response = Protocol.Response()
             response.status = response.WAITING
-            self.work_list_lock.release() # Release lock
+            self.work_list_lock.release()  # Release lock
             return response
-        elif(len(self.temp_list) == 0):
+        elif len(self.temp_list) == 0:
             # Selecting job
-            self.temp_list = self.work_list.pop(0) #Adds new job (set of files) to the temp_list and removes
+            self.temp_list = self.work_list.pop(
+                0
+            )  # Adds new job (set of files) to the temp_list and removes
 
         # Check state of OT-2, wait for READY state
-        if self.current_state == self.state['BUSY']:
-            time.sleep(5) # Protocol running, wait 5 seconds
-        elif self.current_state == self.state['READY']:
+        if self.current_state == self.state["BUSY"]:
+            time.sleep(5)  # Protocol running, wait 5 seconds
+        elif self.current_state == self.state["READY"]:
             self.get_logger().info("OT-2 ready for new protocol")
-        elif self.current_state == self.state['ERROR']: #Error
+        elif self.current_state == self.state["ERROR"]:  # Error
             self.get_logger().error("OT-2 in error state")
             response = Protocol.Response()
             response.status = response.ERROR
@@ -311,6 +330,7 @@ class OT2(Node):
         self.temp_list.pop(0)
         return response
 
+
 # TODO: DELETE
 def work(ot2node):
 
@@ -330,10 +350,11 @@ def work(ot2node):
         args.append("army")
         status = retry(ot2node, _load_transfer, 20, 4, args)
 
+
 def main(args=None):
     rclpy.init(args=args)
 
-    name = "temp" #TODO: delete
+    name = "temp"  # TODO: delete
 
     ot2node = OT2(name)
     try:
@@ -345,11 +366,12 @@ def main(args=None):
     args = []
     args.append(ot2node)  # Self
     status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-#    spin_thread.join()
+    #    spin_thread.join()
     ot2node.destroy_node()
     rclpy.shutdown()
 
-'''
+
+"""
     # Spin
     try:
         # TODO: DELETE
@@ -372,7 +394,7 @@ def main(args=None):
         spin_thread.join()
         ot2node.destroy_node()
         rclpy.shutdown()
-'''
+"""
 
 if __name__ == "__main__":
     main()

@@ -18,9 +18,7 @@ def run(self, file, id):
         self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
     )  # retry function
     if status == self.status["ERROR"] or status == self.status["FATAL"]:
-        self.get_logger().error(
-           "Unable to find node %s" % id
-        )  # Node isn't registered
+        self.get_logger().error("Unable to find node %s" % id)  # Node isn't registered
         return self.status["ERROR"]
     else:
         self.get_logger().info("Node %s found" % id)  # Found
@@ -66,6 +64,7 @@ def run(self, file, id):
                 self.get_logger().info("Module run succeeded")
                 return self.status["SUCCESS"]  # All good
 
+
 # Loads filename to a worker node
 # parameters, name of file (path not needed done by worker), id of worker, and if the file already exists do we replace it or not?
 def load(self, name, id, replacement):
@@ -76,9 +75,7 @@ def load(self, name, id, replacement):
         self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
     )  # retry function
     if status == self.status["ERROR"] or status == self.status["FATAL"]:
-        self.get_logger().error(
-            "Unable to find node %s" % id
-        )  # Node isn't registered
+        self.get_logger().error("Unable to find node %s" % id)  # Node isn't registered
         return self.status["ERROR"]
     else:
         self.get_logger().info("Node %s found" % id)  # Found
@@ -86,9 +83,7 @@ def load(self, name, id, replacement):
     # Select a node
     try:
         # Get node information
-        target_node = self.search_for_node(
-            id
-        )  # See if id robot exists and the data
+        target_node = self.search_for_node(id)  # See if id robot exists and the data
 
         # Error checking
         if target_node["type"] == "-1":  # No such node
@@ -156,13 +151,16 @@ def load(self, name, id, replacement):
                 self.get_logger().info("Load succeeded")
                 return self.status["SUCCESS"]  # All good
 
+
 # Function to segway to main function call
 def _load(self, args):
     return self.load(args[0], args[1], args[2])  # File, id, replacement
 
+
 # Function to segway to main function call
 def _run(self, args):
     return self.run(args[0], args[1])  # File, id
+
 
 # Function to just run load and run
 def load_and_run(self, file, id):
@@ -172,14 +170,12 @@ def load_and_run(self, file, id):
     args.append(id)
     args.append(True)  # Auto update
     status = retry(
-    self, self._load, 1, 0, args
+        self, self._load, 1, 0, args
     )  # Calling retry function with 1 attempt, just want output information
 
     # Status check
     if status == self.status["FATAL"]:
-        self.get_logger().fatal(
-            "Major error occured when attempting to run function"
-        )
+        self.get_logger().fatal("Major error occured when attempting to run function")
         return self.status["FATAL"]  # Fatal error
     elif status == self.status["ERROR"]:
         self.get_logger().error(
@@ -205,9 +201,7 @@ def load_and_run(self, file, id):
 
     # Status check
     if status == self.status["FATAL"]:
-        self.get_logger().fatal(
-            "Major error occured when attempting to run function"
-        )
+        self.get_logger().fatal("Major error occured when attempting to run function")
         return self.status["FATAL"]  # Fatal error
     elif status == self.status["ERROR"]:
         self.get_logger().error(
@@ -222,6 +216,7 @@ def load_and_run(self, file, id):
     else:
         self.get_logger().info("Function ran to completion")
         return self.status["SUCCESS"]  # All Good
+
 
 def main_null():
     print("This function isn't meant to have a main functino")

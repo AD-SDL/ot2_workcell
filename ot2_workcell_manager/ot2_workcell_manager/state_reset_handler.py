@@ -28,12 +28,11 @@ from random import random
 # Master: TODO
 # OT-2: TODO
 class StateResetHandler(Node):
-
     def __init__(self):
         super().__init__("State_Reset_Handler")
         self.name = "state_reset_handler"
         self.type = "state_reset_handler"
-        self.id = "S-1" # "S-1" like "M-1"
+        self.id = "S-1"  # "S-1" like "M-1"
 
         # Readabilty
         self.state = {  # TODO maybe a sync with the master
@@ -52,7 +51,9 @@ class StateResetHandler(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        self.module_location = (
+            self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        )
 
         # Initialization Complete
         self.get_logger().info(
@@ -68,56 +69,66 @@ class StateResetHandler(Node):
         entry = get_node_info(self, name_or_id)
 
         # Error checking
-        if(not (entry['type'] == 'arm' or entry['type'] == 'OT_2')):
-            self.get_logger().error("Node doesn't exist or listed robot isn't a known type")
-            return self.status['ERROR']
+        if not (entry["type"] == "arm" or entry["type"] == "OT_2"):
+            self.get_logger().error(
+                "Node doesn't exist or listed robot isn't a known type"
+            )
+            return self.status["ERROR"]
         # TODO: Provide warning if the state isn't in an error state
 
         # Get information from entry
-        id = entry['id']
-        type = entry['type']
+        id = entry["id"]
+        type = entry["type"]
 
         # Create msg and pub
-        if(type == 'arm'):
+        if type == "arm":
             msg = ArmReset()
-            reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset"%id, 10)
-            time.sleep(1) # Sleep 1 second to wait for the publisher to finish
-        elif(type == 'OT_2'):
-            reset_state_pub = self.create_publisher(OT2Reset, "/OT_2/%s/ot2_state_reset"%id, 10)
-            time.sleep(1) # Sleep 1 second to wait for the publisher to finish
+            reset_state_pub = self.create_publisher(
+                ArmReset, "/arm/%s/arm_state_reset" % id, 10
+            )
+            time.sleep(1)  # Sleep 1 second to wait for the publisher to finish
+        elif type == "OT_2":
+            reset_state_pub = self.create_publisher(
+                OT2Reset, "/OT_2/%s/ot2_state_reset" % id, 10
+            )
+            time.sleep(1)  # Sleep 1 second to wait for the publisher to finish
             msg = OT2Reset()
         msg.state = new_state
         msg.id = id
 
         # Confirm
-        confirmation = 'a'
-        while(not (confirmation == 'Y' or confirmation == 'N')):
+        confirmation = "a"
+        while not (confirmation == "Y" or confirmation == "N"):
             confirmation = input("Confirmation required (Y/N): ")
 
-        if(confirmation.strip() == 'N'):
-            return self.status['WARNING']
+        if confirmation.strip() == "N":
+            return self.status["WARNING"]
 
         # Pub
         reset_state_pub.publish(msg)
 
         self.get_logger().info("State reset")
 
-        return self.status['SUCCESS'] #TODO: Error handling
+        return self.status["SUCCESS"]  # TODO: Error handling
+
 
 def work(self):
-    temp = 'Y'
-    while not temp == 'Q':
+    temp = "Y"
+    while not temp == "Q":
         temp = input("Y/N/Q for resetting arm state: ")
-        if(temp.strip() == 'Y'):
+        if temp.strip() == "Y":
             arm_name_or_id = input("Please enter arm name or id: ")
-            status = self.node_state_reset(self.state['READY'], arm_name_or_id.strip()) # TODO: maybe do something with status
+            status = self.node_state_reset(
+                self.state["READY"], arm_name_or_id.strip()
+            )  # TODO: maybe do something with status
+
 
 def main(args=None):
     rclpy.init(args=args)
 
     state_reset_handler = StateResetHandler()
 
-    spin_thread = Thread(target = work, args = (state_reset_handler,))
+    spin_thread = Thread(target=work, args=(state_reset_handler,))
     spin_thread.start()
 
     try:
@@ -130,5 +141,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

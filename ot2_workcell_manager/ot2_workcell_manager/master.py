@@ -47,7 +47,9 @@ class Master(Node):
         # Path setup
         path = Path()
         self.home_location = str(path.home())
-        self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        self.module_location = (
+            self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
+        )
 
         # Basic informaton
         self.id = "M-1"  # Ultimate position, before 0
@@ -96,8 +98,22 @@ class Master(Node):
             }
 
             # Add to sub list
-            self.sub_list.append(self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%dict['id'], self.state_reset_callback, 10))
+            self.sub_list.append(
+                self.create_subscription(
+                    OT2StateUpdate,
+                    "/OT_2/%s/ot2_state_update" % dict["id"],
+                    self.node_state_update_callback,
+                    10,
+                )
+            )
+            self.sub_list.append(
+                self.create_subscription(
+                    OT2Reset,
+                    "/OT_2/%s/ot2_state_reset" % dict["id"],
+                    self.state_reset_callback,
+                    10,
+                )
+            )
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
@@ -115,8 +131,22 @@ class Master(Node):
             }
 
             # Add to sub list
-            self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
+            self.sub_list.append(
+                self.create_subscription(
+                    ArmStateUpdate,
+                    "/arm/%s/arm_state_update" % dict["id"],
+                    self.node_state_update_callback,
+                    10,
+                )
+            )
+            self.sub_list.append(
+                self.create_subscription(
+                    ArmReset,
+                    "/arm/%s/arm_state_reset" % dict["id"],
+                    self.state_reset_callback,
+                    10,
+                )
+            )
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
@@ -341,7 +371,9 @@ class Master(Node):
 
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
-                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                if (
+                    not split_files[i].split(":")[0] == "transfer"
+                ):  # Don't send files if transfer
                     self.send_scripts(id, split_files[i])
 
             # files sent to worker OT-2 to become threads
@@ -352,7 +384,7 @@ class Master(Node):
 
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
-    
+
     # Creates client that sends contents of files to OT-2
     def send_scripts(self, id, name):
 
@@ -386,24 +418,24 @@ class Master(Node):
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             return self.status["ERROR"]
-        
 
         # Create client that calls send_scripts servive on controller
 
-        script_cli = self.create_client(SendScripts, "/%s/%s/send_scripts" % (type, id))  # format of service is /{type}/{id}/{service name}
+        script_cli = self.create_client(
+            SendScripts, "/%s/%s/send_scripts" % (type, id)
+        )  # format of service is /{type}/{id}/{service name}
         while not script_cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("Service not available, trying again...")
 
         # extract name and contents of each first file in list
-        with open(self.module_location + name, 'r') as file:
+        with open(self.module_location + name, "r") as file:
             contents = file.read()
-        
 
         # Client ready
         script_request = SendScripts.Request()
-        script_request.name = name # name of file
-        script_request.contents = contents # contents of file
-        script_request.replace = True # Replace file of same name (default true)
+        script_request.name = name  # name of file
+        script_request.contents = contents  # contents of file
+        script_request.replace = True  # Replace file of same name (default true)
 
         # Call service
         future = script_cli.call_async(script_request)
@@ -427,7 +459,6 @@ class Master(Node):
                 else:
                     self.get_logger().info("File %s contents loaded" % name)
                     return self.status["SUCCESS"]  # All good
-
 
     # Handles get node info service call
     def handle_get_node_info(self, request, response):
@@ -473,39 +504,42 @@ class Master(Node):
     def node_state_update_callback(self, msg):
         # Find node
         entry = self.search_for_node(msg.id)
-        current_state = entry['state']
+        current_state = entry["state"]
 
         # Prevent changing state when in an error state
-        if(current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of the arm is already error")
-            return # exit out of function
+        if current_state == self.state["ERROR"]:
+            self.get_logger().error(
+                "Can't change state, the state of the arm is already error"
+            )
+            return  # exit out of function
 
         # set state
         self.node_lock.acquire()
-        entry['state'] = msg.state
+        entry["state"] = msg.state
         self.node_lock.release()
 
         # Debug
-  #      entry = self.search_for_node(msg.id)
-   #     self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
 
-   # Function to reset the state of the transfer handler
+    #      entry = self.search_for_node(msg.id)
+    #     self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
+
+    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
-        self.get_logger().warning("Resetting state of id: %s..."%msg.id)
+        self.get_logger().warning("Resetting state of id: %s..." % msg.id)
 
         # Find node
         entry = self.search_for_node(msg.id)
-        current_state = entry['state']
+        current_state = entry["state"]
 
         # set state
         self.node_lock.acquire()
-        entry['state'] = msg.state
+        entry["state"] = msg.state
         self.node_lock.release()
 
-        # Debug 
-#        entry = self.search_for_node(msg.id)
- #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
+        # Debug
 
+    #        entry = self.search_for_node(msg.id)
+    #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
 
     # Service to read items from the submitter node
     def handle_submitter(self, request, response):
@@ -517,12 +551,13 @@ class Master(Node):
         status = self.read_from_setup(request.workload)
 
         # Error handling
-        if(status == self.status['ERROR']):
+        if status == self.status["ERROR"]:
             self.get_logger().error("Something went wrong with read_from_setup")
 
         # Return response
         response.status = status
         return response
+
 
 # TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
