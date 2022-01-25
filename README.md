@@ -72,6 +72,7 @@ This workcell will eventually support:
 ## Install ROS2 Foxy
 
 * [On Ubuntu, Mac, or Windows](https://docs.ros.org/en/foxy/Installation.html)
+ 	* Please note that this current install does not work and involves a modified set of steps to work, TODO 
 * [On a Raspberry Pi 4](https://roboticsbackend.com/install-ros2-on-raspberry-pi/)
 
 ## Install the Packages
