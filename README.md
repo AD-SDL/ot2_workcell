@@ -72,11 +72,6 @@ This workcell will eventually support:
 ## Install ROS2 Foxy
 
 * [On Ubuntu, Mac, or Windows](https://docs.ros.org/en/foxy/Installation.html)
- 	* Please note that this current build does not work and involves a modified set of steps to work, the following
- 	* Change to ```/etc/apt/sources.list.d/ros2.list``` to ```deb [arch=arm64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu focal main```  
-**after** this step in the building ros2 guide ```echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null```
-	* Change this command ```rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers"``` to  
-```rosdep install --from-paths src --ignore-src -y --skip-keys "fastcdr rti-connext-dds-5.3.1 urdfdom_headers python3-ifcfg"```
 * [On a Raspberry Pi 4](https://roboticsbackend.com/install-ros2-on-raspberry-pi/)
 
 ## Install the Packages
