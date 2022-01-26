@@ -85,8 +85,9 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 1. `git clone https://github.com/AD-SDL/ros2tests`
 1. `cd ~/ot2_ws`
 1. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
-1. `colcon build`
-1. `source install/setup.bash`
+1. `sudo apt install python3-colcon-common-extensions`
+3. `colcon build`
+4. `source install/setup.bash`
 
 ## Launching
 
