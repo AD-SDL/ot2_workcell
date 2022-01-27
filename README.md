@@ -82,7 +82,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 1. `source /opt/ros/foxy/setup.bash`
 1. `mkdir -p ~/ot2_ws/src`
 1. `cd ~/ot2_ws/src`
-1. `git clone https://github.com/AD-SDL/ros2tests`
+1. `git clone https://github.com/AD-SDL/ot2_workcell.git`
 1. `cd ~/ot2_ws`
 1. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
 1. `sudo apt install python3-colcon-common-extensions`
