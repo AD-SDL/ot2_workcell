@@ -227,7 +227,7 @@ class ArmManager(Node):
             return response
 
         # Check to see if other side is ready
-        both_ready = False
+        both_ready = False #TODO: Switch name and test
         for item in self.transfer_queue:
             if item == identifier_other:  # Item is waiting can continue
                 both_ready = True
