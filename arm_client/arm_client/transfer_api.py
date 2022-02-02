@@ -12,7 +12,6 @@ from ot2_workcell_manager_client.worker_info_api import (
     get_node_info,
 )
 
-# TODO: DELETE
 def load_transfer(
     self, from_name_or_id, to_name_or_id, item, arm_name_or_id
 ):  # TODO do something with item
@@ -121,7 +120,6 @@ def load_transfer(
     return self.status["SUCCESS"]
 
 
-# TODO: DELETE
 # Middleman function to segway to transfer call in retry function
 def _load_transfer(args):
     return load_transfer(
