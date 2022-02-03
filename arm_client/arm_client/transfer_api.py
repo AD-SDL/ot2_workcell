@@ -59,10 +59,10 @@ def load_transfer(
             request.other_name = from_name  # Then the other one is the one sending
         elif self.name == from_name:  # We are the one sending
             request.other_name = to_name  # Then the other one is the one recieving
-        '''
-            Error (The one calling this is trying to create an invalid transfer - the transfer request must come from the nodes involved )
-        '''
         else:
+            '''
+                Error (The one calling this is trying to create an invalid transfer - the transfer request must come from the nodes involved )
+            '''
             self.get_logger().error(
                 "Invalid transfer request: Node %s can't start transfer: %s"
                 % (self.name, (from_name + " to " + to_name))
