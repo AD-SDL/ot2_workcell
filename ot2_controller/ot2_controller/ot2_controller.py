@@ -44,7 +44,7 @@ class OT2(Node):
 
         # readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: sync with master
-        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3}
+        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
         # State information
         self.current_state = self.state["READY"]
@@ -193,7 +193,7 @@ class OT2(Node):
             self.work_list_lock.release()
             return response
 
-    # Function to reset the state of the transfer handler
+    # Function to reset the state of the ot2 handler
     def state_reset_callback(self, msg):
         self.get_logger().warning("Resetting state...")
 
@@ -311,31 +311,10 @@ class OT2(Node):
         self.temp_list.pop(0)
         return response
 
-# TODO: DELETE
-def work(ot2node):
-
-    args = []
-    if ot2node.name == "bob":
-        args.append(ot2node)
-        args.append("bob")
-        args.append("alex")
-        args.append("10")
-        args.append("army")
-        status = retry(ot2node, _load_transfer, 20, 4, args)
-    if ot2node.name == "alex":
-        args.append(ot2node)
-        args.append("bob")
-        args.append("alex")
-        args.append("10")
-        args.append("army")
-        status = retry(ot2node, _load_transfer, 20, 4, args)
-
 def main(args=None):
     rclpy.init(args=args)
-
-    name = "temp" #TODO: delete
-
-    ot2node = OT2(name)
+    
+    ot2node = OT2("temp")
     try:
         rclpy.spin(ot2node)
     except:
@@ -343,36 +322,11 @@ def main(args=None):
 
     # Setup args and end
     args = []
-    args.append(ot2node)  # Self
+    args.append(ot2node) # Self
     status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-#    spin_thread.join()
+
     ot2node.destroy_node()
     rclpy.shutdown()
-
-'''
-    # Spin
-    try:
-        # TODO: DELETE
-        spin_thread = Thread(
-            target=work,
-            args=(
-                ot2node,
-            ),
-        )
-        spin_thread.start()
-
-        rclpy.spin(ot2node)
-    except:
-        ot2node.get_logger().error("Terminating...")
-
-        # Setup args and end
-        args = []
-        args.append(ot2node)  # Self
-        status = retry(ot2node, _deregister_node, 10, 1.5, args)  # TODO: handle status
-        spin_thread.join()
-        ot2node.destroy_node()
-        rclpy.shutdown()
-'''
 
 if __name__ == "__main__":
     main()

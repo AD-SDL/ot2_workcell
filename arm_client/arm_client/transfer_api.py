@@ -14,7 +14,7 @@ from ot2_workcell_manager_client.worker_info_api import (
 
 def load_transfer(
     self, from_name_or_id, to_name_or_id, item, arm_name_or_id
-):  # TODO do something with item
+):  #TODO: do something with item
 
     # Get destination node info
     to_entry = get_node_info(self, to_name_or_id)
@@ -59,7 +59,10 @@ def load_transfer(
             request.other_name = from_name  # Then the other one is the one sending
         elif self.name == from_name:  # We are the one sending
             request.other_name = to_name  # Then the other one is the one recieving
-        else:  # Error (The one calling this is trying to create an invalid transfer)
+        '''
+            Error (The one calling this is trying to create an invalid transfer - the transfer request must come from the nodes involved )
+        '''
+        else:
             self.get_logger().error(
                 "Invalid transfer request: Node %s can't start transfer: %s"
                 % (self.name, (from_name + " to " + to_name))
@@ -74,11 +77,11 @@ def load_transfer(
         self.get_logger().info("Service not available, trying again...")
 
     # Call client
-    status = 10
-    while status == 10:  # 10 is WAITING
+    status = self.status["WAITING"]
+    while status == self.status["WAITING"] :  # 10 is WAITING
         future = load_transfer_cli.call_async(request)
         self.get_logger().info(
-            "Requesting a transfer / Adding a entry to transfer queue"
+            "Requesting transfer from %s to %s Node: %s" % (to_name, from_name, self.cur_name)
         )
 
         # Waiting for completion
@@ -96,8 +99,8 @@ def load_transfer(
                 ):  # Some error occured
                     raise Exception
             except Exception as e:
-                self.get_logger().error("Error occured %r" % (e,))
-                status = 10  # Retry
+                self.get_logger().error("Error occured %r" % (e,)) #TODO: Maybe handle this as error and not as waiting
+                status = self.status["WAITING"]   # Retry
             else:
                 if response.status == response.SUCCESS:
                     self.get_logger().info(
@@ -109,16 +112,18 @@ def load_transfer(
                     self.get_logger().info(
                         "Waiting on transfer from: %s to: %s" % (from_name, to_name)
                     )
-                    status = 10  # WAITING
+                    status = self.status["WAITING"]  # WAITING
 
-        if status == 10:  # Waiting
+        '''
+            Note: The time.sleep() used to be 5 seconds, but was decided to change to just a simply time.sleep(0) for thread yielding this allows this to run at a much higher frequency to allow the checks to happen more rapidly.
+        '''
+        if status == self.status["WAITING"] :  # Waiting
             time.sleep(
-                5
-            )  # Sleep an additional 5 seconds (all other threads to gain access)
+                0
+            )  # Yields to other threads
         time.sleep(1)  # 1 second timeout
 
     return self.status["SUCCESS"]
-
 
 # Middleman function to segway to transfer call in retry function
 def _load_transfer(args):

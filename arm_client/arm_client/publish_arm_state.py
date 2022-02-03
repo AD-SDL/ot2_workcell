@@ -10,7 +10,7 @@ from workcell_interfaces.msg import *
 def update_arm_state(self, current_state):
 
     # Error checking
-    if current_state > 2 or current_state < 0:
+    if current_state not in self.state:
         return self.status["ERROR"]  # Error
 
     # Create a request
@@ -25,10 +25,9 @@ def update_arm_state(self, current_state):
     time.sleep(1)  # wait for it to start
 
     # Call client
-    # 	self.get_logger().info("Updating state")
     arm_state_update_pub.publish(msg)
 
-    # No error checks without services :(
+    # No error checks without services
     return self.status["SUCCESS"]
 
 

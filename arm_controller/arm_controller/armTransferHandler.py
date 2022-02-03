@@ -24,11 +24,9 @@ from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
 
 # TODO: figure out how to integrate arm code
-
-
 class ArmTransferHandler(Node):
     def __init__(self, name):
-        # Createa  temporary node so we can read in parameters
+        # Create a temporary node so we can read in parameters
         super().__init__("Temp" + str(int(random() * 17237967)))
 
         # Create parameters for name to be sent through
@@ -95,11 +93,14 @@ class ArmTransferHandler(Node):
             % (self.id, self.name)
         )
 
-    # retrieves the next transfer to run in the queue
-    # No need to lock the arm this is done by the manager
+    '''
+        Retrieves the next transfer to run in the queue
+        No need to lock the arm this is done by the manager
+        
+        We send a message to master that we are busy when we take a new job
+    '''
     def get_next_transfer(self):
-        # Get the next transfer
-        # Create client and wait for service
+        # Get the next transfer - Create client and wait for service
         get_next_transfer_cli = self.create_client(
             GetNextTransfer, "/arm/%s/get_next_transfer" % self.id
         )
@@ -123,7 +124,7 @@ class ArmTransferHandler(Node):
                     or response.status == response.FATAL
                 ):
                     raise Exception
-                elif response.status == response.WAITING:
+                elif response.status == response.WAITING: #TODO: consistent style putting this in else or try block
                     return self.status["WAITING"]
             except Exception as e:
                 self.get_logger().error("Error occured %r" % (e,))
@@ -133,7 +134,7 @@ class ArmTransferHandler(Node):
                     response.next_transfer.splitlines()
                 )  # Breaks up based on newlines
 
-        # Get transfer data
+        # Get transfer data - Retrieve from and to from the first identifier
         transfer_request = next_transfer[0].split()  # Split based on whitespaces
         from_name = transfer_request[0]
         to_name = transfer_request[1]
@@ -159,12 +160,14 @@ class ArmTransferHandler(Node):
             self.get_logger().info(
                 "Attempting to transfer complete transfer %s" % str(next_transfer)
             )
-            time.sleep(2)  # TODO actual transfer code
+            time.sleep(2)  # TODO: actual transfer code
             self.get_logger().info("Transfer %s is complete" % str(next_transfer))
         except Exception as e:
-            # At this point it is safe to exit
-            # The reason why is because we still only have one entry in the transfer_queue, and no entry
-            # In the completed queue, which means the system is still in the same state it started in
+            '''
+             At this point it is safe to exit
+             The reason why is because we still only have one entry in the transfer_queue, and no entry
+             In the completed queue, which means the system is still in the same state it started in
+            '''
             self.get_logger().error("Error occured: %r" % (e,))
             self.current_state = self.state["ERROR"]  # ERROR state
             return self.status["ERROR"]
@@ -173,15 +176,13 @@ class ArmTransferHandler(Node):
         finally:  # No matter what after this the army is no longer busy
             self.set_state()
 
-        # Add to completed queue
-
-        # Create pub
+        # Add to completed queue - Create pub
         completed_transfer_pub = self.create_publisher(
             CompletedTransfer, "/arm/%s/completed_transfer" % self.id, 10
         )
         time.sleep(1)  # Wait for it
 
-        # Create msg
+        # Create msg - Using identifiers
         msg = CompletedTransfer()
         msg.identifier_cur = next_transfer[0]
         msg.identifier_other = next_transfer[1]
@@ -203,7 +204,7 @@ class ArmTransferHandler(Node):
             )
 
     # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg):
+    def state_reset_callback(self, msg): #TODO: more comprehensive reset handler
         self.get_logger().warning("Resetting state...")
         self.current_state = msg.state
 
@@ -213,18 +214,15 @@ class ArmTransferHandler(Node):
         while rclpy.ok():
             time.sleep(3)
             status = self.get_next_transfer()
+        '''
+            TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
+        '''
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    # 	if(len(sys.argv) != 2):
-    # 		print("need 1 arguments")
-    # 		sys.exit(1)
-    # 	name = str(sys.argv[1])
-    name = "temp"  # TODO: DELETE
-
-    arm_transfer_node = ArmTransferHandler(name)
+    arm_transfer_node = ArmTransferHandler("Temp")
     try:
         spin_thread = Thread(target=arm_transfer_node.run, args=())
         spin_thread.start()
@@ -236,7 +234,6 @@ def main(args=None):
         arm_transfer_node.get_logger().error("Terminating...")
 
     # End
-#    spin_thread.join()
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 

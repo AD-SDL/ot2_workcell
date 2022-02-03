@@ -21,8 +21,6 @@ from ot2_workcell_manager_client.worker_info_api import (
 )
 
 # TODO: figure out how to integrate arm code
-
-
 class ArmManager(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))
@@ -51,12 +49,12 @@ class ArmManager(Node):
         self.run_queue = []  # Which transfers are currently running
 
         # Readabilty
-        self.state = {  # TODO maybe a sync with the master
+        self.state = {  # TODO: maybe a sync with the master
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
         }
-        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3}
+        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
         # State information
         self.current_state = self.state["READY"]  # Start ready
@@ -75,7 +73,7 @@ class ArmManager(Node):
         args.append(name)  # Name
         status = retry(
             self, _register, 10, 1, args
-        )  # Setups up a retry system for a function, args is empty as we don't want to feed arguments
+        )  # Setups up a retry system for a function
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().fatal("Unable to register with master, exiting...")
             sys.exit(1)  # Can't register node even after retrying
@@ -108,7 +106,12 @@ class ArmManager(Node):
             10,
         )
         self.completed_transfer_sub  # prevent unused warning
-        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub = self.create_subscription(
+            ArmReset,
+            "/arm/%s/arm_state_reset" % self.id,
+            self.state_reset_callback,
+            10,
+        )
         self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
@@ -170,19 +173,12 @@ class ArmManager(Node):
         # Get lock
         self.arm_lock.acquire()
 
-        # 		self.get_logger().info("Get next transfer " + str(self.run_queue)) #TODO: DELETE
-        # 		self.get_logger().info("Get next transfer " + str(self.transfer_queue)) #TODO: DELETE
-
         # Retrieve next item in queue
         if len(self.run_queue) > 0:
             response.next_transfer = self.run_queue[0]  # Get the first in the queue (don't remove it, upon completion it is removed)
             response.status = response.SUCCESS
         else:
             response.status = response.WAITING  # Waiting on things to run
-
-        # 		self.get_logger().info("Get next transfer " + str(self.run_queue)) #TODO: DELETE
-        # 		self.get_logger().info("Get next transfer " + str(self.transfer_queue)) #TODO: DELETE
-        # 		self.get_logger().info("get next transfer done") #TODO: DELETE
 
         # Release lock
         self.arm_lock.release()
@@ -209,10 +205,7 @@ class ArmManager(Node):
 
         # Create identifier
         identifier_cur = from_name + " " + to_name + " " + item + " Node: " + cur_node
-        identifier_other = (
-            from_name + " " + to_name + " " + item + " Node: " + other_node
-        )
-        # 		self.get_logger().info("cur: %s   other: %s"%(identifier_cur, identifier_other)) #TODO: DELETE
+        identifier_other = from_name + " " + to_name + " " + item + " Node: " + other_node
 
         # Check to see if the transfer already completed
         completed = False
@@ -221,7 +214,9 @@ class ArmManager(Node):
                 completed = True
                 self.completed_queue.remove(item)  # remove from completed queue
                 break
-        if completed == True:  # We are done
+        
+        # Transfer was already completed
+        if completed == True:
             response.status = response.SUCCESS
             self.arm_lock.release()  # Realise lock
             return response
@@ -244,30 +239,30 @@ class ArmManager(Node):
         if in_queue == False:
             self.transfer_queue.append(identifier_cur)
 
-        # 		self.get_logger().info("both ready %s, in queue %s"%(str(both_ready), str(in_queue))) #TODO: DELETE
         # If both aren't ready we return WAITING, or if both are listed in transfer (being processed)
         if both_ready == False or (in_queue == True and both_ready == True):
             response.status = response.WAITING  # Still waiting on the other side
             self.arm_lock.release()  # Realise lock
             return response
 
-        # if this point is reached the transfer is ready to be run
+        # If this point is reached the transfer is ready to be run
         # Add to run queue
         self.run_queue.append(
             identifier_cur + "\n" + identifier_other
         )  # For the node waiting on it
-        self.arm_lock.release()  # Release lock
+        
+        # Release lock
+        self.arm_lock.release()
+        
+        # If it isn't in completed then it isn't done
         response.status = (
             response.WAITING
-        )  # If it isn't in completed then it isn't done
+        )
 
-        # 		self.get_logger().info("Load transfer " + str(self.transfer_queue)) #TODO: DELETE
-        # 		self.get_logger().info("Load transfer " + str(self.run_queue)) #TODO: DELETE
-        # 		self.get_logger().info("Load transfer " + str(self.completed_queue)) #TODO: DELETE
         return response
 
     # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg):
+    def state_reset_callback(self, msg): #TODO: More Comprehensive Reset
         self.get_logger().warning("Resetting state...")
 
         # Get state lock
@@ -290,11 +285,10 @@ class ArmManager(Node):
             return # exit out of function
 
         # Recieve request
-        self.current_state = msg.state  # TODO error checks
+        self.current_state = msg.state
 
-        # TODO: sync with master
+        # TODO: sync state with master
 
-        # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
         self.state_lock.release() # release lock
 
 
@@ -318,13 +312,7 @@ class ArmManager(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    # 	if(len(sys.argv) != 2):
-    # 		print("need 1 arguments")
-    # 		sys.exit(1)
-    # 	name = str(sys.argv[1])
-    name = "temp"  # TODO: DELETE
-
-    arm_manager_node = ArmManager(name)
+    arm_manager_node = ArmManager("Temp")
     try:
         rclpy.spin(arm_manager_node)
     except:

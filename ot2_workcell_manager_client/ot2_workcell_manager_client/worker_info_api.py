@@ -14,10 +14,12 @@ def get_node_info(self, name_or_id):
     # Client setup
     get_node_info_cli = self.create_client(
         GetNodeInfo, "get_node_info"
-    )  # Create client
+    )
+    
+    # Wait for service to start
     while not get_node_info_cli.wait_for_service(
         timeout_sec=2.0
-    ):  # Wait for service to start
+    ):
         self.get_logger().info("Service not available, trying again...")
 
     # Call service to get node info
