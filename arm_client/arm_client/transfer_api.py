@@ -81,7 +81,7 @@ def load_transfer(
     while status == self.status["WAITING"] :  # 10 is WAITING
         future = load_transfer_cli.call_async(request)
         self.get_logger().info(
-            "Requesting transfer from %s to %s Node: %s" % (to_name, from_name, self.cur_name)
+            "Requesting transfer from %s to %s Node: %s" % (to_name, from_name, self.name)
         )
 
         # Waiting for completion
