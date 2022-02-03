@@ -10,7 +10,7 @@ from workcell_interfaces.msg import *
 def update_arm_state(self, current_state):
 
     # Error checking
-    if current_state not in self.state:
+    if not (current_state in self.state):
         return self.status["ERROR"]  # Error
 
     # Create a request
