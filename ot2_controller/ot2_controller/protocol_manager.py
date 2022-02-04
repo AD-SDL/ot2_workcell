@@ -23,8 +23,6 @@ from ot2_workcell_manager_client.worker_info_api import (
 from random import random
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
-
-# TODO: import ot2_client
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 from ot2_client.load_run_api import *
@@ -83,7 +81,12 @@ class OT2ProtocolManager(Node):
         # Create services
 
         # Create subs
-        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub = self.create_subscription(
+            OT2Reset,
+            "/OT_2/%s/ot2_state_reset"%self.id,
+            self.state_reset_callback,
+            10,
+        )
         self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
@@ -107,8 +110,7 @@ class OT2ProtocolManager(Node):
         # Get the next protocol
         file_name = ""
 
-        # Client ready, get name of file
-        # No request info needed
+        # Client ready, get name of file - No request info needed
         protocol_request = Protocol.Request()
 
         # Call service to protocol
@@ -253,10 +255,8 @@ class OT2ProtocolManager(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
-    name = "temp"
-    protocol_manager = OT2ProtocolManager(name)
-
+    
+    protocol_manager = OT2ProtocolManager("temp")
     try:
         # Work
         spin_thread = Thread(target=protocol_manager.run, args=())
@@ -269,7 +269,6 @@ def main(args=None):
         protocol_manager.get_logger().error("Terminating...")
 
     # End
-#    spin_thread.join()
     protocol_manager.destroy_node()
     rclpy.shutdown()
 

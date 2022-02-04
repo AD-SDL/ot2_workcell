@@ -18,6 +18,10 @@ from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 from random import random
 
+'''
+    TODO: If there is still work then it can't deregister properly only when there is no work left (maybe lock)
+'''
+
 class OT2(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))
@@ -55,17 +59,12 @@ class OT2(Node):
         self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         self.work_list = []  # list of files list recieved from jobs
-        self.work_index = 0  # location of recently added files in work_list
-        self.threads_list = []  # list of all worker threads
+        self.work_index = 0  # location of recently added files in work_list TODO: change to better name
         self.temp_list = [] # List that stores individual jobs for the protocol handler
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
         self.node_wait_attempts = 10  # 10 attempts before error thrown
-
-        # Create clients
-        # 		self.register_cli = self.create_client(Register, 'register') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
-        # 		self.deregister_cli = self.create_client(Destroy, 'destroy') # All master service calls will be plain, not /{type}/{id} (TODO: change to this maybe?)
 
         # Register with master
         args = []
@@ -83,7 +82,7 @@ class OT2(Node):
         self.get_id_service = self.create_service(
             GetId, "/OT_2/%s/get_id" % self.name, self.get_id_handler
         )
-        self.send_service = self.create_service(
+        self.send_service = self.create_service( #TODO: Change name to something better
             SendFiles, "/OT_2/%s/send_files" % self.id, self.receive_files_handler
         )
         self.protocol_service = self.create_service(
@@ -101,7 +100,12 @@ class OT2(Node):
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
-        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub = self.create_subscription(
+            OT2Reset,
+            "/OT_2/%s/ot2_state_reset"%self.id,
+            self.state_reset_callback,
+            10,
+        )
         self.state_reset_sub # prevent unused variable warning
 
         # TODO: create service to unload and recieve items
@@ -133,7 +137,7 @@ class OT2(Node):
             # Check if file already exists
             filepath = Path(self.module_location + name)
 
-            if filepath.is_file(): # file already exists
+            if filepath.is_file(): # file already exists TODO: decrease lines of code
                 if replace == True: # request says to replace file
                     os.remove(self.module_location + name) # delete preexisting file
                     f = open(self.module_location + name, "x") # create new file with name
@@ -148,7 +152,6 @@ class OT2(Node):
                 f.close()
                 self.get_logger.info("File %s created and loaded" % name)
 
-
         except Exception as e:
             self.get_logger().error("Error occurred: %r" % (e,))
             response.status = response.ERROR
@@ -159,8 +162,6 @@ class OT2(Node):
             # release lock
             self.file_lock.release()
             return response
-
-
 
     # Handles send_module service calls
     def receive_files_handler(self, request, response):
@@ -210,9 +211,7 @@ class OT2(Node):
 
         # Recieve request
         current_state = msg.state  # TODO error checks
-
-        # 		self.get_logger().info("I Heard %d"%msg.state) # TODO: DELETE
-
+        
         # Update our state
         self.current_state = current_state
 
@@ -235,7 +234,7 @@ class OT2(Node):
         return response
 
     # handles protocol module service calls
-    def protocol_handler(self, request, response):
+    def protocol_handler(self, request, response): #TODO: remodel to be more efficient
 
         # get state lock
         self.state_lock.acquire()
