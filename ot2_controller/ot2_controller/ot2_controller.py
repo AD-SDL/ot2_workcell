@@ -21,7 +21,7 @@ from random import random
 '''
     TODO: If there is still work then it can't deregister properly only when there is no work left (maybe lock)
 '''
-
+ 
 class OT2(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))

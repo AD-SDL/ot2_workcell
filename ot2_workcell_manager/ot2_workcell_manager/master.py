@@ -35,14 +35,11 @@ class Master(Node):
         self.sub_list = []
 
         # Thread setup
-        self.files_for_threads = (
-            []
-        )  # Maintains list of all the files each thread saved in threads_list needs to run
-        self.threads_list = []  # Maintains all the thread objects
+        self.files_for_threads = []
 
         # Readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: more states
-        self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3}
+        self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
 
         # Path setup
         path = Path()
@@ -151,7 +148,7 @@ class Master(Node):
     # Removes node information upon service call
     def handle_destroy_worker(
         self, request, response
-    ):  # TODO make it request name as well
+    ):  # TODO: make it request name as well
 
         # Lock: Entering critical section
         self.node_lock.acquire()
@@ -217,6 +214,11 @@ class Master(Node):
         else:
             return self.status["SUCCESS"]
 
+    '''
+        TODO: These should be moved to the ot2_client package as these jobs should be provided by that interface
+        It would also mean that currently only the master possess the ability to successfully call these functions as only teh master has access to the search_for_nodes function so all other calls by any other robot would be blocked which is what we want. 
+    '''
+
     # Creates client that sends files to worker OT-2 to create threads
     def send_files(self, id, files):  # self, id of robot, and files of current job
 
@@ -262,6 +264,7 @@ class Master(Node):
 
         # Client ready
         # TODO: replacement parameter?
+        
         # Create a request
         send_request = SendFiles.Request()
         # send_request.numFiles = len(files) # number of files to be sent to worker node
@@ -485,10 +488,6 @@ class Master(Node):
         entry['state'] = msg.state
         self.node_lock.release()
 
-        # Debug
-  #      entry = self.search_for_node(msg.id)
-   #     self.get_logger().info("I heard %d, current state was %d"%(entry['state'], current_state))
-
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
         self.get_logger().warning("Resetting state of id: %s..."%msg.id)
@@ -501,11 +500,6 @@ class Master(Node):
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
-
-        # Debug 
-#        entry = self.search_for_node(msg.id)
- #       self.get_logger().info("a I heard %d, current state was %d"%(entry['state'], current_state))
-
 
     # Service to read items from the submitter node
     def handle_submitter(self, request, response):
@@ -532,14 +526,8 @@ def main(args=None):
     master_controller = Master()
 
     # Create a thread to run setup_thread
-    spin_thread = Thread(target=master_controller.read_from_setup, args=("setup",))
+    spin_thread = Thread(target=master_controller.read_from_setup, args=("setup",)) #TODO: make it so you can press a button to start it
     spin_thread.start()
-
-    # master.read_from_setup("setup")
-
-    # 	status = master.load("module_test.py", "O0",  False)
-    # 	status2 = master.run("module_test.py", "O0")
-    # 	status = master.load_and_run("module_test.py", "O0")
 
     # Spin
     try:

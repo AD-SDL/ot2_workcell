@@ -181,7 +181,7 @@ class OT2ProtocolManager(Node):
 
 
     # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg):
+    def state_reset_callback(self, msg): #TODO: More comprehensive state reset handler 
         self.get_logger().warning("Resetting state...")
         self.current_state = msg.state
 
