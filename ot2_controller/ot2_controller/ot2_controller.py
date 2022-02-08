@@ -89,7 +89,7 @@ class OT2(Node):
             Protocol, "/OT_2/%s/protocol" % self.id, self.protocol_handler
         )
         self.script_service = self.create_service(
-            LoadProtocols, "/OT_2/%s/LoadProtocols" % self.id, self.load_protocols_handler
+            LoadProtocols, "/OT_2/%s/load_protocols" % self.id, self.load_protocols_handler
         )
 
         # Create subscribers
