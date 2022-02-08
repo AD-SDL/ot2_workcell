@@ -34,9 +34,6 @@ class Master(Node):
         self.node_wait_attempts = 10  # 10 attempts before error thrown
         self.sub_list = []
 
-        # Thread setup
-        self.files_for_threads = []
-
         # Readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
@@ -218,9 +215,83 @@ class Master(Node):
         TODO: These should be moved to the ot2_client package as these jobs should be provided by that interface
         It would also mean that currently only the master possess the ability to successfully call these functions as only teh master has access to the search_for_nodes function so all other calls by any other robot would be blocked which is what we want. 
     '''
+    # Creates client that sends contents of files to OT-2
+    def load_protocols_to_ot2(self, id, name):
+
+        # Check node online?
+        args = []
+        args.append(id)
+        status = retry(
+            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
+        )  # retry function
+        if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            self.get_logger().error(
+                "Unable to find node %s" % id
+            )  # Node isn't registered
+            return self.status["ERROR"]
+        else:
+            self.get_logger().info("Node %s found" % id)  # Found
+
+        # Select a node
+        try:
+            # Get node information
+            target_node = self.search_for_node(id)  # See if id robot exists
+
+            # Error checking
+            if target_node["type"] == "-1":  # No such node
+                self.get_logger().error("id: %s doesn't exist" % id)
+                return self.status["ERROR"]
+
+            type = target_node["type"]  # These will be needed to acess the service
+            id = target_node["id"]
+
+        except Exception as e:
+            self.get_logger().error("Error occured: %r" % (e,))
+            return self.status["ERROR"]
+        
+
+        # Create client that calls load_protocols servive on controller
+
+        script_cli = self.create_client(LoadProtocols, "/%s/%s/load_protocols" % (type, id))  # format of service is /{type}/{id}/{service name}
+        while not script_cli.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("Service not available, trying again...")
+
+        # extract name and contents of each first file in list
+        with open(self.module_location + name, 'r') as file:
+            contents = file.read()
+        
+
+        # Client ready
+        script_request = LoadProtocols.Request()
+        script_request.name = name # name of file
+        script_request.contents = contents # contents of file
+        script_request.replace = True # Replace file of same name (default true)
+
+        # Call service
+        future = script_cli.call_async(script_request)
+
+        # Waiting on future
+        while future.done() == False:
+            time.sleep(1)  # timeout 1 second
+        if future.done():
+            try:
+                response = future.result()
+            except Exception as e:
+                self.get_logger().error("Error occured %r" % (e,))
+                return self.status["ERROR"]  # Error
+            else:
+                # Error checking
+                if response.status == response.ERROR:
+                    self.get_logger().error(
+                        "Error occured when sending script %s at id: %s" % (name, id)
+                    )
+                    return self.status["ERROR"]  # Error
+                else:
+                    self.get_logger().info("File %s contents loaded" % name)
+                    return self.status["SUCCESS"]  # All good
 
     # Creates client that sends files to worker OT-2 to create threads
-    def send_files(self, id, files):  # self, id of robot, and files of current job
+    def add_work_to_ot2(self, id, files):  # self, id of robot, and files of current job
 
         # Check node online?
         args = []
@@ -257,7 +328,7 @@ class Master(Node):
 
         # Client setup
         send_cli = self.create_client(
-            SendFiles, "/%s/%s/send_files" % (type, id)
+            AddWork, "/%s/%s/add_work" % (type, id)
         )  # format of service is /{type}/{id}/{service name}
         while not send_cli.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("Service not available, trying again...")
@@ -266,7 +337,7 @@ class Master(Node):
         # TODO: replacement parameter?
         
         # Create a request
-        send_request = SendFiles.Request()
+        send_request = AddWork.Request()
         # send_request.numFiles = len(files) # number of files to be sent to worker node
         send_request.files = files  # string of file names list
 
@@ -293,10 +364,14 @@ class Master(Node):
                     self.get_logger().info("Files loaded")
                     return self.status["SUCCESS"]  # All good
 
-    # Reads from a setup file to run a number of files on a specified robot
+    '''
+        This reads from a setup file in the OT2_Modules directory which contains the work for each robot that needs to be 
+        run. Currently it is possible for the system to deadlock due to circular wait with the transfer requests, since 
+        both robots need to be ready for the arm (Technically the OT2 are the resource as it waits on the other robot). 
+        This could cause issues that need to be addressed in the future. 
+    '''
     def read_from_setup(self, file):  # TODO: deadlock detection algorithm
-        # Read from setup file and distrubute to worker threads
-        # Read number of threads
+        # Read from setup file and distrubute to worker threads - Read number of threads
         f = open(
             self.module_location + file, "r"
         )  # Open up file "setup" in well-known directory
@@ -334,103 +409,26 @@ class Master(Node):
             # Get files for the worker
             try:
                 files = f.readline()
-
-                self.files_for_threads.append(files)  # should be the same index
             except Exception as e:
                 self.get_logger().error("Reading from setup error: %r" % (e,))
                 return self.status["ERROR"]  # Error
 
             split_files = files.split()
 
+            # TODO: Maybe parallelize this part of the program
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
                 if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    self.send_scripts(id, split_files[i])
+                    self.load_protocols_to_ot2(id, split_files[i])
 
             # files sent to worker OT-2 to become threads
-            self.send_files(id, files)
+            self.add_work_to_ot2(id, files)
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
 
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
-    
-    # Creates client that sends contents of files to OT-2
-    def send_scripts(self, id, name):
-
-        # Check node online?
-        args = []
-        args.append(id)
-        status = retry(
-            self, self.node_ready, self.node_wait_attempts, self.node_wait_timeout, args
-        )  # retry function
-        if status == self.status["ERROR"] or status == self.status["FATAL"]:
-            self.get_logger().error(
-                "Unable to find node %s" % id
-            )  # Node isn't registered
-            return self.status["ERROR"]
-        else:
-            self.get_logger().info("Node %s found" % id)  # Found
-
-        # Select a node
-        try:
-            # Get node information
-            target_node = self.search_for_node(id)  # See if id robot exists
-
-            # Error checking
-            if target_node["type"] == "-1":  # No such node
-                self.get_logger().error("id: %s doesn't exist" % id)
-                return self.status["ERROR"]
-
-            type = target_node["type"]  # These will be needed to acess the service
-            id = target_node["id"]
-
-        except Exception as e:
-            self.get_logger().error("Error occured: %r" % (e,))
-            return self.status["ERROR"]
-        
-
-        # Create client that calls send_scripts servive on controller
-
-        script_cli = self.create_client(SendScripts, "/%s/%s/send_scripts" % (type, id))  # format of service is /{type}/{id}/{service name}
-        while not script_cli.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("Service not available, trying again...")
-
-        # extract name and contents of each first file in list
-        with open(self.module_location + name, 'r') as file:
-            contents = file.read()
-        
-
-        # Client ready
-        script_request = SendScripts.Request()
-        script_request.name = name # name of file
-        script_request.contents = contents # contents of file
-        script_request.replace = True # Replace file of same name (default true)
-
-        # Call service
-        future = script_cli.call_async(script_request)
-
-        # Waiting on future
-        while future.done() == False:
-            time.sleep(1)  # timeout 1 second
-        if future.done():
-            try:
-                response = future.result()
-            except Exception as e:
-                self.get_logger().error("Error occured %r" % (e,))
-                return self.status["ERROR"]  # Error
-            else:
-                # Error checking
-                if response.status == response.ERROR:
-                    self.get_logger().error(
-                        "Error occured when sending script %s at id: %s" % (name, id)
-                    )
-                    return self.status["ERROR"]  # Error
-                else:
-                    self.get_logger().info("File %s contents loaded" % name)
-                    return self.status["SUCCESS"]  # All good
-
 
     # Handles get node info service call
     def handle_get_node_info(self, request, response):

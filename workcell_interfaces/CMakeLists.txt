@@ -40,9 +40,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CompletedTransfer.msg"
   "msg/CompletedOT2.msg"
   "srv/GetNextTransfer.srv"
-  "srv/SendFiles.srv"
+  "srv/AddWork.srv"
   "srv/Protocol.srv"
-  "srv/SendScripts.srv"
+  "srv/LoadProtocols.srv"
   "srv/Submitter.srv"
  )
 

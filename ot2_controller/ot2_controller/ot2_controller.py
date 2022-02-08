@@ -59,7 +59,7 @@ class OT2(Node):
         self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
         self.work_list = []  # list of files list recieved from jobs
-        self.work_index = 0  # location of recently added files in work_list TODO: change to better name
+        self.work_length = 0  # size of work we have
         self.temp_list = [] # List that stores individual jobs for the protocol handler
 
         # Node timeout info
@@ -83,13 +83,13 @@ class OT2(Node):
             GetId, "/OT_2/%s/get_id" % self.name, self.get_id_handler
         )
         self.send_service = self.create_service( #TODO: Change name to something better
-            SendFiles, "/OT_2/%s/send_files" % self.id, self.receive_files_handler
+            AddWork, "/OT_2/%s/add_work" % self.id, self.add_work_handler
         )
         self.protocol_service = self.create_service(
             Protocol, "/OT_2/%s/protocol" % self.id, self.protocol_handler
         )
         self.script_service = self.create_service(
-            SendScripts, "/OT_2/%s/send_scripts" % self.id, self.load_scripts_handler
+            LoadProtocols, "/OT_2/%s/LoadProtocols" % self.id, self.load_protocols_handler
         )
 
         # Create subscribers
@@ -115,8 +115,8 @@ class OT2(Node):
             "ID: %s name: %s initialization completed" % (self.id, self.name)
         )
     
-    # Handles send_scripts service calls, creates files and loads contents into them
-    def load_scripts_handler(self, request, response):
+    # Handles load_protocols service calls, creates files and loads contents into them
+    def load_protocols_handler(self, request, response):
 
         # Get request information
         name = request.name # name of file to be created
@@ -124,7 +124,7 @@ class OT2(Node):
         replace = request.replace # bool whether or not to replace file of same name
 
         # Create response
-        response = SendScripts.Response()
+        response = LoadProtocols.Response()
 
         # Create file
         self.get_logger().info("Creating file %s" % name)
@@ -133,11 +133,10 @@ class OT2(Node):
             # Get lock
             self.file_lock.acquire()
 
-            # TODO: Create file
             # Check if file already exists
             filepath = Path(self.module_location + name)
 
-            if filepath.is_file(): # file already exists TODO: decrease lines of code
+            if filepath.is_file(): # file already exists 
                 if replace == True: # request says to replace file
                     os.remove(self.module_location + name) # delete preexisting file
                     f = open(self.module_location + name, "x") # create new file with name
@@ -163,15 +162,15 @@ class OT2(Node):
             self.file_lock.release()
             return response
 
-    # Handles send_module service calls
-    def receive_files_handler(self, request, response):
+    # Handles add_work service calls
+    def add_work_handler(self, request, response):
 
         # Get request information
         files = request.files
-        files = files.split()
+        files = files.split() 
 
         # Create Response
-        response = SendFiles.Response()
+        response = AddWork.Response()
 
         # Begin reading file names
         self.get_logger().info("Reading file names")
@@ -182,7 +181,7 @@ class OT2(Node):
 
             # Append files to work list
             self.work_list.append(files)
-            self.work_index = self.work_index + 1 # Counts total number of jobs given to this OT-2
+            self.work_length += 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
