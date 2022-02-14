@@ -278,7 +278,7 @@ class Master(Node):
                     load_protocols_to_ot2(self, id, split_files[i])
 
             # files sent to worker OT-2 to become threads
-            add_work_to_ot2(id, files)
+            add_work_to_ot2(self, id, files)
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
