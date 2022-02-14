@@ -10,7 +10,7 @@ from workcell_interfaces.msg import *
 from ot2_workcell_manager_client.retry_api import *
 
 # OT2 Control API
-from ot2_client.ot2_control_api import *
+#from ot2_client.ot2_control_api import *
 from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 
 # Other Libraries
@@ -275,10 +275,10 @@ class Master(Node):
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
                 if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    self.load_protocols_to_ot2(id, split_files[i])
+                    load_protocols_to_ot2(id, split_files[i])
 
             # files sent to worker OT-2 to become threads
-            self.add_work_to_ot2(id, files)
+            add_work_to_ot2(id, files)
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
