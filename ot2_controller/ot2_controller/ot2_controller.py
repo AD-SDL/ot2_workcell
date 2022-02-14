@@ -1,22 +1,34 @@
+# ROS Library
 import rclpy
 from rclpy.node import Node
+
+# ROS messages and services 
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
+
+# OS library
+import os
+import os.path
+from os import path
+
+# ot2_workcell_manager library
+from ot2_workcell_manager_client.retry_api import *
+from ot2_workcell_manager_client.register_api import *
+from ot2_workcell_manager_client.register_api import _register, _deregister_node
+
+# Arm library
+from arm_client.transfer_api import *
+from arm_client.transfer_api import _load_transfer
+
+# Other
 import threading
 from threading import Thread, Lock
 import sys
 import time
-from workcell_interfaces.srv import *
-from workcell_interfaces.msg import *
-import os
-import os.path
-from os import path
 from pathlib import Path
 import importlib.util
-from ot2_workcell_manager_client.retry_api import *
-from ot2_workcell_manager_client.register_api import *
-from ot2_workcell_manager_client.register_api import _register, _deregister_node
-from arm_client.transfer_api import *
-from arm_client.transfer_api import _load_transfer
 from random import random
+
 
 '''
     TODO: If there is still work then it can't deregister properly only when there is no work left (maybe lock)
