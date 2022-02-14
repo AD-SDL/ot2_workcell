@@ -20,6 +20,7 @@ setup(
     entry_points={
         "console_scripts": [
             "publish_ot2_state_api = ot2_client.publish_ot2_state_api:main_null",
+            "ot2_control_api = ot2_client.ot2_control_api:main_null",
         ],
     },
 )
