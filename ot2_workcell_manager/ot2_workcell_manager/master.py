@@ -9,11 +9,8 @@ from workcell_interfaces.msg import *
 # Retry API
 from ot2_workcell_manager_client.retry_api import *
 
-# Arm Transfer API
-from arm_client.transfer_api import *
-from arm_client.transfer_api import _load_transfer
-
 # OT2 Control API
+from ot2_client.ot2_control_api import *
 from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 
 # Other Libraries
