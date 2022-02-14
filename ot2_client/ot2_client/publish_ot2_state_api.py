@@ -1,8 +1,11 @@
+# ROS Libraries
 import rclpy
 from rclpy.node import Node
-import threading
-from threading import Thread, Lock
+
+# Time library
 import time
+
+# ROS messages and services 
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 

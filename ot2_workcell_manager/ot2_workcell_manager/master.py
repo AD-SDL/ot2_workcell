@@ -10,16 +10,12 @@ from workcell_interfaces.msg import *
 from ot2_workcell_manager_client.retry_api import *
 
 # OT2 Control API
-#from ot2_client.ot2_control_api import *
 from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 
 # Other Libraries
-import threading
 from threading import Thread, Lock
-import sys
 import time
 from pathlib import Path
-from random import random
 
 # Only one master node can be running at anytime, or else you will cause issues
 class Master(Node):
