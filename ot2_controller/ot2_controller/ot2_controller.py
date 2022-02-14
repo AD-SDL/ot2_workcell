@@ -14,7 +14,7 @@ from os import path
 # ot2_workcell_manager library
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
-#from ot2_workcell_manager_client.register_api import _register, _deregister_node
+from ot2_workcell_manager_client.register_api import _register, _deregister_node
 
 # Arm library
 from arm_client.transfer_api import *
