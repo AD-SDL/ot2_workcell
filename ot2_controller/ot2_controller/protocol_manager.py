@@ -2,10 +2,7 @@
 import rclpy
 from rclpy.node import Node
 
-# OS library
-import os
-import os.path
-from os import path
+# Other
 from threading import Thread, Lock
 import time
 import sys
@@ -13,6 +10,11 @@ from pathlib import Path
 import importlib.util
 from random import random
 from typing import Protocol
+
+# OS library
+import os
+import os.path
+from os import path
 
 # ROS messages and services 
 from workcell_interfaces.srv import *
