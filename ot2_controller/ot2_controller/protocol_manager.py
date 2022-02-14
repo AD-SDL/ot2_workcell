@@ -2,6 +2,18 @@
 import rclpy
 from rclpy.node import Node
 
+# Others 
+from threading import Thread, Lock
+import time
+import sys
+import os
+import os.path
+from os import path
+from pathlib import Path
+import importlib.util
+from random import random
+from typing import Protocol
+
 # ROS messages and services 
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
@@ -25,17 +37,6 @@ from arm_client.transfer_api import _load_transfer
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
-# Others 
-from threading import Thread, Lock
-import time
-import sys
-import os
-import os.path
-from os import path
-from pathlib import Path
-import importlib.util
-from random import random
-from typing import Protocol
 
 class OT2ProtocolManager(Node):
     def __init__(self, name):
