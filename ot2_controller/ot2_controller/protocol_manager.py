@@ -2,6 +2,11 @@
 import rclpy
 from rclpy.node import Node
 
+# OS library !!!!! Must be below ROS msgs below ROS libraries 
+import os
+import os.path
+from os import path
+
 # Others
 from threading import Thread, Lock
 import time
