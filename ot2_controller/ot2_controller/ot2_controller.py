@@ -2,14 +2,14 @@
 import rclpy
 from rclpy.node import Node
 
-# ROS messages and services 
-from workcell_interfaces.srv import *
-from workcell_interfaces.msg import *
-
-# OS library
+# OS library !!!!! Must be below ROS libraries 
 import os
 import os.path
 from os import path
+
+# ROS messages and services 
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 
 # ot2_workcell_manager library
 from ot2_workcell_manager_client.retry_api import *
