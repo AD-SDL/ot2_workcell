@@ -12,7 +12,7 @@ def protocol_parser(filename):
 
         Return: A new protocol name with a time_stamp
         '''
-        
+         
         try:
                 file = open(filename, "r")
                 now = datetime.now()
