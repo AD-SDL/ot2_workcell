@@ -2,6 +2,10 @@
 import rclpy
 from rclpy.node import Node
 
+from threading import Thread, Lock
+import time
+import sys
+
 # ROS messages and services 
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
@@ -26,9 +30,6 @@ from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
 # Others 
-from threading import Thread, Lock
-import time
-import sys
 from pathlib import Path
 import importlib.util
 from random import random
