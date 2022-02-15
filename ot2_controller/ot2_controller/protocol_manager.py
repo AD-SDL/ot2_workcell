@@ -2,19 +2,20 @@
 import rclpy
 from rclpy.node import Node
 
-# OS library
-import os
-import os.path
-from os import path
-
 # Others 
+from threading import Thread, Lock
 import time
 import sys
 from pathlib import Path
 import importlib.util
 from random import random
 from typing import Protocol
-from threading import Thread, Lock
+
+# OS library
+import os
+import os.path
+from os import path
+
 
 # ROS messages and services 
 from workcell_interfaces.srv import *
