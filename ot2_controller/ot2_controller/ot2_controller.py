@@ -21,7 +21,6 @@ from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 
 # Other
-import threading
 from threading import Thread, Lock
 import sys
 import time

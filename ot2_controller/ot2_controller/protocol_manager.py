@@ -8,13 +8,13 @@ import os.path
 from os import path
 
 # Others 
-from threading import Thread, Lock
 import time
 import sys
 from pathlib import Path
 import importlib.util
 from random import random
 from typing import Protocol
+from threading import Thread, Lock
 
 # ROS messages and services 
 from workcell_interfaces.srv import *
