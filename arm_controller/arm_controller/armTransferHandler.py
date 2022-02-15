@@ -1,15 +1,19 @@
+# ROS Library
 import rclpy
 from rclpy.node import Node
+
+# Other
 from threading import Thread, Lock
 import time
-import sys
-import os
-import os.path
-from os import path
 from pathlib import Path
 import importlib.util
+from random import random
+
+# ROS messages and services
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
+
+# OT2_workcell_manager API
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _get_id_name
@@ -19,7 +23,8 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_list,
     get_node_info,
 )
-from random import random
+
+# Arm Library
 from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
 

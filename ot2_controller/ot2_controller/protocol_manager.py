@@ -34,9 +34,6 @@ from arm_client.transfer_api import _load_transfer
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
-
-
-
 class OT2ProtocolManager(Node):
     def __init__(self, name):
         # Create a temporary node so we can read in parameters
