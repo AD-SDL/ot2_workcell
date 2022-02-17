@@ -27,26 +27,26 @@ def drop_tip(p20, protocol):
     p20.drop_tip()
 
 def is_tip_attached(p20, protocol):
-    #TODO: Return error detection massage from Rory's code
-    #massage = "No Tip"
-    #massage = "Yes"
-    massage = "Impropriate Tip"
+    #TODO: Return error detection message from Rory's code
+    #message = "No Tip"
+    #message = "Yes"
+    message = "Impropriate Tip"
 
-    if  massage == "Impropriate Tip":
+    if  message == "Impropriate Tip":
         return_tip(p20, protocol)
 
-    elif  massage == "No Tip":
+    elif  message == "No Tip":
         pick_another_tip(p20, protocol)
     
     else:
         print("Tip is attached properly")
  
 def is_tip_dropped(p20, protocol):
-    #TODO: Return error detection massage from Rory's code
-    massage = "No"
-    #massage = "Yes"
+    #TODO: Return error detection message from Rory's code
+    message = "No"
+    #message = "Yes"
     
-    if  massage == "No":
+    if  message == "No":
         drop_tip(p20, protocol)
 
 def repeat_aspirate():
@@ -59,10 +59,10 @@ def repeat_aspirate():
     pass
 
 def is_aspirate(p20, protocol):
-    #TODO: Return error detection massage from Rory's code
+    #TODO: Return error detection message from Rory's code
     repeat_aspirate()
     pass
 
 def is_dispense(p20,protocol):
-    #TODO: Return error detection massage from Rory's code
+    #TODO: Return error detection message from Rory's code
     pass
