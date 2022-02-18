@@ -105,10 +105,10 @@ class StateResetHandler(Node):
 def work(self):
     temp = 'Y'
     while not temp == 'Q':
-        temp = input("Y/N/Q for resetting arm state: ")
+        temp = input("Y/N/Q for resetting node state: ")
         if(temp.strip() == 'Y'):
-            arm_name_or_id = input("Please enter arm name or id: ")
-            status = self.node_state_reset(self.state['READY'], arm_name_or_id.strip()) # TODO: maybe do something with status
+            node_name_or_id = input("Please enter node name or id: ")
+            status = self.node_state_reset(self.state['READY'], node_name_or_id.strip()) # TODO: maybe do something with status
 
 def main(args=None):
     rclpy.init(args=args)
