@@ -200,9 +200,6 @@ class OT2ProtocolManager(Node):
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
 
-        # Bring to attention
-        self.get_logger().warning("OT2 state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
-
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
             self.get_logger().error("Can't change state, the state of the arm is already error")
