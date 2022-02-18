@@ -3,7 +3,7 @@
 <package format="3">
   <name>workcell_interfaces</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Contains all the custom messages and services used for OT2_workcell.</description>
   <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
   <license>MIT License</license>
 

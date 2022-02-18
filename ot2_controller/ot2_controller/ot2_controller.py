@@ -32,7 +32,11 @@ from random import random
 '''
     TODO: If there is still work then it can't deregister properly only when there is no work left (maybe lock)
 '''
- 
+'''
+    This is the OT2 class, it is the same as the OT2 manager. The purpose of the OT2 class is to store the run queue for the OT2, store state information, and provide a path to the 
+    master's services. 
+    It also houses the service handlers for uploading files and protocols to the OT2. 
+'''
 class OT2(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))

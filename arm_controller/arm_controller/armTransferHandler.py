@@ -34,6 +34,11 @@ from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
 
 # TODO: figure out how to integrate arm code
+'''
+    This is the ArmTransferHandler class. The purpose of this class is to execute tasks running on the Manager's queue and alert the system of state changes and program status. 
+
+    It is undecided if this package is directly running on the arm or if it will follow the same model as the OT2 
+'''
 class ArmTransferHandler(Node):
     def __init__(self, name):
         # Create a temporary node so we can read in parameters

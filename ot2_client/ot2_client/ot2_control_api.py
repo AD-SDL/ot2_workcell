@@ -19,11 +19,11 @@ from arm_client.transfer_api import _load_transfer
     Note: These functions are only currently usable by the master node as there is no search_for_node function in the OT2 package or Arm Package, therefore the API would cause an error
     since that function is not found. 
 
-    TODO: Move the search_for_node function into an API provided by the master. (get_node_info part of the worker_api)
+    These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
 
+    TODO: Move the search_for_node function into an API provided by the master. (get_node_info part of the worker_api)
     TODO: element the need for master (switch to get_node_info)
 '''
-
 # Creates client that sends contents of files to OT-2
 def load_protocols_to_ot2(self, id, name):
 

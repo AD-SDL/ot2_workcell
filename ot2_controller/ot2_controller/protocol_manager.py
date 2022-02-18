@@ -39,6 +39,10 @@ from arm_client.transfer_api import _load_transfer
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
+'''
+    The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
+    It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
+'''
 class OT2ProtocolManager(Node):
     def __init__(self, name):
         # Create a temporary node so we can read in parameters

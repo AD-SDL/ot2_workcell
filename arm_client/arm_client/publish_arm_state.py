@@ -10,10 +10,7 @@ from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
 '''
-    Calls the service to update the respective arm's state, this is currently set up so that only the armTransferHandler is able to call this function
-
-    TODO: add in the ability for any function to be able to update the state of the arm or for more security only the master 
-    TODO: doesn't confirm if the armManager is ready to recieve, or is down in some way shape or form. 
+    Calls the service to update the respective arm's state, this is currently set up so that only the arm is able to call this function. 
 '''
 def update_arm_state(self, current_state):
 

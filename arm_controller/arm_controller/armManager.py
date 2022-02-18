@@ -26,6 +26,10 @@ from ot2_workcell_manager_client.worker_info_api import (
 )
 
 # TODO: figure out how to integrate arm code
+'''
+    This class is the ArmManager class. The purpose of the ArmManager is to maintain the queue information for transfer requests, maintain state information, and provide a path to
+    to the master's services. 
+'''
 class ArmManager(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))

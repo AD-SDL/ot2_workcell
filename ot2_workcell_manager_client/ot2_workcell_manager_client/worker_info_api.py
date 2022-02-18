@@ -1,6 +1,11 @@
+# ROS Libraries
 import rclpy
 from rclpy.node import Node
+
+# Time Library 
 import time
+
+# ROS services and messages
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 

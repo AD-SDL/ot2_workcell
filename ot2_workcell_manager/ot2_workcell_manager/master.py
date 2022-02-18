@@ -18,6 +18,11 @@ import time
 from pathlib import Path
 
 # Only one master node can be running at anytime, or else you will cause issues
+'''
+    This the Master class, which is the central command for the entire system. The purpose of the master class is to handle/provide communication among the different robots on the system. 
+    To do so it is required to maintain information about every single robot running on the system which is syncronized with each robot. It is responsbile for allowing the dynamic addition
+    and removal of new robots to the system easily and provide an interface for them to find other robots also connected to the system. 
+'''
 class Master(Node):
     def __init__(self):
         # Node creation
