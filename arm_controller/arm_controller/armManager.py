@@ -282,7 +282,7 @@ class ArmManager(Node):
     def arm_state_update_callback(self, msg):
 
         # Bring to attention
-        self.get_logger().warning("Arm state for id %s is now: %s"%msg.state) #TODO: maybe convert to text instead of num code
+        self.get_logger().warning("Arm state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
