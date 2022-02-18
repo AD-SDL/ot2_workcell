@@ -7,6 +7,14 @@ from threading import Thread
 import time
 from pathlib import Path
 
+# Worker info API
+from ot2_workcell_manager_client.worker_info_api import *
+from ot2_workcell_manager_client.worker_info_api import (
+    _get_node_info,
+    _get_node_list,
+    get_node_info,
+)
+
 # ROS services and messages
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
