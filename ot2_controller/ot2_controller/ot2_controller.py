@@ -75,7 +75,7 @@ class OT2(Node):
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
-        self.node_wait_attempts = 10  # 10 attempts before error thrown
+        self.node_wait_attempts = 1000  # 10 attempts before error thrown
 
         # Register with master
         args = []
@@ -219,13 +219,18 @@ class OT2(Node):
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
 
-        # Recieve request
-        current_state = msg.state  # TODO error checks
-        
-        # Update our state
-        self.current_state = current_state
+        # Bring to attention
+        self.get_logger().warning("OT2 state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
 
-        # TODO: other stuff
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.state_lock.release() # release lock
+            return # exit out of function
+
+        self.state_lock.acquire() # Enter critical section
+        self.current_state = msg.state
+        self.state_lock.release() # Exit Critical Section
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):

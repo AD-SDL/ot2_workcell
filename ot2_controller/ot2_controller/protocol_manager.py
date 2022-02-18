@@ -62,6 +62,7 @@ class OT2ProtocolManager(Node):
 
         # Lock creation
         self.run_lock = Lock()  # Only one can access ot2 at a time
+        self.state_lock = Lock() # State lock
 
         # Readabilty
         self.state = {  # TODO maybe a sync with the master
@@ -84,7 +85,7 @@ class OT2ProtocolManager(Node):
         # Get ID and confirm name from manager
         args = []
         args.append(self)
-        status = retry(self, _get_id_name, 5, 2, args)  # 5 retries 2 second timeout
+        status = retry(self, _get_id_name, 1000, 2, args)  # 5 retries 2 second timeout
         if status == self.status["ERROR"]:
             self.get_logger().fatal("Unable to get id from ot2 manager, exiting...")
             sys.exit(1)  # TODO: alert manager of error
@@ -92,6 +93,13 @@ class OT2ProtocolManager(Node):
         # Create services
 
         # Create subs
+        self.ot2_state_update_sub = self.create_subscription(
+            OT2StateUpdate,
+            "/OT_2/%s/ot2_state_update" % self.id,
+            self.ot2_state_update_callback,
+            10,
+        )
+        self.ot2_state_update_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             OT2Reset,
             "/OT_2/%s/ot2_state_reset"%self.id,
@@ -162,8 +170,7 @@ class OT2ProtocolManager(Node):
 
         # set state to busy
         try:
-            self.current_state = self.state["BUSY"]
-            self.set_state()
+            self.set_state(self.state["BUSY"]) # Set system to BUSY
 
             # Conducting a transfer
             if(file_name.split(":")[0] == "transfer"):
@@ -182,19 +189,37 @@ class OT2ProtocolManager(Node):
                 self.get_logger().info("Protocol %s was run successfully" % file_name)
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
-            self.current_state = self.state["ERROR"]
+            new_state = self.state["ERROR"]
             return self.status['ERROR']
         else:
-            self.current_state = self.state["READY"]
+            new_state = self.state["READY"]
             return self.status['SUCCESS']
         finally:
-            self.set_state()
+            self.set_state(new_state) # Set system to new_state
 
+    # Service to update the state of the ot2
+    def ot2_state_update_callback(self, msg):
+
+        # Bring to attention
+        self.get_logger().warning("OT2 state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
+
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.state_lock.release() # release lock
+            return # exit out of function
+
+        self.state_lock.acquire() # Enter critical section
+        self.current_state = msg.state
+        self.state_lock.release() # Exit Critical Section
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg): #TODO: More comprehensive state reset handler 
         self.get_logger().warning("Resetting state...")
+
+        self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
+        self.state_lock.release() # Exit critical section
 
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
@@ -235,10 +260,10 @@ class OT2ProtocolManager(Node):
             return self.status['SUCCESS']
 
     # Helper function
-    def set_state(self):
+    def set_state(self, new_state):
         args = []
         args.append(self)
-        args.append(self.current_state)
+        args.append(new_state)
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(

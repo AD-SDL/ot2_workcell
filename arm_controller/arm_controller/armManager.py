@@ -287,7 +287,6 @@ class ArmManager(Node):
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
             self.get_logger().error("Can't change state, the state of the arm is already error")
-            self.state_lock.release() # release lock
             return # exit out of function
 
         self.state_lock.acquire() # Enter critical section
