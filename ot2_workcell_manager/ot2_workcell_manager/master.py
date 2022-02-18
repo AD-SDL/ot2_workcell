@@ -34,7 +34,7 @@ class Master(Node):
         self.nodes = 0  # Total nodes registered
         self.nodes_list = []  # Information about all nodes registered: type, id, state
         self.node_wait_timeout = 2  # 2 seconds
-        self.node_wait_attempts = 10  # 10 attempts before error thrown
+        self.node_wait_attempts = 100  # 100 attempts before error thrown
         self.sub_list = []
 
         # Readability
@@ -148,7 +148,7 @@ class Master(Node):
     # Removes node information upon service call
     def handle_destroy_worker(
         self, request, response
-    ):  # TODO: make it request name as well
+    ):
 
         # Lock: Entering critical section
         self.node_lock.acquire()
@@ -161,6 +161,8 @@ class Master(Node):
             dict = self.nodes_list[i]
             if dict["id"] == request.id and dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
+                self.sub_list.pop(2*i) # Remove subscription from list
+                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Removed id: %s of type: %s name: %s from nodes_list"
                     % (dict["id"], dict["type"], dict["name"])
@@ -171,6 +173,8 @@ class Master(Node):
             # Error checking
             elif dict["id"] == request.id and not dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
+                self.sub_list.pop(2*i) # Remove subscription from list
+                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Warning! id: %s name: %s doesn't match type in service request, type in request: %s, actual type: %s"
                     % (dict["id"], dict["name"], request.type, dict["type"])
@@ -338,11 +342,21 @@ class Master(Node):
         entry['state'] = msg.state
         self.node_lock.release()
 
-        # Print full state information
-        self.get_looger().info("----------------System State Information----------------")
+        # Print full state information 
+        self.get_logger().info("----------------System State Information----------------") #TODO: will fix but using it for master state sync with nodes
         for node in self.nodes_list:
             self.get_logger().info("node ID: %s name: %s is in state: %s"%(node["id"], node["name"], node["state"]))
-        self.get_looger().info("-------------------End of Information-------------------")
+        self.get_logger().info("-------------------End of Information-------------------")
+
+    '''
+        Upon master deregistration it needs to alert all nodes that are still reliant on master services that it is in an errored state. In the future this doesn't mean a full shutdown
+        of that node but currently as a prototype it will shutdown all nodes currently registered with the master by initiating a node_state_update to error. In order for the master 
+        to properly be restarted, the current state information in self.nodes_list needs to be saved. Then upon master restart it boots from the saved file and resets the states of all
+        respective nodes. Any work that was loaded in the database should still be there, but any work that was currently worked should also be restarted. 
+    '''
+    def master_deregistration(self):
+        pass # TODO
+
 
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
@@ -373,8 +387,6 @@ class Master(Node):
         # Return response
         response.status = status
         return response
-
-# TODO: Add a deregister master, so if the master disconnects or deregisters the workers can start waiting for a new master
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):

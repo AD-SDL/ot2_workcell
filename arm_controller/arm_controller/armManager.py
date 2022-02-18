@@ -77,7 +77,7 @@ class ArmManager(Node):
         args.append("arm")  # Type
         args.append(name)  # Name
         status = retry(
-            self, _register, 10, 1, args
+            self, _register, 1000, 1, args
         )  # Setups up a retry system for a function
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().fatal("Unable to register with master, exiting...")
