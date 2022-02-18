@@ -338,8 +338,11 @@ class Master(Node):
         entry['state'] = msg.state
         self.node_lock.release()
 
-        # DEBUG
-        self.get_logger().info("***** node %s is now in state: %s"%(msg.id, msg.state))
+        # Print full state information
+        self.get_looger().info("----------------System State Information----------------")
+        for node in self.nodes_list:
+            self.get_logger().info("node ID: %s name: %s is in state: %s"%(node["id"], node["name"], node["state"]))
+        self.get_looger().info("-------------------End of Information-------------------")
 
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):

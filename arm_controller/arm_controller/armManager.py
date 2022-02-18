@@ -281,8 +281,8 @@ class ArmManager(Node):
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
 
-        # DEBUG: 
-        self.get_logger().info("Node state is now %s"%msg.state)
+        # Bring to attention
+        self.get_logger().warning("Arm state for id %s is now: %s"%msg.state) #TODO: maybe convert to text instead of num code
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):

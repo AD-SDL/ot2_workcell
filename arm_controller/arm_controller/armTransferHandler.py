@@ -85,12 +85,10 @@ class ArmTransferHandler(Node):
         # Get ID and confirm name from manager
         args = []
         args.append(self)
-        status = retry(self, _get_id_name, 5, 2, args)  # 5 retries 2 second timeout
+        status = retry(self, _get_id_name, 1000, 2, args)  # 1000 retries 2 second timeout
         if status == self.status["ERROR"]:
             self.get_logger().fatal("Unable to get id from arm manager, exiting...")
-            # Alert manager of error
-            self.current_state = self.state["ERROR"]
-            self.set_state()
+            self.set_state(self.state["ERROR"]) # Set system state to ERROR
 
         # Create services
 
@@ -98,8 +96,8 @@ class ArmTransferHandler(Node):
         self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
         self.state_reset_sub # prevent unused variable warning
 
-        # Arm Manager State Heartbeat (Sync)
-        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.node_state_update_callback, 10)
+        #  Arm State Syncronization topic 
+        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.arm_state_update_callback, 10)
         self.state_sync # prevent unused variable warning
 
         # Initialization Complete
@@ -167,10 +165,7 @@ class ArmTransferHandler(Node):
             return self.status["ERROR"]
 
         # Update state and let it be know that we are busy
-        self.state_lock.acquire() # Enter critical section
-        self.current_state = self.state["BUSY"]
-        self.state_lock.release() # Exit critical section
-        self.set_state() # Alert manager of state change 
+        self.set_state(self.state["BUSY"]) # Set system state to BUSY 
 
         # Do the transfer
         try:
@@ -186,16 +181,12 @@ class ArmTransferHandler(Node):
              In the completed queue, which means the system is still in the same state it started in
             '''
             self.get_logger().error("Error occured: %r" % (e,))
-            self.state_lock.acquire() # Enter critical section 
-            self.current_state = self.state["ERROR"]
-            self.state_lock.release() # Exit critical section
+            new_state = self.state["ERROR"]
             return self.status["ERROR"]
         else:
-            self.state_lock.acquire() # Enter critical section
-            self.current_state = self.state["READY"]
-            self.state_lock.release() # Exit critical section
+            new_state = self.state["READY"]
         finally:
-            self.set_state() # Alert manager of new state 
+            self.set_state(new_state) # Set system state to new_state
 
         # Add to completed queue - Create pub
         completed_transfer_pub = self.create_publisher(
@@ -214,25 +205,22 @@ class ArmTransferHandler(Node):
         return self.status["SUCCESS"]
 
     # Helper function
-    def set_state(self):
+    def set_state(self, new_state):
         args = []
         args.append(self)
-        args.append(self.current_state)
-        status = retry(self, _update_arm_state, 10, 2, args)
+        args.append(new_state)
+        status = retry(self, _update_arm_state, 1, 0, args) # if it fails it usually isn't something that will be fixed upon a retry
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
                 "Unable to update state with manager, continuing but the state of the arm may be incorrect"
             )
 
     # Service to update the state of a node
-    def node_state_update_callback(self, msg):
-
-        # DEBUG - check for concurrency TODO: delete
-        self.get_logger().info("Node state update hit, new state %s"%msg.state)
-
+    def arm_state_update_callback(self, msg):
+        
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of node %s is already error"%msg.id)
+            self.get_logger().error("Can't change state, the state of Arm %s is already error"%msg.id)
             return # exit out of function
 
         # set state
