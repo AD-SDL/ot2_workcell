@@ -280,8 +280,9 @@ class ArmManager(Node):
 
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
-        # Lock the state
-        self.state_lock.acquire()
+
+        # DEBUG: 
+        self.get_logger().info("Node state is now %s"%msg.state)
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
@@ -289,12 +290,9 @@ class ArmManager(Node):
             self.state_lock.release() # release lock
             return # exit out of function
 
-        # Recieve request
+        self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
-
-        # TODO: sync state with master
-
-        self.state_lock.release() # release lock
+        self.state_lock.release() # Exit Critical Section
 
 
     # Service to retrieve ID of the robot

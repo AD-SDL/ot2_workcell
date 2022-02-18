@@ -73,6 +73,7 @@ class ArmTransferHandler(Node):
 
         # State of the arm
         self.current_state = self.state["READY"]
+        self.state_lock = Lock()
 
         # Path setup
         path = Path()
@@ -96,6 +97,10 @@ class ArmTransferHandler(Node):
         # Sub to topics
         self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
         self.state_reset_sub # prevent unused variable warning
+
+        # Arm Manager State Heartbeat (Sync)
+        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.node_state_update_callback, 10)
+        self.state_sync # prevent unused variable warning
 
         # Initialization Complete
         self.get_logger().info(
@@ -162,8 +167,10 @@ class ArmTransferHandler(Node):
             return self.status["ERROR"]
 
         # Update state and let it be know that we are busy
+        self.state_lock.acquire() # Enter critical section
         self.current_state = self.state["BUSY"]
-        self.set_state()
+        self.state_lock.release() # Exit critical section
+        self.set_state() # Alert manager of state change 
 
         # Do the transfer
         try:
@@ -179,12 +186,16 @@ class ArmTransferHandler(Node):
              In the completed queue, which means the system is still in the same state it started in
             '''
             self.get_logger().error("Error occured: %r" % (e,))
-            self.current_state = self.state["ERROR"]  # ERROR state
+            self.state_lock.acquire() # Enter critical section 
+            self.current_state = self.state["ERROR"]
+            self.state_lock.release() # Exit critical section
             return self.status["ERROR"]
         else:
+            self.state_lock.acquire() # Enter critical section
             self.current_state = self.state["READY"]
-        finally:  # No matter what after this the army is no longer busy
-            self.set_state()
+            self.state_lock.release() # Exit critical section
+        finally:
+            self.set_state() # Alert manager of new state 
 
         # Add to completed queue - Create pub
         completed_transfer_pub = self.create_publisher(
@@ -213,10 +224,30 @@ class ArmTransferHandler(Node):
                 "Unable to update state with manager, continuing but the state of the arm may be incorrect"
             )
 
-    # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg): #TODO: more comprehensive reset handler
-        self.get_logger().warning("Resetting state...")
+    # Service to update the state of a node
+    def node_state_update_callback(self, msg):
+
+        # DEBUG - check for concurrency TODO: delete
+        self.get_logger().info("Node state update hit, new state %s"%msg.state)
+
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of node %s is already error"%msg.id)
+            return # exit out of function
+
+        # set state
+        self.state_lock.acquire()
         self.current_state = msg.state
+        self.state_lock.release()
+
+   # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state of id: %s..."%msg.id)
+
+        # set state
+        self.state_lock.acquire()
+        self.current_state = msg.state
+        self.state_lock.release()
 
     # Function to constantly poll manager queue for transfers
     def run(self):

@@ -322,7 +322,7 @@ class Master(Node):
         response.status = response.SUCCESS
         return response
 
-    # Service to update the state of the arm
+    # Service to update the state of a node
     def node_state_update_callback(self, msg):
         # Find node
         entry = self.search_for_node(msg.id)
@@ -330,13 +330,16 @@ class Master(Node):
 
         # Prevent changing state when in an error state
         if(current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.get_logger().error("Can't change state, the state of node %s is already error"%msg.id)
             return # exit out of function
 
         # set state
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
+
+        # DEBUG
+        self.get_logger().info("***** node %s is now in state: %s"%(msg.id, msg.state))
 
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
