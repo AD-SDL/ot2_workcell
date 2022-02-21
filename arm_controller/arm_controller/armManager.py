@@ -330,8 +330,8 @@ def main(args=None):
     status = retry(
         arm_manager_node, _deregister_node, 10, 1.5, args
     )  # TODO: handle status
-    # arm_manager_node.destroy_node()
-    # rclpy.shutdown()
+    arm_manager_node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":

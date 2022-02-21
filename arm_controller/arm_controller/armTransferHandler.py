@@ -268,8 +268,8 @@ def main(args=None):
         arm_transfer_node.get_logger().error("Terminating...")
 
     # End
-    arm_transfer_node.destroy_node()
-    rclpy.shutdown()
+    # arm_transfer_node.destroy_node()
+    # rclpy.shutdown()
 
 
 if __name__ == "__main__":
