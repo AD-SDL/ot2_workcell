@@ -254,6 +254,7 @@ class ArmTransferHandler(Node):
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
+            self.get_logger().warn("Sleep cycle")
             time.sleep(3)
             try: 
                 status = self.get_next_transfer()
