@@ -264,8 +264,12 @@ class ArmTransferHandler(Node):
 
                 if(status == self.status['ERROR']):
                     raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation")
-            except: 
+            except Exception as e: 
                 self.get_logger().error("Error occured: %r" % (e,))
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation") # exit out 
+            except: # Catch other errors 
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
                 raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation") # exit out 
             else: 
                 if(status == self.status['FATAL']):
@@ -281,10 +285,9 @@ def main(args=None):
 
         rclpy.spin(arm_transfer_node)
     except Exception as e:
-        arm_transfer_node.get_logger().fatal("Error %r" % (e,))
-        arm_transfer_node.set_state(arm_transfer_node.state['ERROR']) # Alert system that state is error 
+        arm_transfer_node.get_logger().error("Error %r" % (e,))
     except:
-        arm_transfer_node.get_logger().error("Terminating...")
+        arm_transfer_node.get_logger().fatal("Terminating...")
 
     # End
     arm_transfer_node.dead = True # Force kill
