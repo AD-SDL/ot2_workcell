@@ -134,10 +134,6 @@ class ArmTransferHandler(Node):
         # Create request
         request = GetNextTransfer.Request()
 
-        # TODO: delete 
-        zero = 5 / 5 - 1 
-        fifty = zero / zero # divide by 0
-
         # Call the cli
         next_transfer = ""
         future = get_next_transfer_cli.call_async(request)
@@ -195,12 +191,9 @@ class ArmTransferHandler(Node):
              In the completed queue, which means the system is still in the same state it started in
             '''
             self.get_logger().error("Error occured: %r" % (e,))
-            new_state = self.state["ERROR"]
-            return self.status["ERROR"]
+            return self.status["ERROR"] # Alert to error, thread will alert system to ERROR
         else:
-            new_state = self.state["READY"]
-        finally:
-            self.set_state(new_state) # Set system state to new_state
+            self.set_state(self.state["READY"]) # System is READY again 
 
         # Add to completed queue - Create pub
         completed_transfer_pub = self.create_publisher(
