@@ -253,6 +253,9 @@ class ArmTransferHandler(Node):
 
     # Function to constantly poll manager queue for transfers
     '''
+        Upon error to this thread, the get_next_transfer infinite loop will terminate with the respective nodes being alerted of an error occuring. However, all services of the node 
+        and subscribers will remain operational, but the only way to restart the arm would require restarting the entire node, it might be beneficial to add restart capabilties. 
+
         TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
     '''
     def run(self):
@@ -267,10 +270,10 @@ class ArmTransferHandler(Node):
             except Exception as e: 
                 self.get_logger().error("Error occured: %r" % (e,))
                 self.set_state(self.state['ERROR']) # Alert system that state is error 
-                raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation") # exit out 
+                return; # exit out 
             except: # Catch other errors 
                 self.set_state(self.state['ERROR']) # Alert system that state is error 
-                raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation") # exit out 
+                return; # exit out 
             else: 
                 if(status == self.status['FATAL']):
                     return; # Exit out we are terminating 
