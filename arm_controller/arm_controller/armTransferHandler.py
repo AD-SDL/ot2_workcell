@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 import importlib.util
 from random import random
+import sys
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -269,6 +270,7 @@ def main(args=None):
 
     # End
     spin_thread.join()
+    sys.exit(1) 
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 
