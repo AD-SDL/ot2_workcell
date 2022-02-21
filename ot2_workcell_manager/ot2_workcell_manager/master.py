@@ -86,6 +86,9 @@ class Master(Node):
         response = Register.Response()
 
         # Check type
+        '''
+            TODO: implement states, more types, and more state information
+        '''
         if request.type == "OT_2":
             dict = {
                 "type": "OT_2",
@@ -93,7 +96,7 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.state["READY"],  # TODO: implement states
+                "state": self.state["READY"],  
                 "name": request.name,
             }
 
@@ -106,13 +109,13 @@ class Master(Node):
                 % (dict["id"], dict["name"])
             )
         elif request.type == "arm":
-            dict = {  # TODO: add more features that the master keeps about the node
+            dict = { 
                 "type": "arm",
                 "id": "A"
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.state["READY"],  # TODO: implement states
+                "state": self.state["READY"],  
                 "name": request.name,
             }
 
@@ -124,7 +127,25 @@ class Master(Node):
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
             )
-        # TODO: more types
+        elif request.type == "scheduler":
+            dict = {  
+                "type": "scheduler",
+                "id": "sch"
+                + str(
+                    self.nodes
+                ),  # Can be searched along with name (each id must be unique)
+                "state": self.state["READY"], 
+                "name": request.name,
+            }
+
+            # Add to sub list TODO: future 
+            #self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
+            #self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
+
+            self.get_logger().info(
+                "Trying to register ID: %s name: %s with master"
+                % (dict["id"], dict["name"])
+            )
         else:
             self.get_logger().error(
                 "type %s not supported at this moment" % request.type
