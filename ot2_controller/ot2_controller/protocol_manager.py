@@ -192,6 +192,8 @@ class OT2ProtocolManager(Node):
                 return self.status['ERROR'] # thread will handle state update 
             elif status == self.status['SUCCESS']:
                 self.get_logger().info("Protocol %s was run successfully" % file_name)
+            elif status == self.status['FATAL']: # TODO: implement this in transfer_api
+                return self.status['FATAL']
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
             return self.status['ERROR'] # thread will handle state update 
