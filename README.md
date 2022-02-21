@@ -41,8 +41,12 @@ This workcell will eventually support:
 
 * **ot2_client/**
 	* **ot2_client/**
-		* load_run_api.py (TODO)
+		* load_run_api.py 
 		* publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
+
+* **sceduler/**
+	* **scheduler/**
+		* schedulerManager.py (Scheduler)
 
 * **workcell_interfaces/**
 	* **srv/**
@@ -106,6 +110,10 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 **Opentrons OT-2 alex**
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 launch ot2_controller ot2_alex_bringup.launch.py`
+
+**Scheduler**
+1. `source ~/ot2_ws/install/setup.bash`
+2. `ros2 run scheduler scheduler_manager`
 
 This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
 

@@ -58,6 +58,9 @@ class schedulerManager(Node):
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
+        # Queues 
+        self.protocol_queue = [] # protocols to run 
+
         # State information
         self.current_state = self.state["READY"]  # Start ready
 
@@ -79,6 +82,9 @@ class schedulerManager(Node):
             sys.exit(1)  # Can't register node even after retrying
 
         # TODO: services and topics
+        self.get_id_service = self.create_service( # Service to add work to the queue 
+            SchedulerWork, "/scheduler/%s/AddWork" % self.id, self.add_work_handler #TODO: SchedulerWork service type has response of string[] 
+        )
 
         # Initialization Complete
         self.get_logger().info(
@@ -86,6 +92,11 @@ class schedulerManager(Node):
             % (self.id, self.name)
         )
 
+    '''
+        This service handler adds the request work to the manager queue to be scheduled
+    '''
+    def add_work_handler(self, request, response): 
+        pass
 
 def main(args=None):
     rclpy.init(args=args)
