@@ -32,6 +32,7 @@ from ot2_workcell_manager_client.worker_info_api import (
 '''
 class schedulerManager(Node):
     def __init__(self, name):
+        ''' TODO: Maybe add this
         super().__init__("Temp" + str(int(random() * 17237534)))
 
         # Parameters before we register with master
@@ -44,7 +45,7 @@ class schedulerManager(Node):
             self.get_logger().info("Please enter parameter node name")
             rclpy.spin_once(self) # spin self once for parameter
             name = self.get_parameter("name").get_parameter_value().string_value
-
+        '''
         # Node creation
         super().__init__("scheduler_manager_" + name)  # User specifies name
 
@@ -89,7 +90,7 @@ class schedulerManager(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    scheduler_manager_node = schedulerManager("Temp")
+    scheduler_manager_node = schedulerManager("ana")
     try:
         rclpy.spin(scheduler_manager_node)
     except:
