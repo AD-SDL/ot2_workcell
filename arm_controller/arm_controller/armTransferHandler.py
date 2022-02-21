@@ -134,6 +134,10 @@ class ArmTransferHandler(Node):
         # Create request
         request = GetNextTransfer.Request()
 
+        # TODO: delete 
+        zero = 5 / 5 - 1 
+        fifty = zero / zero # divide by 0
+
         # Call the cli
         next_transfer = ""
         future = get_next_transfer_cli.call_async(request)
@@ -145,12 +149,9 @@ class ArmTransferHandler(Node):
             try:
                 response = future.result()
 
-                if (
-                    response.status == response.ERROR
-                    or response.status == response.FATAL
-                ):
-                    raise Exception
-                elif response.status == response.WAITING: #TODO: consistent style putting this in else or try block
+                if (response.status == response.ERROR or response.status == response.FATAL):
+                    raise Exception("Next transfer request failed")
+                elif response.status == response.WAITING: 
                     return self.status["WAITING"]
             except Exception as e:
                 self.get_logger().error("Error occured %r" % (e,))
@@ -281,6 +282,7 @@ def main(args=None):
         rclpy.spin(arm_transfer_node)
     except Exception as e:
         arm_transfer_node.get_logger().fatal("Error %r" % (e,))
+        arm_transfer_node.set_state(arm_transfer_node.state['ERROR']) # Alert system that state is error 
     except:
         arm_transfer_node.get_logger().error("Terminating...")
 
