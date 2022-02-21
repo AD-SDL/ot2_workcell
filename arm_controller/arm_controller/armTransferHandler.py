@@ -128,7 +128,7 @@ class ArmTransferHandler(Node):
         )
         while not get_next_transfer_cli.wait_for_service(timeout_sec=2.0):
             if(self.dead == True): # Force thread to kill
-                raise Exception("Thread kill") 
+                 return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
         # Create request
@@ -139,7 +139,7 @@ class ArmTransferHandler(Node):
         future = get_next_transfer_cli.call_async(request)
         while future.done() == False:
             if(self.dead == True): # Force thread to kill
-                raise Exception("Thread kill") 
+                return self.status['FATAL']
             time.sleep(1)  # 1 second timeout
         if future.done():
             try:
@@ -251,15 +251,24 @@ class ArmTransferHandler(Node):
         self.state_lock.release()
 
     # Function to constantly poll manager queue for transfers
+    '''
+        TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
+    '''
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
             time.sleep(3)
-            status = self.get_next_transfer()
-        '''
-            TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
-        '''
+            try: 
+                status = self.get_next_transfer()
 
+                if(status == self.status['ERROR']):
+                    raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation")
+            except: 
+                self.get_logger().error("Error occured: %r" % (e,))
+                raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation") # exit out 
+            else: 
+                if(status == self.status['FATAL']):
+                    return; # Exit out we are terminating 
 
 def main(args=None):
     rclpy.init(args=args)
