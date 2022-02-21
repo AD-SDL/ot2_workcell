@@ -1,4 +1,5 @@
 # ROS Library
+from signal import sigpending
 import rclpy
 from rclpy.node import Node
 
@@ -13,7 +14,6 @@ import time
 from pathlib import Path
 import importlib.util
 from random import random
-import sys
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -112,6 +112,9 @@ class ArmTransferHandler(Node):
             % (self.id, self.name)
         )
 
+        # Kill thread 
+        self.dead = False 
+
     '''
         Retrieves the next transfer to run in the queue
         No need to lock the arm this is done by the manager
@@ -124,6 +127,8 @@ class ArmTransferHandler(Node):
             GetNextTransfer, "/arm/%s/get_next_transfer" % self.id
         )
         while not get_next_transfer_cli.wait_for_service(timeout_sec=2.0):
+            if(self.dead == True): # Force thread to kill
+                raise Exception("Thread kill") 
             self.get_logger().info("Service not available, trying again...")
 
         # Create request
@@ -133,6 +138,8 @@ class ArmTransferHandler(Node):
         next_transfer = ""
         future = get_next_transfer_cli.call_async(request)
         while future.done() == False:
+            if(self.dead == True): # Force thread to kill
+                raise Exception("Thread kill") 
             time.sleep(1)  # 1 second timeout
         if future.done():
             try:
@@ -269,8 +276,8 @@ def main(args=None):
         arm_transfer_node.get_logger().error("Terminating...")
 
     # End
+    arm_transfer_node.dead = True # Force kill
     spin_thread.join()
-    sys.exit(1) 
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 
