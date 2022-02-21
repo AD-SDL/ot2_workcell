@@ -118,6 +118,9 @@ class OT2ProtocolManager(Node):
             % (self.id, self.name)
         )
 
+        # Kill thread
+        self.dead = False
+
     # retrieves next script to run in the queue
     def get_next_protocol(self):
 
@@ -128,6 +131,8 @@ class OT2ProtocolManager(Node):
         # Create client
         protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
         while not protocol_cli.wait_for_service(timeout_sec=2.0):
+            if(self.dead == True): # Force thread to kill
+                return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
         # Get the next protocol
@@ -142,6 +147,8 @@ class OT2ProtocolManager(Node):
 
         # Waiting on future
         while future.done() == False:
+            if(self.dead == True): # Force thread to kill
+                return self.status['FATAL']
             time.sleep(1)  # timeout 1 second
         if future.done():
             try:
@@ -160,14 +167,8 @@ class OT2ProtocolManager(Node):
                     return self.status["ERROR"]  # Error
                 elif response.status == response.WAITING: # Waiting for jobs
                     return self.status['WAITING']
-                elif response.status == response.WARNING:
-                    self.get_logger().warning(
-                        "Warning: File %s already exists on system %s" % (response.file, id)
-                    )
-                    return self.status["WARNING"]  # Warning
                 else:
                     self.get_logger().info("Load succeeded")
-                    self.status["SUCCESS"]  # All good
 
         # Begin running the next protocol
         # TODO: actually incorporate runs
@@ -188,18 +189,14 @@ class OT2ProtocolManager(Node):
             # Check to see if run was success
             if status == self.status['ERROR']:
                 self.get_logger().error("Error: protocol %s was not run successfully" % file_name)
-                raise Exception
+                return self.status['ERROR'] # thread will handle state update 
             elif status == self.status['SUCCESS']:
                 self.get_logger().info("Protocol %s was run successfully" % file_name)
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
-            new_state = self.state["ERROR"]
-            return self.status['ERROR']
+            return self.status['ERROR'] # thread will handle state update 
         else:
-            new_state = self.state["READY"]
-            return self.status['SUCCESS']
-        finally:
-            self.set_state(new_state) # Set system to new_state
+            self.set_state(self.status['SUCCESS'])
 
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
@@ -271,12 +268,32 @@ class OT2ProtocolManager(Node):
                 "Unable to update state with manager, continuing but the state of the ot2 may be incorrect"
             )
 
-    # Function to constantly poll manager queue for work, TODO: optimization  - steal work
+    # Function to constantly poll manager queue for protocols
+    '''
+        Upon error to this thread, the get_next_protocol infinite loop will terminate with the respective nodes being alerted of an error occuring. However, all services of the node 
+        and subscribers will remain operational, but the only way to restart the arm would require restarting the entire node, it might be beneficial to add restart capabilties. 
+
+        TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
+    '''
     def run(self):
-        # Run get_protocol every 3 seconds
+        # Runs every 3 seconds
         while rclpy.ok():
             time.sleep(3)
-            status = self.get_next_protocol()  # Full finish before waiting
+            try: 
+                status = self.get_next_protocol()
+
+                if(status == self.status['ERROR']):
+                    raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
+            except Exception as e: 
+                self.get_logger().error("Error occured: %r" % (e,))
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            except: # Catch other errors 
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            else: 
+                if(status == self.status['FATAL']):
+                    return; # Exit out we are terminating 
 
 
     # Function to setup transfer
@@ -306,6 +323,8 @@ def main(args=None):
         protocol_manager.get_logger().error("Terminating...")
 
     # End
+    protocol_manager.dead = True
+    spin_thread.join() 
     protocol_manager.destroy_node()
     rclpy.shutdown()
 
