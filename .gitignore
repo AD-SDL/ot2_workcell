@@ -2,8 +2,8 @@ build/*
 install/*
 log/*
 src/ros_tutorials/
-*.save
 *.swp
+*.save
 
 # Python
 

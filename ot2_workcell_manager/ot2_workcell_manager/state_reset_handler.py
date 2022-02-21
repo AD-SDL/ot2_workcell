@@ -1,32 +1,30 @@
+# ROS Libaries 
 import rclpy
 from rclpy.node import Node
-from threading import Thread, Lock
+
+# Other Libraries
+from threading import Thread
 import time
-import sys
-import os
-import os.path
-from os import path
 from pathlib import Path
-import importlib.util
-from workcell_interfaces.srv import *
-from workcell_interfaces.msg import *
-from ot2_workcell_manager_client.retry_api import *
-from ot2_workcell_manager_client.register_api import *
-from ot2_workcell_manager_client.register_api import _get_id_name
+
+# Worker info API
 from ot2_workcell_manager_client.worker_info_api import *
 from ot2_workcell_manager_client.worker_info_api import (
     _get_node_info,
     _get_node_list,
     get_node_info,
 )
-from random import random
+
+# ROS services and messages
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 
 # This handles all state resets
 
 # Current reset support
-# Arm: IP
+# Arm: done
 # Master: TODO
-# OT-2: TODO
+# OT-2: done
 class StateResetHandler(Node):
 
     def __init__(self):
@@ -107,10 +105,10 @@ class StateResetHandler(Node):
 def work(self):
     temp = 'Y'
     while not temp == 'Q':
-        temp = input("Y/N/Q for resetting arm state: ")
+        temp = input("Y/N/Q for resetting node state: ")
         if(temp.strip() == 'Y'):
-            arm_name_or_id = input("Please enter arm name or id: ")
-            status = self.node_state_reset(self.state['READY'], arm_name_or_id.strip()) # TODO: maybe do something with status
+            node_name_or_id = input("Please enter node name or id: ")
+            status = self.node_state_reset(self.state['READY'], node_name_or_id.strip()) # TODO: maybe do something with status
 
 def main(args=None):
     rclpy.init(args=args)

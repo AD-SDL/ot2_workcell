@@ -1,7 +1,14 @@
+# ROS Library
 import rclpy
 from rclpy.node import Node
+
+# Sys Library 
 import sys
+
+# ROS services
 from workcell_interfaces.srv import *
+
+# Retry API
 from ot2_workcell_manager_client.retry_api import *
 
 # registers a worker with the master node

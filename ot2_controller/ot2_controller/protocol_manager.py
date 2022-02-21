@@ -1,16 +1,26 @@
-from typing import Protocol
+# ROS library
 import rclpy
 from rclpy.node import Node
-from threading import Thread, Lock
-import time
-import sys
+
+# OS library !!!!! Must be below ROS msgs below ROS libraries 
 import os
 import os.path
 from os import path
+
+# Others
+from threading import Thread, Lock
+import time
+import sys 
 from pathlib import Path
 import importlib.util
+from random import random
+from typing import Protocol
+
+# ROS messages and services 
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
+
+# ot2_workcell_manager library 
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _get_id_name
@@ -20,16 +30,19 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_list,
     get_node_info,
 )
-from random import random
+
+# Arm Libraries 
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 
-# TODO: import ot2_client
+# ot2_client libraries 
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
-from ot2_client.load_run_api import *
 
-
+'''
+    The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
+    It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
+'''
 class OT2ProtocolManager(Node):
     def __init__(self, name):
         # Create a temporary node so we can read in parameters
@@ -53,6 +66,7 @@ class OT2ProtocolManager(Node):
 
         # Lock creation
         self.run_lock = Lock()  # Only one can access ot2 at a time
+        self.state_lock = Lock() # State lock
 
         # Readabilty
         self.state = {  # TODO maybe a sync with the master
@@ -75,7 +89,7 @@ class OT2ProtocolManager(Node):
         # Get ID and confirm name from manager
         args = []
         args.append(self)
-        status = retry(self, _get_id_name, 5, 2, args)  # 5 retries 2 second timeout
+        status = retry(self, _get_id_name, 1000, 2, args)  # 5 retries 2 second timeout
         if status == self.status["ERROR"]:
             self.get_logger().fatal("Unable to get id from ot2 manager, exiting...")
             sys.exit(1)  # TODO: alert manager of error
@@ -83,7 +97,19 @@ class OT2ProtocolManager(Node):
         # Create services
 
         # Create subs
-        self.state_reset_sub = self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%self.id,self.state_reset_callback, 10)
+        self.ot2_state_update_sub = self.create_subscription(
+            OT2StateUpdate,
+            "/OT_2/%s/ot2_state_update" % self.id,
+            self.ot2_state_update_callback,
+            10,
+        )
+        self.ot2_state_update_sub  # prevent unused warning
+        self.state_reset_sub = self.create_subscription(
+            OT2Reset,
+            "/OT_2/%s/ot2_state_reset"%self.id,
+            self.state_reset_callback,
+            10,
+        )
         self.state_reset_sub # prevent unused variable warning
 
         # Initialization Complete
@@ -91,6 +117,9 @@ class OT2ProtocolManager(Node):
             "OT2 protocol manager for ID: %s name: %s initialization completed"
             % (self.id, self.name)
         )
+
+        # Kill thread
+        self.dead = False
 
     # retrieves next script to run in the queue
     def get_next_protocol(self):
@@ -102,13 +131,14 @@ class OT2ProtocolManager(Node):
         # Create client
         protocol_cli = self.create_client(Protocol, "/%s/%s/protocol" % (type, id)) # format of service is /{type}/{id}/{service name}
         while not protocol_cli.wait_for_service(timeout_sec=2.0):
+            if(self.dead == True): # Force thread to kill
+                return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
         # Get the next protocol
         file_name = ""
 
-        # Client ready, get name of file
-        # No request info needed
+        # Client ready, get name of file - No request info needed
         protocol_request = Protocol.Request()
 
         # Call service to protocol
@@ -117,6 +147,8 @@ class OT2ProtocolManager(Node):
 
         # Waiting on future
         while future.done() == False:
+            if(self.dead == True): # Force thread to kill
+                return self.status['FATAL']
             time.sleep(1)  # timeout 1 second
         if future.done():
             try:
@@ -135,22 +167,15 @@ class OT2ProtocolManager(Node):
                     return self.status["ERROR"]  # Error
                 elif response.status == response.WAITING: # Waiting for jobs
                     return self.status['WAITING']
-                elif response.status == response.WARNING:
-                    self.get_logger().warning(
-                        "Warning: File %s already exists on system %s" % (response.file, id)
-                    )
-                    return self.status["WARNING"]  # Warning
                 else:
                     self.get_logger().info("Load succeeded")
-                    self.status["SUCCESS"]  # All good
 
         # Begin running the next protocol
         # TODO: actually incorporate runs
 
         # set state to busy
         try:
-            self.current_state = self.state["BUSY"]
-            self.set_state()
+            self.set_state(self.state["BUSY"]) # Set system to BUSY
 
             # Conducting a transfer
             if(file_name.split(":")[0] == "transfer"):
@@ -164,24 +189,37 @@ class OT2ProtocolManager(Node):
             # Check to see if run was success
             if status == self.status['ERROR']:
                 self.get_logger().error("Error: protocol %s was not run successfully" % file_name)
-                raise Exception
+                return self.status['ERROR'] # thread will handle state update 
             elif status == self.status['SUCCESS']:
                 self.get_logger().info("Protocol %s was run successfully" % file_name)
+            elif status == self.status['FATAL']: # TODO: implement this in transfer_api
+                return self.status['FATAL']
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
-            self.current_state = self.state["ERROR"]
-            return self.status['ERROR']
+            return self.status['ERROR'] # thread will handle state update 
         else:
-            self.current_state = self.state["READY"]
-            return self.status['SUCCESS']
-        finally:
-            self.set_state()
+            self.set_state(self.status['SUCCESS'])
 
+    # Service to update the state of the ot2
+    def ot2_state_update_callback(self, msg):
+
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.state_lock.release() # release lock
+            return # exit out of function
+
+        self.state_lock.acquire() # Enter critical section
+        self.current_state = msg.state
+        self.state_lock.release() # Exit Critical Section
 
     # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg):
+    def state_reset_callback(self, msg): #TODO: More comprehensive state reset handler 
         self.get_logger().warning("Resetting state...")
+
+        self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
+        self.state_lock.release() # Exit critical section
 
     # Takes filename, unpacks script from file, and runs the script
     def load_and_run(self, file):
@@ -222,22 +260,42 @@ class OT2ProtocolManager(Node):
             return self.status['SUCCESS']
 
     # Helper function
-    def set_state(self):
+    def set_state(self, new_state):
         args = []
         args.append(self)
-        args.append(self.current_state)
+        args.append(new_state)
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
                 "Unable to update state with manager, continuing but the state of the ot2 may be incorrect"
             )
 
-    # Function to constantly poll manager queue for work, TODO: optimization  - steal work
+    # Function to constantly poll manager queue for protocols
+    '''
+        Upon error to this thread, the get_next_protocol infinite loop will terminate with the respective nodes being alerted of an error occuring. However, all services of the node 
+        and subscribers will remain operational, but the only way to restart the arm would require restarting the entire node, it might be beneficial to add restart capabilties. 
+
+        TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
+    '''
     def run(self):
-        # Run get_protocol every 3 seconds
+        # Runs every 3 seconds
         while rclpy.ok():
             time.sleep(3)
-            status = self.get_next_protocol()  # Full finish before waiting
+            try: 
+                status = self.get_next_protocol()
+
+                if(status == self.status['ERROR']):
+                    raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
+            except Exception as e: 
+                self.get_logger().error("Error occured: %r" % (e,))
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            except: # Catch other errors 
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            else: 
+                if(status == self.status['FATAL']):
+                    return; # Exit out we are terminating 
 
 
     # Function to setup transfer
@@ -253,10 +311,8 @@ class OT2ProtocolManager(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
-    name = "temp"
-    protocol_manager = OT2ProtocolManager(name)
-
+    
+    protocol_manager = OT2ProtocolManager("temp")
     try:
         # Work
         spin_thread = Thread(target=protocol_manager.run, args=())
@@ -269,7 +325,8 @@ def main(args=None):
         protocol_manager.get_logger().error("Terminating...")
 
     # End
-#    spin_thread.join()
+    protocol_manager.dead = True
+    spin_thread.join() 
     protocol_manager.destroy_node()
     rclpy.shutdown()
 

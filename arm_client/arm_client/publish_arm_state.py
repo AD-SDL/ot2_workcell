@@ -1,12 +1,17 @@
+# ROS libraries 
 import rclpy
 from rclpy.node import Node
-import threading
-from threading import Thread, Lock
+
+# Time Library
 import time
+
+# ROS messages and services
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Calls a service created by the arm manager to udpate the state of the arm
+'''
+    Calls the service to update the respective arm's state, this is currently set up so that only the arm is able to call this function. 
+'''
 def update_arm_state(self, current_state):
 
     # Error checking
@@ -30,11 +35,9 @@ def update_arm_state(self, current_state):
     # No error checks without services
     return self.status["SUCCESS"]
 
-
 # Middleman function to segway from retry functions to update_arm_state
 def _update_arm_state(args):
     return update_arm_state(args[0], args[1])  # self, current_state
-
 
 def main_null():
     print("This is not meant to have a main function")

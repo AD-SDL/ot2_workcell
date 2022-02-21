@@ -3,7 +3,7 @@
 <package format="3">
   <name>arm_client</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This package contains the API and interfaces available to those attempting to the use the arm. It contains the ability for internal arms nodes to communicate to themselves and an interface for beginning arm transfers between OT2s</description>
   <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
   <license>MIT License</license>
 

@@ -3,7 +3,7 @@
 <package format="3">
   <name>ot2_client</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This package provides internal and external interfaces for use. The internal interfaces are for communication among the OT2 nodes to syncronize state. The external interfaces provide the ability for other nodes to add nodes to the OT2 run queue. </description>
   <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
   <license>MIT License</license>
 

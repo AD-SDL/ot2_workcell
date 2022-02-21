@@ -1,15 +1,25 @@
+# ROS Library
+from signal import sigpending
 import rclpy
 from rclpy.node import Node
-from threading import Thread, Lock
-import time
-import sys
+
+# OS library !!!!! Must be below ROS msgs below ROS libraries 
 import os
 import os.path
 from os import path
+
+# Other
+from threading import Thread, Lock
+import time
 from pathlib import Path
 import importlib.util
+from random import random
+
+# ROS messages and services
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
+
+# OT2_workcell_manager API
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _get_id_name
@@ -19,11 +29,17 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_list,
     get_node_info,
 )
-from random import random
+
+# Arm Library
 from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
 
 # TODO: figure out how to integrate arm code
+'''
+    This is the ArmTransferHandler class. The purpose of this class is to execute tasks running on the Manager's queue and alert the system of state changes and program status. 
+
+    It is undecided if this package is directly running on the arm or if it will follow the same model as the OT2 
+'''
 class ArmTransferHandler(Node):
     def __init__(self, name):
         # Create a temporary node so we can read in parameters
@@ -63,6 +79,7 @@ class ArmTransferHandler(Node):
 
         # State of the arm
         self.current_state = self.state["READY"]
+        self.state_lock = Lock()
 
         # Path setup
         path = Path()
@@ -74,12 +91,10 @@ class ArmTransferHandler(Node):
         # Get ID and confirm name from manager
         args = []
         args.append(self)
-        status = retry(self, _get_id_name, 5, 2, args)  # 5 retries 2 second timeout
+        status = retry(self, _get_id_name, 1000, 2, args)  # 1000 retries 2 second timeout
         if status == self.status["ERROR"]:
             self.get_logger().fatal("Unable to get id from arm manager, exiting...")
-            # Alert manager of error
-            self.current_state = self.state["ERROR"]
-            self.set_state()
+            self.set_state(self.state["ERROR"]) # Set system state to ERROR
 
         # Create services
 
@@ -87,11 +102,18 @@ class ArmTransferHandler(Node):
         self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
         self.state_reset_sub # prevent unused variable warning
 
+        #  Arm State Syncronization topic 
+        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.arm_state_update_callback, 10)
+        self.state_sync # prevent unused variable warning
+
         # Initialization Complete
         self.get_logger().info(
             "Arm Transfer handler for ID: %s name: %s initialization completed"
             % (self.id, self.name)
         )
+
+        # Kill thread 
+        self.dead = False 
 
     '''
         Retrieves the next transfer to run in the queue
@@ -105,6 +127,8 @@ class ArmTransferHandler(Node):
             GetNextTransfer, "/arm/%s/get_next_transfer" % self.id
         )
         while not get_next_transfer_cli.wait_for_service(timeout_sec=2.0):
+            if(self.dead == True): # Force thread to kill
+                 return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
         # Create request
@@ -114,17 +138,16 @@ class ArmTransferHandler(Node):
         next_transfer = ""
         future = get_next_transfer_cli.call_async(request)
         while future.done() == False:
+            if(self.dead == True): # Force thread to kill
+                return self.status['FATAL']
             time.sleep(1)  # 1 second timeout
         if future.done():
             try:
                 response = future.result()
 
-                if (
-                    response.status == response.ERROR
-                    or response.status == response.FATAL
-                ):
-                    raise Exception
-                elif response.status == response.WAITING: #TODO: consistent style putting this in else or try block
+                if (response.status == response.ERROR or response.status == response.FATAL):
+                    raise Exception("Next transfer request failed")
+                elif response.status == response.WAITING: 
                     return self.status["WAITING"]
             except Exception as e:
                 self.get_logger().error("Error occured %r" % (e,))
@@ -152,8 +175,7 @@ class ArmTransferHandler(Node):
             return self.status["ERROR"]
 
         # Update state and let it be know that we are busy
-        self.current_state = self.state["BUSY"]
-        self.set_state()
+        self.set_state(self.state["BUSY"]) # Set system state to BUSY 
 
         # Do the transfer
         try:
@@ -169,12 +191,9 @@ class ArmTransferHandler(Node):
              In the completed queue, which means the system is still in the same state it started in
             '''
             self.get_logger().error("Error occured: %r" % (e,))
-            self.current_state = self.state["ERROR"]  # ERROR state
-            return self.status["ERROR"]
+            return self.status["ERROR"] # Alert to error, thread will alert system to ERROR
         else:
-            self.current_state = self.state["READY"]
-        finally:  # No matter what after this the army is no longer busy
-            self.set_state()
+            self.set_state(self.state["READY"]) # System is READY again 
 
         # Add to completed queue - Create pub
         completed_transfer_pub = self.create_publisher(
@@ -193,31 +212,64 @@ class ArmTransferHandler(Node):
         return self.status["SUCCESS"]
 
     # Helper function
-    def set_state(self):
+    def set_state(self, new_state):
         args = []
         args.append(self)
-        args.append(self.current_state)
-        status = retry(self, _update_arm_state, 10, 2, args)
+        args.append(new_state)
+        status = retry(self, _update_arm_state, 1, 0, args) # if it fails it usually isn't something that will be fixed upon a retry
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
                 "Unable to update state with manager, continuing but the state of the arm may be incorrect"
             )
 
-    # Function to reset the state of the transfer handler
-    def state_reset_callback(self, msg): #TODO: more comprehensive reset handler
-        self.get_logger().warning("Resetting state...")
+    # Service to update the state of a node
+    def arm_state_update_callback(self, msg):
+        
+        # Prevent changing state when in an error state
+        if(self.current_state == self.state['ERROR']):
+            self.get_logger().error("Can't change state, the state of Arm %s is already error"%msg.id)
+            return # exit out of function
+
+        # set state
+        self.state_lock.acquire()
         self.current_state = msg.state
+        self.state_lock.release()
+
+   # Function to reset the state of the transfer handler
+    def state_reset_callback(self, msg):
+        self.get_logger().warning("Resetting state of id: %s..."%msg.id)
+
+        # set state
+        self.state_lock.acquire()
+        self.current_state = msg.state
+        self.state_lock.release()
 
     # Function to constantly poll manager queue for transfers
+    '''
+        Upon error to this thread, the get_next_transfer infinite loop will terminate with the respective nodes being alerted of an error occuring. However, all services of the node 
+        and subscribers will remain operational, but the only way to restart the arm would require restarting the entire node, it might be beneficial to add restart capabilties. 
+
+        TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
+    '''
     def run(self):
         # Runs every 3 seconds
         while rclpy.ok():
             time.sleep(3)
-            status = self.get_next_transfer()
-        '''
-            TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
-        '''
+            try: 
+                status = self.get_next_transfer()
 
+                if(status == self.status['ERROR']):
+                    raise Exception("Unexpected Error occured in ArmTransferHandler get_next_transfer operation")
+            except Exception as e: 
+                self.get_logger().error("Error occured: %r" % (e,))
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            except: # Catch other errors 
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            else: 
+                if(status == self.status['FATAL']):
+                    return; # Exit out we are terminating 
 
 def main(args=None):
     rclpy.init(args=args)
@@ -229,11 +281,13 @@ def main(args=None):
 
         rclpy.spin(arm_transfer_node)
     except Exception as e:
-        arm_transfer_node.get_logger().fatal("Error %r" % (e,))
+        arm_transfer_node.get_logger().error("Error %r" % (e,))
     except:
-        arm_transfer_node.get_logger().error("Terminating...")
+        arm_transfer_node.get_logger().fatal("Terminating...")
 
     # End
+    arm_transfer_node.dead = True # Force kill
+    spin_thread.join()
     arm_transfer_node.destroy_node()
     rclpy.shutdown()
 
