@@ -141,6 +141,8 @@ class Master(Node):
             # Add to sub list TODO: future 
             #self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
             #self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
+            self.sub_list.append("blank")
+            self.sub_list.append("blank")
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
@@ -185,16 +187,7 @@ class Master(Node):
         # Find id in nodes_list
         for i in range(0, len(self.nodes_list)):
             dict = self.nodes_list[i]
-            if dict["id"] == request.id and dict["type"] == "scheduler": #TODO: this might change 
-                self.nodes_list.pop(i)  # Remove from list
-                self.get_logger().info(
-                    "Removed id: %s of type: %s name: %s from nodes_list"
-                    % (dict["id"], dict["type"], dict["name"])
-                )
-                response.status = response.SUCCESS
-                self.node_lock.release()
-                return response
-            elif dict["id"] == request.id and dict["type"] == request.type:
+            if dict["id"] == request.id and dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
                 self.sub_list.pop(2*i) # Remove subscription from list
                 self.sub_list.pop(2*i)
