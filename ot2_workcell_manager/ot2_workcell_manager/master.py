@@ -183,7 +183,7 @@ class Master(Node):
         response = Destroy.Response()
 
         # Find id in nodes_list
-        for i in range(0, self.nodes_list.size()):
+        for i in range(0, len(self.nodes_list)):
             dict = self.nodes_list[i]
             if dict["id"] == request.id and dict["type"] == "scheduler": #TODO: this might change 
                 self.nodes_list.pop(i)  # Remove from list
