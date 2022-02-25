@@ -231,6 +231,7 @@ class Master(Node):
         return dict
 
     # Checks to see if the node/worker is ready (registered with the master)
+    '''
     def node_ready(self, args):
         entry = self.search_for_node(args[0])
         if entry["type"] == "-1":
@@ -238,6 +239,31 @@ class Master(Node):
             return self.status["ERROR"]
         else:
             return self.status["SUCCESS"]
+    '''
+
+    # Handles get node info service call
+    def handle_get_node_info(self, request, response):
+        # Create a response
+        response = GetNodeInfo.Response()
+
+        # Get request
+        name_or_id = request.name_or_id
+
+        # TODO: DELETE Debug
+        self.get_logger().info("Node info request for %s" % name_or_id)
+
+        # Get request
+        entry = self.search_for_node(name_or_id)
+
+        # Edit response
+        response.entry.id = entry["id"]
+        response.entry.name = entry["name"]
+        response.entry.state = entry["state"]
+        response.entry.type = entry["type"]  # Differ error checking back to caller
+        response.status = response.SUCCESS  # all good
+
+        # return response
+        return response
 
     # Hanldes get the whole node list service call
     def handle_get_node_list(self, request, response):  # TODO testing
