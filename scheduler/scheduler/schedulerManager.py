@@ -118,8 +118,9 @@ class schedulerManager(Node):
 
             # Find entry for that id or name (spin to wait for it)
             args = []
+            args.append(self)
             args.append(name_or_id)
-            status = retry(self, node_ready, 100, 1, args) 
+            status = retry(self, _node_ready, 100, 1, args) 
             if status == self.status['ERROR']:
                 self.get_logger().error(
                     "Unable to find node %s" % name_or_id
@@ -127,7 +128,7 @@ class schedulerManager(Node):
                 return self.status["ERROR"]
             else:
                 self.get_logger().info("Node %s found" % name_or_id)  # Found
-                
+
             # Get files for the worker
             entry = get_node_info(self, name_or_id)
             try:

@@ -10,13 +10,17 @@ from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
 # Function to determine if a node is ready 
-def node_ready(self, args):
-    entry = get_node_info(self, args[0])
+def node_ready(self, name_or_id):
+    entry = get_node_info(self, name_or_id)
     if entry["type"] == "-1":
-        self.get_logger().info("Waiting on node %s" % args[0])
+        self.get_logger().info("Waiting on node %s" % name_or_id)
         return self.status["WAITING"]
     else:
         return self.status["SUCCESS"]
+
+# Function to determine if a node is ready 
+def _node_ready(self, args):
+    return node_ready(args[0], args[1])
 
 # Get master manager entry about the specific node
 def get_node_info(self, name_or_id):
