@@ -95,7 +95,6 @@ class schedulerManager(Node):
             % (self.id, self.name)
         )
 
-
     '''
         This reads from a setup file in the OT2_Modules directory which contains the work for each robot that needs to be 
         run. Currently it is possible for the system to deadlock due to circular wait with the transfer requests, since 
@@ -117,24 +116,13 @@ class schedulerManager(Node):
             name_or_id = f.readline().strip()  # Remove newline
 
             # Find entry for that id or name (spin to wait for it)
-            args = []
-            args.append(name_or_id)
-            status = retry(
-                self,
-                self.node_ready,
-                self.node_wait_attempts,
-                self.node_wait_timeout,
-                args,
-            )  # retry function
-            if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            entry  = get_node_info(self, name_or_id)
+            if entry['type'] == -1:
                 self.get_logger().error(
                     "Unable to find node %s" % name_or_id
                 )  # Node isn't registered
                 return self.status["ERROR"]
             else:
-                entry = self.search_for_node(
-                    name_or_id
-                )  # get information about that node
                 id = entry["id"]
                 self.get_logger().info("Node %s found" % name_or_id)  # Found
 
