@@ -81,7 +81,7 @@ def pull_protocol(protocol_ID):
         filename = protocol[0][1]
         protocol = protocol[0][0]
         try:
-            file = open("/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/" + filename, 'wb')
+            file = open(filename, 'wb')
         except OSError as err:
             print(err)
             sys.exit()

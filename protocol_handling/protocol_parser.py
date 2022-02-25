@@ -51,6 +51,6 @@ def protocol_parser(filename):
 
 if __name__ == "__main__":
         #TODO Pull protocol file & name from database
-        filename = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocol.py"
+        filename = "/path/to/protocol.py"
         new_name = protocol_parser(filename)
 
