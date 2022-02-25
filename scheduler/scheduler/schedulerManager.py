@@ -24,6 +24,7 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_list,
     get_node_info,
     node_ready,
+    _node_ready,
 )
 
 # OT2 Control API
