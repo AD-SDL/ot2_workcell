@@ -78,10 +78,14 @@ class Master(Node):
         self.arm_state_subscriber
         self.OT2_state_subscriber = self.create_subscription(OT2StateUpdate, "/OT_2/ot2_state_update", self.node_state_update_callback, 10)
         self.OT2_state_subscriber 
+        self.sch_state_subscriber = self.create_subscription(SchStateUpdate, "/sch/sch_state_update", self.node_state_update_callback, 10) # TODO incorporate into scheduler 
+        self.sch_state_subscriber 
         self.arm_state_reset_subscriber = self.create_subscription(ArmReset, "/arm/arm_state_reset", self.state_reset_callback, 10)
         self.arm_state_reset_subscriber 
         self.OT2_state_reset_subscriber = self.create_subscription(OT2Reset, "/OT_2/ot2_state_reset", self.state_reset_callback, 10)
         self.OT2_state_reset_subscriber
+        self.sch_state_reset_subscriber = self.create_subscription(SchReset, "/sch/sch_state_reset", self.state_reset_callback, 10)
+        self.sch_state_reset_subscriber
 
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
