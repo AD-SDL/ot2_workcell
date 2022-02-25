@@ -45,6 +45,7 @@ def load_protocols_to_ot2(self, entry, name):
     '''
 
     # Select a node
+    id = -1 # Init
     try:
         # Get node information
         #target_node = self.search_for_node(id)  # See if id robot exists
@@ -122,6 +123,7 @@ def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of curr
     '''
 
     # Select a node
+    id = -1 # Init 
     try:
         # Get node information
         #target_node = self.search_for_node(id)  # See if id robot exists

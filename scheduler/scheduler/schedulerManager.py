@@ -123,7 +123,6 @@ class schedulerManager(Node):
                 )  # Node isn't registered
                 return self.status["ERROR"]
             else:
-                id = entry["id"]
                 self.get_logger().info("Node %s found" % name_or_id)  # Found
 
             # Get files for the worker
