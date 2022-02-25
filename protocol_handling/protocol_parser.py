@@ -1,7 +1,6 @@
 import os
 import sys
 from datetime import datetime
-from unicodedata import name
 
 
 def protocol_parser(filename):
@@ -52,6 +51,6 @@ def protocol_parser(filename):
 
 if __name__ == "__main__":
         #TODO Pull protocol file & name from database
-        filename = "protocol.py"
+        filename = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocol.py"
         new_name = protocol_parser(filename)
 

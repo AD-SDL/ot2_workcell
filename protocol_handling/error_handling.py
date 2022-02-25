@@ -42,7 +42,7 @@ def is_tip_attached(p20, protocol):
         print("Tip is attached properly")
  
 def is_tip_dropped(p20, protocol):
-    #TODO: Return error detection message from Rory's code
+    #TODO: opent
     message = "No"
     #message = "Yes"
     
