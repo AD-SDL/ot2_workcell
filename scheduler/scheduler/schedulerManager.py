@@ -116,7 +116,7 @@ class schedulerManager(Node):
             name_or_id = f.readline().strip()  # Remove newline
 
             # Find entry for that id or name (spin to wait for it)
-            entry  = get_node_info(self, name_or_id)
+            entry = get_node_info(self, name_or_id)
             if entry['type'] == -1:
                 self.get_logger().error(
                     "Unable to find node %s" % name_or_id
@@ -138,6 +138,7 @@ class schedulerManager(Node):
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
                 if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                    self.get_logger().warn("id: %s"%entry['id']) #DELETE
                     load_protocols_to_ot2(self, entry, split_files[i])
 
             # files sent to worker OT-2 to become threads
