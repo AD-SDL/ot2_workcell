@@ -23,6 +23,7 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_info,
     _get_node_list,
     get_node_info,
+    node_ready,
 )
 
 # OT2 Control API
@@ -116,18 +117,19 @@ class schedulerManager(Node):
             name_or_id = f.readline().strip()  # Remove newline
 
             # Find entry for that id or name (spin to wait for it)
-            entry = get_node_info(self, name_or_id)
-            self.get_logger().warn("id: %s type: %s"% (entry["id"], entry['type'])) #DELETE
-
-            if entry['type'] == -1:
+            args = []
+            args.append(name_or_id)
+            status = retry(self, node_ready, 100, 1, args) 
+            if status == self.status['ERROR']:
                 self.get_logger().error(
                     "Unable to find node %s" % name_or_id
                 )  # Node isn't registered
                 return self.status["ERROR"]
             else:
                 self.get_logger().info("Node %s found" % name_or_id)  # Found
-
+                
             # Get files for the worker
+            entry = get_node_info(self, name_or_id)
             try:
                 files = f.readline()
             except Exception as e:

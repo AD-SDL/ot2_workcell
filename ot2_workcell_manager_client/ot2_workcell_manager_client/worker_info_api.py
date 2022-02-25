@@ -9,6 +9,15 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
+# Function to determine if a node is ready 
+def node_ready(self, args):
+    entry = get_node_info(self, args[0])
+    if entry["type"] == "-1":
+        self.get_logger().info("Waiting on node %s" % args[0])
+        return self.status["WAITING"]
+    else:
+        return self.status["SUCCESS"]
+
 # Get master manager entry about the specific node
 def get_node_info(self, name_or_id):
 
