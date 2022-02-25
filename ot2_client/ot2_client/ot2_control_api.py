@@ -134,7 +134,7 @@ def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of curr
             self.get_logger().error("id: %s doesn't exist" % id)
             return self.status["ERROR"]
 
-        type = target_node["type"]  # These will be needed to acess the service
+        type = target_node["type"]  # These will be needed to access the service
         id = target_node["id"]
 
     except Exception as e:

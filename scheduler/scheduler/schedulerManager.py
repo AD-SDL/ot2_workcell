@@ -129,9 +129,9 @@ class schedulerManager(Node):
                 return self.status["ERROR"]
             else:
                 self.get_logger().info("Node %s found" % name_or_id)  # Found
+            entry = get_node_info(self, name_or_id)
 
             # Get files for the worker
-            entry = get_node_info(self, name_or_id)
             try:
                 files = f.readline()
             except Exception as e:
