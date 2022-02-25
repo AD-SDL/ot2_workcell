@@ -19,7 +19,7 @@ def node_ready(self, name_or_id):
         return self.status["SUCCESS"]
 
 # Function to determine if a node is ready 
-def _node_ready(self, args):
+def _node_ready(args):
     return node_ready(args[0], args[1])
 
 # Get master manager entry about the specific node
