@@ -1,4 +1,5 @@
 # ROS Libraries
+from importlib.metadata import entry_points
 import rclpy
 from rclpy.node import Node
 
@@ -25,9 +26,10 @@ from arm_client.transfer_api import _load_transfer
     TODO: element the need for master (switch to get_node_info)
 '''
 # Creates client that sends contents of files to OT-2
-def load_protocols_to_ot2(self, id, name):
+def load_protocols_to_ot2(self, entry, name):
 
     # Check node online?
+    '''
     args = []
     args.append(id)
     status = retry(
@@ -40,11 +42,13 @@ def load_protocols_to_ot2(self, id, name):
         return self.status["ERROR"]
     else:
         self.get_logger().info("Node %s found" % id)  # Found
+    '''
 
     # Select a node
     try:
         # Get node information
-        target_node = self.search_for_node(id)  # See if id robot exists
+        #target_node = self.search_for_node(id)  # See if id robot exists
+        target_node = entry
 
         # Error checking
         if target_node["type"] == "-1":  # No such node
@@ -68,7 +72,6 @@ def load_protocols_to_ot2(self, id, name):
     # extract name and contents of each first file in list
     with open(self.module_location + name, 'r') as file:
         contents = file.read()
-    
 
     # Client ready
     script_request = LoadProtocols.Request()
@@ -100,9 +103,10 @@ def load_protocols_to_ot2(self, id, name):
                 return self.status["SUCCESS"]  # All good
 
 # Creates client that sends files to worker OT-2 to create threads
-def add_work_to_ot2(self, id, files):  # self, id of robot, and files of current job
+def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of current job
 
     # Check node online?
+    '''
     args = []
     args.append(id)
     status = retry(
@@ -115,11 +119,13 @@ def add_work_to_ot2(self, id, files):  # self, id of robot, and files of current
         return self.status["ERROR"]
     else:
         self.get_logger().info("Node %s found" % id)  # Found
+    '''
 
     # Select a node
     try:
         # Get node information
-        target_node = self.search_for_node(id)  # See if id robot exists
+        #target_node = self.search_for_node(id)  # See if id robot exists
+        target_node = entry
 
         # Error checking
         if target_node["type"] == "-1":  # No such node

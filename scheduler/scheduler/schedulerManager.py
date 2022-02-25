@@ -139,10 +139,10 @@ class schedulerManager(Node):
             # files get split and have their contents sent one by one to OT-2 controller
             for i in range(len(split_files)):
                 if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    load_protocols_to_ot2(self, id, split_files[i])
+                    load_protocols_to_ot2(self, entry, split_files[i])
 
             # files sent to worker OT-2 to become threads
-            add_work_to_ot2(self, id, files)
+            add_work_to_ot2(self, entry, files)
 
             # Setup complete for this thread
             self.get_logger().info("Setup complete for %s" % name_or_id)
