@@ -239,98 +239,6 @@ class Master(Node):
         else:
             return self.status["SUCCESS"]
 
-    '''
-        This reads from a setup file in the OT2_Modules directory which contains the work for each robot that needs to be 
-        run. Currently it is possible for the system to deadlock due to circular wait with the transfer requests, since 
-        both robots need to be ready for the arm (Technically the OT2 are the resource as it waits on the other robot). 
-        This could cause issues that need to be addressed in the future. 
-
-        TODO: move to scheduler 
-    '''
-    def read_from_setup(self, file):  # TODO: deadlock detection algorithm
-        # Read from setup file and distrubute to worker threads - Read number of threads
-        f = open(
-            self.module_location + file, "r"
-        )  # Open up file "setup" in well-known directory
-        n = int(
-            f.readline()
-        )  # First line should contain an integer, corresponds to number of threads
-
-        # For each thread
-        for i in range(n):  # Starts reading names and files to be run
-            # Get identification
-            name_or_id = f.readline().strip()  # Remove newline
-
-            # Find entry for that id or name (spin to wait for it)
-            args = []
-            args.append(name_or_id)
-            status = retry(
-                self,
-                self.node_ready,
-                self.node_wait_attempts,
-                self.node_wait_timeout,
-                args,
-            )  # retry function
-            if status == self.status["ERROR"] or status == self.status["FATAL"]:
-                self.get_logger().error(
-                    "Unable to find node %s" % name_or_id
-                )  # Node isn't registered
-                return self.status["ERROR"]
-            else:
-                entry = self.search_for_node(
-                    name_or_id
-                )  # get information about that node
-                id = entry["id"]
-                self.get_logger().info("Node %s found" % name_or_id)  # Found
-
-            # Get files for the worker
-            try:
-                files = f.readline()
-            except Exception as e:
-                self.get_logger().error("Reading from setup error: %r" % (e,))
-                return self.status["ERROR"]  # Error
-
-            split_files = files.split()
-
-            # TODO: Maybe parallelize this part of the program
-            # files get split and have their contents sent one by one to OT-2 controller
-            for i in range(len(split_files)):
-                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    load_protocols_to_ot2(self, id, split_files[i])
-
-            # files sent to worker OT-2 to become threads
-            add_work_to_ot2(self, id, files)
-
-            # Setup complete for this thread
-            self.get_logger().info("Setup complete for %s" % name_or_id)
-
-        self.get_logger().info("Setup file read and run complete")
-        return self.status["SUCCESS"]
-
-    # Handles get node info service call
-    def handle_get_node_info(self, request, response):
-        # Create a response
-        response = GetNodeInfo.Response()
-
-        # Get request
-        name_or_id = request.name_or_id
-
-        # TODO: DELETE Debug
-        self.get_logger().info("Node info request for %s" % name_or_id)
-
-        # Get request
-        entry = self.search_for_node(name_or_id)
-
-        # Edit response
-        response.entry.id = entry["id"]
-        response.entry.name = entry["name"]
-        response.entry.state = entry["state"]
-        response.entry.type = entry["type"]  # Differ error checking back to caller
-        response.status = response.SUCCESS  # all good
-
-        # return response
-        return response
-
     # Hanldes get the whole node list service call
     def handle_get_node_list(self, request, response):  # TODO testing
         # Create response
@@ -413,11 +321,7 @@ class Master(Node):
 def main(args=None):
     rclpy.init(args=args)
     master_controller = Master()
-
-    # Create a thread to run setup_thread
-    spin_thread = Thread(target=master_controller.read_from_setup, args=("setup",)) #TODO: make it so you can press a button to start it
-    spin_thread.start()
-
+    
     # Spin
     try:
         rclpy.spin(master_controller)
@@ -429,7 +333,6 @@ def main(args=None):
         master_controller.get_logger().fatal("Terminating...")
 
     # End
-    spin_thread.join()
     master_controller.destroy_node()
     rclpy.shutdown()
 
