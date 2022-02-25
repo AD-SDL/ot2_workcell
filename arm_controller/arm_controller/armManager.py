@@ -103,7 +103,7 @@ class ArmManager(Node):
         # Create subscribers
         self.arm_state_update_sub = self.create_subscription(
             ArmStateUpdate,
-            "/arm/%s/arm_state_update" % self.id,
+            "/arm/arm_state_update",
             self.arm_state_update_callback,
             10,
         )
@@ -117,7 +117,7 @@ class ArmManager(Node):
         self.completed_transfer_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             ArmReset,
-            "/arm/%s/arm_state_reset" % self.id,
+            "/arm/arm_state_reset",
             self.state_reset_callback,
             10,
         )
@@ -272,6 +272,10 @@ class ArmManager(Node):
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg): #TODO: More Comprehensive Reset
+        # Check for id
+        if(self.id != msg.id):
+            return 
+
         self.get_logger().warning("Resetting state...")
 
         # Get state lock
@@ -284,6 +288,9 @@ class ArmManager(Node):
 
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
+        # Check if the update is for our node 
+        if(msg.id != self.id):
+            return 
 
         # Bring to attention
         self.get_logger().warning("Arm state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
@@ -296,7 +303,6 @@ class ArmManager(Node):
         self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
         self.state_lock.release() # Exit Critical Section
-
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):

@@ -73,8 +73,15 @@ class Master(Node):
             Submitter, "submitter", self.handle_submitter
         )  # Requests to submit a workload file
 
-        # Client setup
-        # TODO: see if any clients can be setup here
+        # Subscription State setup
+        self.arm_state_subscriber = self.create_subscription(ArmStateUpdate, "/arm/arm_state_update", self.node_state_update_callback, 10)
+        self.arm_state_subscriber
+        self.OT2_state_subscriber = self.create_subscription(OT2StateUpdate, "/OT_2/ot2_state_update", self.node_state_update_callback, 10)
+        self.OT2_state_subscriber 
+        self.arm_state_reset_subscriber = self.create_subscription(ArmReset, "/arm/arm_state_reset", self.state_reset_callback, 10)
+        self.arm_state_reset_subscriber 
+        self.OT2_state_reset_subscriber = self.create_subscription(OT2Reset, "/OT_2/ot2_state_reset", self.state_reset_callback, 10)
+        self.OT2_state_reset_subscriber
 
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
@@ -100,10 +107,6 @@ class Master(Node):
                 "name": request.name,
             }
 
-            # Add to sub list
-            self.sub_list.append(self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%dict['id'], self.state_reset_callback, 10))
-
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -119,10 +122,6 @@ class Master(Node):
                 "name": request.name,
             }
 
-            # Add to sub list
-            self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
-
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
@@ -137,12 +136,6 @@ class Master(Node):
                 "state": self.state["READY"], 
                 "name": request.name,
             }
-
-            # Add to sub list TODO: future 
-            #self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
-            #self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
-            self.sub_list.append("blank")
-            self.sub_list.append("blank")
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
@@ -189,8 +182,6 @@ class Master(Node):
             dict = self.nodes_list[i]
             if dict["id"] == request.id and dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
-                self.sub_list.pop(2*i) # Remove subscription from list
-                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Removed id: %s of type: %s name: %s from nodes_list"
                     % (dict["id"], dict["type"], dict["name"])
@@ -201,8 +192,6 @@ class Master(Node):
             # Error checking
             elif dict["id"] == request.id and not dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
-                self.sub_list.pop(2*i) # Remove subscription from list
-                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Warning! id: %s name: %s doesn't match type in service request, type in request: %s, actual type: %s"
                     % (dict["id"], dict["name"], request.type, dict["type"])

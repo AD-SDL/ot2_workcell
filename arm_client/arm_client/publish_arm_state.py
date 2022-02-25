@@ -25,7 +25,7 @@ def update_arm_state(self, current_state):
 
     # Create client and wait for service
     arm_state_update_pub = self.create_publisher(
-        ArmStateUpdate, "/arm/%s/arm_state_update" % self.id, 10
+        ArmStateUpdate, "/arm/arm_state_update", 10
     )
     time.sleep(1)  # wait for it to start
 

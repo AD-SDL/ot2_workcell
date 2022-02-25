@@ -110,14 +110,14 @@ class OT2(Node):
         # Create subscribers
         self.ot2_state_update_sub = self.create_subscription(
             OT2StateUpdate,
-            "/OT_2/%s/ot2_state_update" % self.id,
+            "/OT_2/ot2_state_update",
             self.ot2_state_update_callback,
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             OT2Reset,
-            "/OT_2/%s/ot2_state_reset"%self.id,
+            "/OT_2/ot2_state_reset",
             self.state_reset_callback,
             10,
         )
@@ -210,6 +210,10 @@ class OT2(Node):
 
     # Function to reset the state of the ot2 handler
     def state_reset_callback(self, msg):
+        # Check for ID
+        if(self.id != msg.id):
+            return
+
         self.get_logger().warning("Resetting state...")
 
         # Get state lock
@@ -222,6 +226,9 @@ class OT2(Node):
 
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
+        # Check for ID
+        if(self.id != msg.id):
+            return
 
         # Bring to attention
         self.get_logger().warning("OT2 state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code

@@ -99,14 +99,14 @@ class OT2ProtocolManager(Node):
         # Create subs
         self.ot2_state_update_sub = self.create_subscription(
             OT2StateUpdate,
-            "/OT_2/%s/ot2_state_update" % self.id,
+            "/OT_2/ot2_state_update",
             self.ot2_state_update_callback,
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             OT2Reset,
-            "/OT_2/%s/ot2_state_reset"%self.id,
+            "/OT_2/ot2_state_reset",
             self.state_reset_callback,
             10,
         )
@@ -202,6 +202,9 @@ class OT2ProtocolManager(Node):
 
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
+        # Check for ID
+        if(self.id != msg.id):
+            return
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
@@ -215,6 +218,10 @@ class OT2ProtocolManager(Node):
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg): #TODO: More comprehensive state reset handler 
+        # Check for ID
+        if(self.id != msg.id):
+            return
+
         self.get_logger().warning("Resetting state...")
 
         self.state_lock.acquire() # Enter critical section
