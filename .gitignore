@@ -198,3 +198,4 @@ _deps
 
 # Textbook
 Texts/OS_Textbook.pdf
+*.DS_Store
