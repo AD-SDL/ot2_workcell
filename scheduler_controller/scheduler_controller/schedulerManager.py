@@ -156,7 +156,6 @@ class schedulerManager(Node):
 
     '''
         Thread to distribute the "blocks" in the queue to available nodes to handle
-        TODO
     '''
     def run_distribute(self):
         # Runs every 3 seconds

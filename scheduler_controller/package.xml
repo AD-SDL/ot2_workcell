@@ -5,13 +5,12 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="alan.linghao.wang@gmail.com">nerra</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT license</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
-
 
   <exec_depend>workcell_interfaces</exec_depend>
   <exec_depend>scheduler_client</exec_depend>
