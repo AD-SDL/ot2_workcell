@@ -22,7 +22,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "scheduler_manager = scheduler_controller.schedulerManager:main"
+            'scheduler_manager = scheduler_controller.schedulerManager:main'
         ],
     },
 )
