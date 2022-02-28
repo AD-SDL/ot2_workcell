@@ -177,11 +177,11 @@ class OT2ProtocolManager(Node):
         try:
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
-            # Conducting a transfer
+            # Conducting an arm transfer
             if(file_name.split(":")[0] == "transfer"):
                 temp = file_name.split(":")
-                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) #from, to , item arm
-            # run protocol, use load_and_run function
+                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
+            # Run protocol on OT2, use load_and_run function
             else:
                 self.get_logger().info("Running protocol")
                 status = self.load_and_run(file_name)

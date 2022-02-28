@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'scheduler'
+package_name = 'scheduler_controller'
 
 setup(
     name=package_name,

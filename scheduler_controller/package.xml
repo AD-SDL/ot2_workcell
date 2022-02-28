@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>scheduler</name>
+  <name>scheduler_controller</name>
   <version>0.0.0</version>
   <description>This package contains the scheduler nodes which are responsible for distrubuting the respective protocols to each OT2.</description>
   <maintainer email="alan.wang@anl.gov">nerra</maintainer>

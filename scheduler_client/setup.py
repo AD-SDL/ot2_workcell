@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "publish_scheduler_state = scheduler_client.publish_scheduler_state:main_null",
         ],
     },
 )

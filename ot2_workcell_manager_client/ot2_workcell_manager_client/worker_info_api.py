@@ -9,7 +9,7 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Function to determine if a node is ready 
+# Function to determine if a node is ready (TODO: change to node_exists) (node_ready means other things)
 def node_ready(self, name_or_id):
     entry = get_node_info(self, name_or_id)
     if entry["type"] == "-1":

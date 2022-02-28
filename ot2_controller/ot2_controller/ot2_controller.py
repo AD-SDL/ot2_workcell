@@ -182,7 +182,7 @@ class OT2(Node):
 
         # Get request information
         files = request.files
-        files = files.split() 
+        #files = files.split() 
 
         # Create Response
         response = AddWork.Response()

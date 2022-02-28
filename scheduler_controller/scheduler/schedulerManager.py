@@ -1,4 +1,5 @@
 # ROS Library
+from ot2_workcell_manager_client.ot2_workcell_manager_client.worker_info_api import get_node_list
 import rclpy
 from rclpy.node import Node
 
@@ -21,7 +22,7 @@ from ot2_workcell_manager_client.register_api import _register, _deregister_node
 from ot2_workcell_manager_client.worker_info_api import *
 from ot2_workcell_manager_client.worker_info_api import (
     _get_node_info,
-    _get_node_list,
+    get_node_list,
     get_node_info,
     node_ready,
     _node_ready,
@@ -29,6 +30,9 @@ from ot2_workcell_manager_client.worker_info_api import (
 
 # OT2 Control API
 from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
+
+# scheduler_client 
+from scheduler_client.publish_scheduler_state import _update_scheduler_state, update_scheduler_state
 
 '''
     The schedulerManager node is responsible for scheduling protocols across the OT2s this means it requires state information and needs to interact with the database. 
@@ -68,6 +72,7 @@ class schedulerManager(Node):
 
         # State information
         self.current_state = self.state["READY"]  # Start ready
+        self.dead = False # kill command
 
         # Path setup
         path = Path()
@@ -102,8 +107,10 @@ class schedulerManager(Node):
         run. Currently it is possible for the system to deadlock due to circular wait with the transfer requests, since 
         both robots need to be ready for the arm (Technically the OT2 are the resource as it waits on the other robot). 
         This could cause issues that need to be addressed in the future. 
+
+        For testing purposes! 
     '''
-    def read_from_setup(self, file):  # TODO: deadlock detection algorithm
+    def read_from_setup(self, file):
         # Read from setup file and distrubute to worker threads - Read number of threads
         f = open(
             self.module_location + file, "r"
@@ -112,70 +119,119 @@ class schedulerManager(Node):
             f.readline()
         )  # First line should contain an integer, corresponds to number of threads
 
-        # For each thread
+        # Load each block 
         for i in range(n):  # Starts reading names and files to be run
-            # Get identification
-            name_or_id = f.readline().strip()  # Remove newline
 
-            # Find entry for that id or name (spin to wait for it)
-            args = []
-            args.append(self)
-            args.append(name_or_id)
-            status = retry(self, _node_ready, 100, 1, args) 
-            if status == self.status['ERROR']:
-                self.get_logger().error(
-                    "Unable to find node %s" % name_or_id
-                )  # Node isn't registered
-                return self.status["ERROR"]
-            else:
-                self.get_logger().info("Node %s found" % name_or_id)  # Found
-            entry = get_node_info(self, name_or_id)
-
-            # Get files for the worker
+            # Get block for the worker
             try:
-                files = f.readline()
+                block = f.readline()
             except Exception as e:
                 self.get_logger().error("Reading from setup error: %r" % (e,))
                 return self.status["ERROR"]  # Error
 
-            split_files = files.split()
-
-            # TODO: Maybe parallelize this part of the program
-            # files get split and have their contents sent one by one to OT-2 controller
-            for i in range(len(split_files)):
-                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    load_protocols_to_ot2(self, entry, split_files[i])
-
-            # files sent to worker OT-2 to become threads
-            add_work_to_ot2(self, entry, files)
-
-            # Setup complete for this thread
-            self.get_logger().info("Setup complete for %s" % name_or_id)
+            split_block = block.split()
+            self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
 
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
 
     '''
         This service handler adds the request work to the manager queue to be scheduled
+
+        TODO: deadlock detection 
     '''
     def add_work_handler(self, request, response): 
         pass
+
+    # Helper function TODO
+    def set_state(self, new_state):
+        args = []
+        args.append(self)
+        args.append(new_state)
+        status = retry(self, _update_scheduler_state, 10, 2, args)
+        if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            self.get_logger().error(
+                "Unable to update state with manager, continuing but the state of the ot2 may be incorrect"
+            )
+
+    '''
+        Thread to distribute the "blocks" in the queue to available nodes to handle
+        TODO
+    '''
+    def run_distribute(self):
+        # Runs every 3 seconds
+        while rclpy.ok():
+            time.sleep(3)
+            try: 
+                status = self.distribute_blocks()
+
+                if(status == self.status['ERROR']):
+                    raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
+            except Exception as e: 
+                self.get_logger().error("Error occured: %r" % (e,))
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            except: # Catch other errors 
+                self.set_state(self.state['ERROR']) # Alert system that state is error 
+                return; # exit out 
+            else: 
+                if(status == self.status['FATAL']):
+                    return; # Exit out we are terminating 
+
+    def distribute_blocks(self): 
+        # base check
+        if(len(self.protocol_queue) == 0):
+            return # exit
+
+        # Get nodes 
+        try:
+            nodes_list = get_node_list()
+        except Exception:
+            self.get_logger().error("Unable to get nodes_list")
+            return self.status['ERROR']
+
+        # Find available nodes and if we have work 
+        for node in nodes_list:
+            if(self.dead == True): # If termination
+                return self.status['FATAL']
+
+            if node['state'] == self.state['READY'] and len(self.protocol_queue) > 0:
+                # Get first job on queue and remove from queue 
+                next_block = self.protocol_queue[0]
+                self.protocol_queue.pop(0) 
+
+                # Load/Add the Protocols
+                try:
+                    for i in range(len(next_block)):
+                        if(not next_block[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                            load_protocols_to_ot2(self, node, next_block[i])
+                    add_work_to_ot2(self, node, next_block)
+                except Exception:
+                    self.get_logger.error("Load/Add protocols failed to OT2: %s"%(node['id']))
+                    return self.status['ERROR']
+        return self.status['SUCCESS']
 
 def main(args=None):
     rclpy.init(args=args)
 
     scheduler_manager_node = schedulerManager("ana")
     try:
-        # Create a thread to run setup_thread
-        spin_thread = Thread(target=scheduler_manager_node.read_from_setup, args=("setup",)) #TODO: make it so you can press a button to start it
-        spin_thread.start()
+        # Create a thread to run read_from_setup
+        setup_thread = Thread(target=scheduler_manager_node.read_from_setup, args=("setup",)) #TODO: make it so you can press a button to start it
+        setup_thread.start()
+
+        # Create a thread to run run_distribute
+        distribute_thread = Thread(target=scheduler_manager_node.run_distribute)
+        distribute_thread.start()
 
         rclpy.spin(scheduler_manager_node)
     except:
         scheduler_manager_node.get_logger().error("Terminating...")
 
     # End
-    spin_thread.join()
+    scheduler_manager_node.dead = True
+    setup_thread.join()
+    distribute_thread.join()
     args = []
     args.append(scheduler_manager_node)
     status = retry(scheduler_manager_node, _deregister_node, 10, 1.5, args)  # TODO: handle status
