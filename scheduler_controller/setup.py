@@ -1,6 +1,4 @@
 from setuptools import setup
-import os
-from glob import glob
 
 package_name = 'scheduler_controller'
 
@@ -15,10 +13,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='SDL',
-    maintainer_email='alan.wang@anl.gov',
+    maintainer='nerra',
+    maintainer_email='alan.linghao.wang@gmail.com',
     description='TODO: Package description',
-    license='MIT licenses',
+    license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
