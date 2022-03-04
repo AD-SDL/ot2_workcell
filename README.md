@@ -113,7 +113,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 
 **Scheduler**
 1. `source ~/ot2_ws/install/setup.bash`
-2. `ros2 run scheduler scheduler_manager`
+2. `ros2 run scheduler_controller scheduler_manager`
 
 This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
 
