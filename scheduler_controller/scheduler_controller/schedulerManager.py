@@ -184,6 +184,9 @@ class schedulerManager(Node):
         # Get nodes 
         try:
             nodes_list = get_node_list()
+        except Exception as e: 
+            self.get_logger().error("Unable to get nodes_list, error: %r"%(e,))
+            return self.status['ERROR']
         except Exception:
             self.get_logger().error("Unable to get nodes_list")
             return self.status['ERROR']
