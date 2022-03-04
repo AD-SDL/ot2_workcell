@@ -162,12 +162,9 @@ class schedulerManager(Node):
             if(self.dead == True):
                 return # exit
             time.sleep(3)
-            if(self.dead == True):
-                return # exit
             try: 
                 status = self.distribute_blocks()
-                if(self.dead == True):
-                    return # exit
+
                 if(status == self.status['ERROR']):
                     raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
             except Exception as e: 
@@ -182,9 +179,13 @@ class schedulerManager(Node):
                     return; # Exit out we are terminating 
 
     def distribute_blocks(self): 
+        # Termination check 
+        if(self.dead == True):
+            return self.status['FATAL'] # exit
+
         # base check
         if(len(self.protocol_queue) == 0):
-            return # exit
+            return self.status['WAITING'] # exit
 
         # Get nodes 
         try:
