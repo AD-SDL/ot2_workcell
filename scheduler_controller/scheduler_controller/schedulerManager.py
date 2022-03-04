@@ -1,5 +1,4 @@
 # ROS Library
-from ot2_workcell_manager_client.ot2_workcell_manager_client.worker_info_api import get_node_list
 import rclpy
 from rclpy.node import Node
 
