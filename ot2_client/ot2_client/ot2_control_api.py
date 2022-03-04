@@ -61,7 +61,6 @@ def load_protocols_to_ot2(self, entry, name):
     
 
     # Create client that calls load_protocols servive on controller
-
     script_cli = self.create_client(LoadProtocols, "/%s/%s/load_protocols" % (type, id))  # format of service is /{type}/{id}/{service name}
     while not script_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")
@@ -174,5 +173,5 @@ def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of curr
                 )
                 return self.status["ERROR"]  # Error
             else:
-                self.get_logger().info("Files loaded")
+                self.get_logger().info("Work added to OT2 queue")
                 return self.status["SUCCESS"]  # All good

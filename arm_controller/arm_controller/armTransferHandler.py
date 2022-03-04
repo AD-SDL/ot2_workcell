@@ -68,6 +68,7 @@ class ArmTransferHandler(Node):
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
+            "QUEUED": 3
         }
         self.status = {
             "ERROR": 1,

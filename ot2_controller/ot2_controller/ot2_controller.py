@@ -20,6 +20,10 @@ from ot2_workcell_manager_client.register_api import _register, _deregister_node
 from arm_client.transfer_api import *
 from arm_client.transfer_api import _load_transfer
 
+# ot2_client libraries 
+from ot2_client.publish_ot2_state_api import *
+from ot2_client.publish_ot2_state_api import _update_ot2_state
+
 # Other
 from threading import Thread, Lock
 import sys
@@ -62,7 +66,7 @@ class OT2(Node):
         self.state_lock = Lock() # Access to the state
 
         # readability
-        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: sync with master
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: sync with master
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
         # State information
@@ -184,13 +188,16 @@ class OT2(Node):
         files = request.files
         #files = files.split() 
 
+        if(len(files) == 0):
+            self.get_logger().error("Can't add an empty block")
+            response.status = response.ERROR
+            return response
+
         # Create Response
         response = AddWork.Response()
-
-        # Begin reading file names
-        self.get_logger().info("Reading file names")
-
         try:
+            self.set_state(self.state["QUEUED"]) # Set system to QUEUED
+
             # Get lock
             self.work_list_lock.acquire()
 
@@ -260,6 +267,9 @@ class OT2(Node):
         return response
 
     # handles protocol module service calls
+    '''
+        Maintains the idea that a string[] is a and offloads worklist blocks into a temp list to be handled separately 
+    '''
     def protocol_handler(self, request, response): #TODO: remodel to be more efficient
 
         # get state lock
@@ -298,7 +308,7 @@ class OT2(Node):
         # Check state of OT-2, wait for READY state
         if self.current_state == self.state['BUSY']:
             time.sleep(5) # Protocol running, wait 5 seconds
-        elif self.current_state == self.state['READY']:
+        elif self.current_state == self.state['READY'] or self.current_state == self.state['QUEUED']:
             self.get_logger().info("OT-2 ready for new protocol")
         elif self.current_state == self.state['ERROR']: #Error
             self.get_logger().error("OT-2 in error state")
@@ -335,6 +345,17 @@ class OT2(Node):
         # Clear temp list
         self.temp_list.pop(0)
         return response
+
+    # Helper function
+    def set_state(self, new_state):
+        args = []
+        args.append(self)
+        args.append(new_state)
+        status = retry(self, _update_ot2_state, 10, 2, args)
+        if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            self.get_logger().error(
+                "Unable to update state with manager, continuing but the state of the ot2 may be incorrect"
+            )
 
 def main(args=None):
     rclpy.init(args=args)

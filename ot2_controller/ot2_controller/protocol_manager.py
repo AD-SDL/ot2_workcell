@@ -73,6 +73,7 @@ class OT2ProtocolManager(Node):
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
+            "QUEUED": 3,
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 

@@ -15,7 +15,7 @@ from workcell_interfaces.msg import *
 def update_ot2_state(self, current_state):
 
     # Error checking
-    if current_state > 2 or current_state < 0:
+    if not (current_state in self.state.values()):
         return self.status["ERROR"]  # Error
 
     # Create a request
