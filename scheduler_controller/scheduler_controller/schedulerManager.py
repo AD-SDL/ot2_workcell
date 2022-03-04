@@ -203,7 +203,7 @@ class schedulerManager(Node):
 
                 # Load/Add the Protocols
                 try:
-                    self.get_logger().warn("Hit")
+                    self.get_logger.warn("type: %s, id: %s"%(node['type'], node['id']))
                     for i in range(len(next_block)):
                         if(not next_block[i].split(":")[0] == 'transfer'): # Don't send files if transfer
                             load_protocols_to_ot2(self, node, next_block[i])
