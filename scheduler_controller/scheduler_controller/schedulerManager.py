@@ -66,7 +66,8 @@ class schedulerManager(Node):
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
-        # Queues 
+        # Protocol queue
+        self.queue_lock = Lock()
         self.protocol_queue = [] # protocols to run 
 
         # State information
@@ -129,7 +130,9 @@ class schedulerManager(Node):
                 return self.status["ERROR"]  # Error
 
             split_block = block.split()
+            self.queue_lock.acquire() # enter critical section
             self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
+            self.queue_lock.release()
 
         self.get_logger().info("Setup file read and run complete")
         return self.status["SUCCESS"]
@@ -137,10 +140,27 @@ class schedulerManager(Node):
     '''
         This service handler adds the request work to the manager queue to be scheduled
 
-        TODO: deadlock detection 
+        The request is a list of strings (each string is a block and will be split the same way the read_from_setup functions splits) 
+
+        TODO: deadlock detection + error handling
     '''
     def add_work_handler(self, request, response): 
-        pass
+        # Create response 
+        response = SchedulerWork.response()
+
+        # Get blocks 
+        blocks = request.protocols 
+
+        # Parse and add each block 
+        self.queue_lock.acquire() # Enter critical section 
+        for block in blocks: 
+            split_block = block.split()
+            self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
+        self.queue_lock.release()
+
+        # return status 
+        response.status = response.SUCCESS
+        return response
 
     # Helper function TODO
     def set_state(self, new_state):
@@ -208,8 +228,10 @@ class schedulerManager(Node):
 
             if node['state'] == self.state['READY'] and len(self.protocol_queue) > 0:
                 # Get first job on queue and remove from queue 
+                self.queue_lock.acquire() # enter critical section
                 next_block = self.protocol_queue[0]
                 self.protocol_queue.pop(0) 
+                self.queue_lock.release() 
 
                 # Load/Add the Protocols
                 try:
