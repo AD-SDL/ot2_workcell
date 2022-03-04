@@ -196,6 +196,10 @@ class schedulerManager(Node):
             if(self.dead == True): # If termination
                 return self.status['FATAL']
 
+            # Must be correct type, if it isn't we skip 
+            if(node['type'] != "OT_2"):
+                continue 
+
             if node['state'] == self.state['READY'] and len(self.protocol_queue) > 0:
                 # Get first job on queue and remove from queue 
                 next_block = self.protocol_queue[0]
@@ -203,7 +207,6 @@ class schedulerManager(Node):
 
                 # Load/Add the Protocols
                 try:
-                    self.get_logger().warn("type: %s, id: %s"%(node['type'], node['id']))
                     for i in range(len(next_block)):
                         if(not next_block[i].split(":")[0] == 'transfer'): # Don't send files if transfer
                             load_protocols_to_ot2(self, node, next_block[i])
