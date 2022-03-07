@@ -199,7 +199,7 @@ class OT2ProtocolManager(Node):
             self.get_logger().error("Error occured: %r"%(e,))
             return self.status['ERROR'] # thread will handle state update 
         else:
-            self.set_state(self.status['SUCCESS'])
+            self.set_state(self.state['QUEUED'])
 
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):

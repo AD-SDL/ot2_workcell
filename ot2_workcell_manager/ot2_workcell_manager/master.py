@@ -316,7 +316,6 @@ class Master(Node):
 
         # Find node
         entry = self.search_for_node(msg.id)
-        entry['state'] = self.state['READY'] # update our data structure
 
         # set state
         self.node_lock.acquire()

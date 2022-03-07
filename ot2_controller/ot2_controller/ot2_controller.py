@@ -196,7 +196,11 @@ class OT2(Node):
         # Create Response
         response = AddWork.Response()
         try:
-            self.set_state(self.state["QUEUED"]) # Set system to QUEUED
+            if(self.current_state == self.state['ERROR']):
+                self.get_logger().error("We are in the errored state cannot add more work")
+                response.status = response.ERROR
+            elif(self.current_sate != self.state['READY']): # we only switch to queued if we were ready 
+                self.set_state(self.state["QUEUED"]) # Set system to QUEUED
 
             # Get lock
             self.work_list_lock.acquire()
@@ -300,6 +304,7 @@ class OT2(Node):
             response = Protocol.Response()
             response.status = response.WAITING
             self.work_list_lock.release() # Release lock
+            self.set_state(self.state['READY']) # set state to ready 
             return response
         elif(len(self.temp_list) == 0):
             # Selecting job
@@ -308,7 +313,7 @@ class OT2(Node):
         # Check state of OT-2, wait for READY state
         if self.current_state == self.state['BUSY']:
             time.sleep(5) # Protocol running, wait 5 seconds
-        elif self.current_state == self.state['READY'] or self.current_state == self.state['QUEUED']:
+        elif self.current_state == self.state['QUEUED']:
             self.get_logger().info("OT-2 ready for new protocol")
         elif self.current_state == self.state['ERROR']: #Error
             self.get_logger().error("OT-2 in error state")
