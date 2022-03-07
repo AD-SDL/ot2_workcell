@@ -45,7 +45,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/AddWork.srv"
   "srv/Protocol.srv"
   "srv/LoadProtocols.srv"
-  "srv/Submitter.srv"
   "srv/SchedulerWork.srv"
  )
 
