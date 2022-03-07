@@ -69,9 +69,6 @@ class Master(Node):
         self.get_node_list_service = self.create_service(
             GetNodeList, "get_node_list", self.handle_get_node_list
         )  # Blank request returns a list of all the nodes the master knows about
-        self.submitter_service = self.create_service(
-            Submitter, "submitter", self.handle_submitter
-        )  # Requests to submit a workload file
 
         # Subscription State setup
         self.arm_state_subscriber = self.create_subscription(ArmStateUpdate, "/arm/arm_state_update", self.node_state_update_callback, 10)
@@ -319,29 +316,12 @@ class Master(Node):
 
         # Find node
         entry = self.search_for_node(msg.id)
-        current_state = entry['state']
+        entry['state'] = self.state['READY'] # update our data structure
 
         # set state
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
-
-    # Service to read items from the submitter node
-    def handle_submitter(self, request, response):
-
-        # Create response
-        response = Submitter.Response()
-
-        # Handing over to read from setup
-        status = self.read_from_setup(request.workload)
-
-        # Error handling
-        if(status == self.status['ERROR']):
-            self.get_logger().error("Something went wrong with read_from_setup")
-
-        # Return response
-        response.status = status
-        return response
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):
