@@ -199,7 +199,7 @@ class OT2(Node):
             if(self.current_state == self.state['ERROR']):
                 self.get_logger().error("We are in the errored state cannot add more work")
                 response.status = response.ERROR
-            elif(self.current_sate != self.state['READY']): # we only switch to queued if we were ready 
+            elif(self.current_state != self.state['READY']): # we only switch to queued if we were ready 
                 self.set_state(self.state["QUEUED"]) # Set system to QUEUED
 
             # Get lock
