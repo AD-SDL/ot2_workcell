@@ -313,7 +313,7 @@ class OT2(Node):
         # Check state of OT-2, wait for READY state
         if self.current_state == self.state['BUSY']:
             time.sleep(5) # Protocol running, wait 5 seconds
-        elif self.current_state == self.state['QUEUED']:
+        elif self.current_state == self.state['READY'] or self.current_state == self.state['QUEUED']:
             self.get_logger().info("OT-2 ready for new protocol")
         elif self.current_state == self.state['ERROR']: #Error
             self.get_logger().error("OT-2 in error state")

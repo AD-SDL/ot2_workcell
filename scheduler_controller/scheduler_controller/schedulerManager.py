@@ -182,7 +182,7 @@ class schedulerManager(Node):
         while rclpy.ok():
             if(self.dead == True):
                 return # exit
-            time.sleep(3)
+            time.sleep(5)
             try: 
                 status = self.distribute_blocks()
 
@@ -232,7 +232,6 @@ class schedulerManager(Node):
                 self.queue_lock.acquire() # enter critical section
                 next_block = self.protocol_queue[0]
                 self.protocol_queue.pop(0) 
-                self.get_logger().warn("Length of queue is now %s"%(str(len(self.protocol_queue))))
                 self.queue_lock.release() 
 
                 # Load/Add the Protocols
