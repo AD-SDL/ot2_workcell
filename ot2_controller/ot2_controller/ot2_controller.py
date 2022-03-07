@@ -196,6 +196,8 @@ class OT2(Node):
         # Create Response
         response = AddWork.Response()
         try:
+            self.work_list_lock.acquire()
+            
             if(self.current_state == self.state['ERROR']):
                 self.get_logger().error("We are in the errored state cannot add more work")
                 response.status = response.ERROR
@@ -203,7 +205,6 @@ class OT2(Node):
                 self.set_state(self.state["QUEUED"]) # Set system to QUEUED
 
             # Get lock
-            self.work_list_lock.acquire()
 
             # Append files to work list
             self.work_list.append(files)
