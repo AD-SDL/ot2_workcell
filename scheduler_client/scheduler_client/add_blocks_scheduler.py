@@ -18,10 +18,10 @@ def add_blocks_scheduler(self, blocks):
             return self.status['ERROR'] # block contains incorrect type 
 
     # Client setup
-    send_cli = self.create_client(
+    add_block_cli = self.create_client(
          SchedulerWork, "/scheduler/%s/AddWork" %("ana"),
     )  
-    while not send_cli.wait_for_service(timeout_sec=2.0):
+    while not add_block_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")
 
     # create request
@@ -29,7 +29,7 @@ def add_blocks_scheduler(self, blocks):
     schedule_request.protocols = blocks 
 
     # call async
-    future = send_cli.call_async(schedule_request)
+    future = add_block_cli.call_async(schedule_request)
 
     # Waiting on future
     while future.done() == False:
