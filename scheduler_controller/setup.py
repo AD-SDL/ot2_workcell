@@ -14,13 +14,14 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='nerra',
-    maintainer_email='alan.linghao.wang@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer_email='alan.wang@anl.gov',
+    description='This package contains the scheduler controller nodes.',
+    license='MIT Licenses',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'scheduler_manager = scheduler_controller.schedulerManager:main'
+            'scheduler_manager = scheduler_controller.schedulerManager:main',
+            'scheduler_work_adder = scheduler_controller.schedulerWorkAdder:main',
         ],
     },
 )

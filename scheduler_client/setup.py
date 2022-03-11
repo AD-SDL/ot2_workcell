@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "publish_scheduler_state = scheduler_client.publish_scheduler_state:main_null",
+            "add_blocks_scheduler = scheduler_client.add_blocks_scheduler:main_null"
         ],
     },
 )

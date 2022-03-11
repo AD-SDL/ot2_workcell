@@ -94,7 +94,7 @@ class schedulerManager(Node):
 
         # TODO: services and topics
         self.get_id_service = self.create_service( # Service to add work to the queue 
-            SchedulerWork, "/scheduler/%s/AddWork" % self.id, self.add_work_handler #TODO: SchedulerWork service type has response of string[] 
+            SchedulerWork, "/scheduler/%s/AddWork" % self.name, self.add_work_handler #TODO: SchedulerWork service type has response of string[] 
         )
 
         # Initialization Complete
