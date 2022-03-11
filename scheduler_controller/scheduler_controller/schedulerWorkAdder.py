@@ -50,10 +50,10 @@ class schedulerWorkAdder(Node):
 
     def submitter_thread(self):
         while(True):
-            status = scheduler_work_adder.submitter()
+            status = self.submitter()
 
             # Error handling
-            if(status == scheduler_work_adder.status['ERROR']):
+            if(status == self.status['ERROR']):
                 self.get_logger().error("Error occured in the submitter for setup file reads")
                 raise Exception("Error occured in submitter for setup file reads")
 
