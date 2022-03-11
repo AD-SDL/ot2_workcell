@@ -305,7 +305,8 @@ class OT2(Node):
             response = Protocol.Response()
             response.status = response.WAITING
             self.work_list_lock.release() # Release lock
-            self.set_state(self.state['READY']) # set state to ready 
+            if(self.current_state == self.state['QUEUED']): # to not flood it with ready state updates 
+                self.set_state(self.state['READY']) # set state to ready 
             return response
         elif(len(self.temp_list) == 0):
             # Selecting job

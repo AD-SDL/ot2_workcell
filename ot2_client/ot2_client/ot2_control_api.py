@@ -173,5 +173,5 @@ def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of curr
                 )
                 return self.status["ERROR"]  # Error
             else:
-                self.get_logger().info("Work added to OT2 queue")
+                self.get_logger().info("Work added to OT2 queue for: %s"%(entry['name']))
                 return self.status["SUCCESS"]  # All good
