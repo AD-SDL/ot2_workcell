@@ -257,7 +257,7 @@ class OT2ProtocolManager(Node):
 
         # Run work() function in module
         self.get_logger().info("Running module...")
-        try:
+        try: # sandbox program kind of 
             ot2Module.work()
         except Exception as e:
             # Error
