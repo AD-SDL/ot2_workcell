@@ -25,11 +25,11 @@ def add_blocks_scheduler(self, blocks):
         self.get_logger().info("Service not available, trying again...")
 
     # create request
-    request = SchedulerWork.Request() 
-    request.protocols = blocks 
+    schedule_request = SchedulerWork.Request() 
+    schedule_request.protocols = blocks 
 
     # call async
-    future = send_cli.call_async(request)
+    future = send_cli.call_async(schedule_request)
 
     # Waiting on future
     while future.done() == False:
