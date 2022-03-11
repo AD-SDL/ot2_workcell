@@ -13,7 +13,7 @@ def add_blocks_scheduler(self, blocks):
     
     # Confirm type is correct 
     for block in blocks:
-        if(isinstance(block, string) == False):
+        if(isinstance(block, str) == False):
             self.get_logger().error("the block %s, is not a string!"%(str(block),))
             return self.status['ERROR'] # block contains incorrect type 
 
