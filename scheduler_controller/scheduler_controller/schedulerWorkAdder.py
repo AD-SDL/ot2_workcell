@@ -3,12 +3,7 @@ import rclpy
 from rclpy.node import Node
 
 # Other
-from threading import Thread, Lock
-import sys
-import time
 from pathlib import Path
-import importlib.util
-from random import random
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -17,7 +12,6 @@ from workcell_interfaces.msg import *
 # OT2_workcell_manager API
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
-from ot2_workcell_manager_client.register_api import _get_id_name
 
 # scheduler_client 
 from scheduler_client.add_blocks_scheduler import add_blocks_scheduler
@@ -31,6 +25,7 @@ class schedulerWorkAdder(Node):
     def __init__(self, name):
         # node creation
         super().__init__("scheduler_work_adder_" + name)
+        self.name = name
 
         # Readabilty
         self.state = {  # TODO: maybe a sync with the master
