@@ -146,6 +146,8 @@ class schedulerManager(Node):
         TODO: deadlock detection + error handling
     '''
     def add_work_handler(self, request, response): 
+        self.get_logger().warn("hit")
+
         # Create response 
         response = SchedulerWork.response()
 
