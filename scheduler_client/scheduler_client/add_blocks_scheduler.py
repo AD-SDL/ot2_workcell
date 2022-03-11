@@ -25,7 +25,7 @@ def add_blocks_scheduler(self, blocks):
         self.get_logger().info("Service not available, trying again...")
 
     # create request
-    request = SchedulerWork.request() 
+    request = SchedulerWork.Request() 
     request.protocols = blocks 
 
     # call async
