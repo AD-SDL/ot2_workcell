@@ -4,6 +4,7 @@ from rclpy.node import Node
 
 # Other
 from pathlib import Path
+from threading import Thread
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -46,6 +47,16 @@ class schedulerWorkAdder(Node):
             "Scheduler Work Adder name: %s initialization completed"
             % (self.name)
         )
+
+    def submitter_thread(self):
+        while(True):
+            status = scheduler_work_adder.submitter()
+
+            # Error handling
+            if(status == scheduler_work_adder.status['ERROR']):
+                self.get_logger().error("Error occured in the submitter for setup file reads")
+                raise Exception("Error occured in submitter for setup file reads")
+
 
     def submitter(self):
         # get input 
@@ -91,17 +102,16 @@ def main(args=None):
     scheduler_work_adder  = schedulerWorkAdder("pigeon")
 
     try:
-        while(True):
-            status = scheduler_work_adder.submitter()
+        spin_thread = Thread(target=scheduler_work_adder.submitter_thread)
+        spin_thread.start()
 
-            # Error handling
-            if(status == scheduler_work_adder.status['ERROR']):
-                raise Exception("Error occured in submitter for setup file reads")
+        rclpy.spin(scheduler_work_adder)
     except Exception as e: 
         scheduler_work_adder.get_logger().error("Error occured: %r"%(e,))
     except:
         scheduler_work_adder.get_logger().error("Terminating...")
 
+    spin_thread.join()
     scheduler_work_adder.destroy_node()
     rclpy.shutdown()
 
