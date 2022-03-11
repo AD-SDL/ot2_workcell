@@ -162,6 +162,7 @@ class schedulerManager(Node):
 
         # return status 
         response.status = response.SUCCESS
+        self.get_logger().warn(str(response))
         return response
 
     # Helper function TODO
