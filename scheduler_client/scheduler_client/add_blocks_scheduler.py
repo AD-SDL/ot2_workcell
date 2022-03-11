@@ -34,6 +34,7 @@ def add_blocks_scheduler(self, blocks):
     # Waiting on future
     while future.done() == False:
         time.sleep(1)  # timeout 1 second
+        self.get_logger().warn("cycle")
     if future.done():
         try:
             response = future.result()

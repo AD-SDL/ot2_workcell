@@ -146,27 +146,22 @@ class schedulerManager(Node):
         TODO: deadlock detection + error handling
     '''
     def add_work_handler(self, request, response): 
-        self.get_logger().warn("hit 1")
 
         # Create response 
         response = SchedulerWork.Response()
 
-        self.get_logger().warn("hit 2")
-
         # Get blocks 
         blocks = request.protocols 
 
-        self.get_logger().warn("hit 3")
         # Parse and add each block 
         self.queue_lock.acquire() # Enter critical section 
         for block in blocks: 
             split_block = block.split()
             self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
         self.queue_lock.release()
-        self.get_logger().warn("hit 4")
+
         # return status 
         response.status = response.SUCCESS
-        self.get_logger().warn("hit 5")
         return response
 
     # Helper function TODO
