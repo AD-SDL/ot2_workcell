@@ -241,8 +241,13 @@ class schedulerManager(Node):
                             load_protocols_to_ot2(self, node, next_block[i])
                     add_work_to_ot2(self, node, next_block)
                 except Exception:
-                    self.get_logger.error("Load/Add protocols failed to OT2: %s"%(node['id']))
+                    self.get_logger().error("Load/Add protocols failed to OT2: %s"%(node['id']))
                     return self.status['ERROR']
+            elif node['state'] == self.state['ERROR']: # alert at error 
+                self.get_logger().warn("Node %s is in errored state and must be handled immediately!"%(node['name']))
+
+                # Alert via some channel thing (discord bot?)
+
         return self.status['SUCCESS']
 
 def main(args=None):
