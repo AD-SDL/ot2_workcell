@@ -149,7 +149,7 @@ class schedulerManager(Node):
         self.get_logger().warn("hit 1")
 
         # Create response 
-        response = SchedulerWork.response()
+        response = SchedulerWork.Response()
 
         self.get_logger().warn("hit 2")
 
