@@ -49,7 +49,7 @@ class schedulerWorkAdder(Node):
 
     def submitter(self):
         # get input 
-        setup_file_name = input("Setup file name in OT2_modules")
+        setup_file_name = input("Setup file name in OT2_modules: ")
 
         # Open setup file
         try:
@@ -98,9 +98,9 @@ def main(args=None):
             if(status == scheduler_work_adder.status['ERROR']):
                 raise Exception("Error occured in submitter for setup file reads")
     except Exception as e: 
-        self.get_logger().error("Error occured: %r"%(e,))
+        scheduler_work_adder.get_logger().error("Error occured: %r"%(e,))
     except:
-        self.get_logger().error("Terminating...")
+        scheduler_work_adder.get_logger().error("Terminating...")
 
     scheduler_work_adder.destroy_node()
     rclpy.shutdown()
