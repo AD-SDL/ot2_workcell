@@ -37,13 +37,15 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ArmReset.msg"
   "msg/OT2Reset.msg"
   "msg/OT2StateUpdate.msg"
+  "msg/SchStateUpdate.msg"
+  "msg/SchReset.msg"
   "msg/CompletedTransfer.msg"
   "msg/CompletedOT2.msg"
   "srv/GetNextTransfer.srv"
   "srv/AddWork.srv"
   "srv/Protocol.srv"
   "srv/LoadProtocols.srv"
-  "srv/Submitter.srv"
+  "srv/SchedulerWork.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

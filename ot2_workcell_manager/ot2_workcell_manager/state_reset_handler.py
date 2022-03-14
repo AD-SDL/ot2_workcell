@@ -78,10 +78,10 @@ class StateResetHandler(Node):
         # Create msg and pub
         if(type == 'arm'):
             msg = ArmReset()
-            reset_state_pub = self.create_publisher(ArmReset, "/arm/%s/arm_state_reset"%id, 10)
+            reset_state_pub = self.create_publisher(ArmReset, "/arm/arm_state_reset", 10)
             time.sleep(1) # Sleep 1 second to wait for the publisher to finish
         elif(type == 'OT_2'):
-            reset_state_pub = self.create_publisher(OT2Reset, "/OT_2/%s/ot2_state_reset"%id, 10)
+            reset_state_pub = self.create_publisher(OT2Reset, "/OT_2/ot2_state_reset", 10)
             time.sleep(1) # Sleep 1 second to wait for the publisher to finish
             msg = OT2Reset()
         msg.state = new_state

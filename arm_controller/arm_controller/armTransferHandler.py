@@ -68,6 +68,7 @@ class ArmTransferHandler(Node):
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
+            "QUEUED": 3
         }
         self.status = {
             "ERROR": 1,
@@ -99,11 +100,11 @@ class ArmTransferHandler(Node):
         # Create services
 
         # Sub to topics
-        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%self.id,self.state_reset_callback, 10)
+        self.state_reset_sub = self.create_subscription(ArmReset, "/arm/arm_state_reset",self.state_reset_callback, 10)
         self.state_reset_sub # prevent unused variable warning
 
         #  Arm State Syncronization topic 
-        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%self.id, self.arm_state_update_callback, 10)
+        self.state_sync = self.create_subscription(ArmStateUpdate, "/arm/arm_state_update", self.arm_state_update_callback, 10)
         self.state_sync # prevent unused variable warning
 
         # Initialization Complete
@@ -224,7 +225,10 @@ class ArmTransferHandler(Node):
 
     # Service to update the state of a node
     def arm_state_update_callback(self, msg):
-        
+        # Check if it was for this id 
+        if(msg.id != self.id):
+            return 
+
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
             self.get_logger().error("Can't change state, the state of Arm %s is already error"%msg.id)
@@ -237,6 +241,10 @@ class ArmTransferHandler(Node):
 
    # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg):
+        # Check for ID
+        if(self.id != msg.id):
+            return
+
         self.get_logger().warning("Resetting state of id: %s..."%msg.id)
 
         # set state

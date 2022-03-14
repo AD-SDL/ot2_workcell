@@ -73,6 +73,7 @@ class OT2ProtocolManager(Node):
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
+            "QUEUED": 3,
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
@@ -99,14 +100,14 @@ class OT2ProtocolManager(Node):
         # Create subs
         self.ot2_state_update_sub = self.create_subscription(
             OT2StateUpdate,
-            "/OT_2/%s/ot2_state_update" % self.id,
+            "/OT_2/ot2_state_update",
             self.ot2_state_update_callback,
             10,
         )
         self.ot2_state_update_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             OT2Reset,
-            "/OT_2/%s/ot2_state_reset"%self.id,
+            "/OT_2/ot2_state_reset",
             self.state_reset_callback,
             10,
         )
@@ -177,11 +178,11 @@ class OT2ProtocolManager(Node):
         try:
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
-            # Conducting a transfer
+            # Conducting an arm transfer
             if(file_name.split(":")[0] == "transfer"):
                 temp = file_name.split(":")
-                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) #from, to , item arm
-            # run protocol, use load_and_run function
+                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
+            # Run protocol on OT2, use load_and_run function
             else:
                 self.get_logger().info("Running protocol")
                 status = self.load_and_run(file_name)
@@ -198,10 +199,13 @@ class OT2ProtocolManager(Node):
             self.get_logger().error("Error occured: %r"%(e,))
             return self.status['ERROR'] # thread will handle state update 
         else:
-            self.set_state(self.status['SUCCESS'])
+            self.set_state(self.state['QUEUED'])
 
     # Service to update the state of the ot2
     def ot2_state_update_callback(self, msg):
+        # Check for ID
+        if(self.id != msg.id):
+            return
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
@@ -215,6 +219,10 @@ class OT2ProtocolManager(Node):
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg): #TODO: More comprehensive state reset handler 
+        # Check for ID
+        if(self.id != msg.id):
+            return
+
         self.get_logger().warning("Resetting state...")
 
         self.state_lock.acquire() # Enter critical section
@@ -249,7 +257,7 @@ class OT2ProtocolManager(Node):
 
         # Run work() function in module
         self.get_logger().info("Running module...")
-        try:
+        try: # sandbox program kind of 
             ot2Module.work()
         except Exception as e:
             # Error

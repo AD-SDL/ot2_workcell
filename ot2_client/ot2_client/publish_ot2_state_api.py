@@ -15,7 +15,7 @@ from workcell_interfaces.msg import *
 def update_ot2_state(self, current_state):
 
     # Error checking
-    if current_state > 2 or current_state < 0:
+    if not (current_state in self.state.values()):
         return self.status["ERROR"]  # Error
 
     # Create a request
@@ -25,7 +25,7 @@ def update_ot2_state(self, current_state):
 
     # Create client and wait for service
     ot2_state_update_pub = self.create_publisher(
-        OT2StateUpdate, "/OT_2/%s/ot2_state_update" % self.id, 10
+        OT2StateUpdate, "/OT_2/ot2_state_update", 10
     )
     time.sleep(1)  # wait for it to start
 

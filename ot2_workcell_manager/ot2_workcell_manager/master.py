@@ -43,7 +43,7 @@ class Master(Node):
         self.sub_list = []
 
         # Readability
-        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2}  # TODO: more states
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
 
         # Path setup
@@ -69,12 +69,20 @@ class Master(Node):
         self.get_node_list_service = self.create_service(
             GetNodeList, "get_node_list", self.handle_get_node_list
         )  # Blank request returns a list of all the nodes the master knows about
-        self.submitter_service = self.create_service(
-            Submitter, "submitter", self.handle_submitter
-        )  # Requests to submit a workload file
 
-        # Client setup
-        # TODO: see if any clients can be setup here
+        # Subscription State setup
+        self.arm_state_subscriber = self.create_subscription(ArmStateUpdate, "/arm/arm_state_update", self.node_state_update_callback, 10)
+        self.arm_state_subscriber
+        self.OT2_state_subscriber = self.create_subscription(OT2StateUpdate, "/OT_2/ot2_state_update", self.node_state_update_callback, 10)
+        self.OT2_state_subscriber 
+        self.sch_state_subscriber = self.create_subscription(SchStateUpdate, "/sch/sch_state_update", self.node_state_update_callback, 10) # TODO incorporate into scheduler 
+        self.sch_state_subscriber 
+        self.arm_state_reset_subscriber = self.create_subscription(ArmReset, "/arm/arm_state_reset", self.state_reset_callback, 10)
+        self.arm_state_reset_subscriber 
+        self.OT2_state_reset_subscriber = self.create_subscription(OT2Reset, "/OT_2/ot2_state_reset", self.state_reset_callback, 10)
+        self.OT2_state_reset_subscriber
+        self.sch_state_reset_subscriber = self.create_subscription(SchReset, "/sch/sch_state_reset", self.state_reset_callback, 10)
+        self.sch_state_reset_subscriber
 
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
@@ -86,6 +94,9 @@ class Master(Node):
         response = Register.Response()
 
         # Check type
+        '''
+            TODO: implement states, more types, and more state information
+        '''
         if request.type == "OT_2":
             dict = {
                 "type": "OT_2",
@@ -93,38 +104,44 @@ class Master(Node):
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.state["READY"],  # TODO: implement states
+                "state": self.state["READY"],  
                 "name": request.name,
             }
-
-            # Add to sub list
-            self.sub_list.append(self.create_subscription(OT2StateUpdate, "/OT_2/%s/ot2_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(OT2Reset, "/OT_2/%s/ot2_state_reset"%dict['id'], self.state_reset_callback, 10))
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
             )
         elif request.type == "arm":
-            dict = {  # TODO: add more features that the master keeps about the node
+            dict = { 
                 "type": "arm",
                 "id": "A"
                 + str(
                     self.nodes
                 ),  # Can be searched along with name (each id must be unique)
-                "state": self.state["READY"],  # TODO: implement states
+                "state": self.state["READY"],  
                 "name": request.name,
             }
-
-            # Add to sub list
-            self.sub_list.append(self.create_subscription(ArmStateUpdate, "/arm/%s/arm_state_update"%dict['id'], self.node_state_update_callback, 10))
-            self.sub_list.append(self.create_subscription(ArmReset, "/arm/%s/arm_state_reset"%dict['id'], self.state_reset_callback, 10))
 
             self.get_logger().info(
                 "Trying to register ID: %s name: %s with master"
                 % (dict["id"], dict["name"])
             )
-        # TODO: more types
+        elif request.type == "scheduler":
+            dict = {  
+                "type": "scheduler",
+                "id": "sch"
+                + str(
+                    self.nodes
+                ),  # Can be searched along with name (each id must be unique)
+                "state": self.state["READY"], 
+                "name": request.name,
+            }
+
+            self.get_logger().info(
+                "Trying to register ID: %s name: %s with master"
+                % (dict["id"], dict["name"])
+            )
         else:
             self.get_logger().error(
                 "type %s not supported at this moment" % request.type
@@ -162,12 +179,10 @@ class Master(Node):
         response = Destroy.Response()
 
         # Find id in nodes_list
-        for i in range(0, self.nodes):
+        for i in range(0, len(self.nodes_list)):
             dict = self.nodes_list[i]
             if dict["id"] == request.id and dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
-                self.sub_list.pop(2*i) # Remove subscription from list
-                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Removed id: %s of type: %s name: %s from nodes_list"
                     % (dict["id"], dict["type"], dict["name"])
@@ -178,8 +193,6 @@ class Master(Node):
             # Error checking
             elif dict["id"] == request.id and not dict["type"] == request.type:
                 self.nodes_list.pop(i)  # Remove from list
-                self.sub_list.pop(2*i) # Remove subscription from list
-                self.sub_list.pop(2*i)
                 self.get_logger().info(
                     "Warning! id: %s name: %s doesn't match type in service request, type in request: %s, actual type: %s"
                     % (dict["id"], dict["name"], request.type, dict["type"])
@@ -215,6 +228,7 @@ class Master(Node):
         return dict
 
     # Checks to see if the node/worker is ready (registered with the master)
+    '''
     def node_ready(self, args):
         entry = self.search_for_node(args[0])
         if entry["type"] == "-1":
@@ -222,74 +236,7 @@ class Master(Node):
             return self.status["ERROR"]
         else:
             return self.status["SUCCESS"]
-
     '''
-        This reads from a setup file in the OT2_Modules directory which contains the work for each robot that needs to be 
-        run. Currently it is possible for the system to deadlock due to circular wait with the transfer requests, since 
-        both robots need to be ready for the arm (Technically the OT2 are the resource as it waits on the other robot). 
-        This could cause issues that need to be addressed in the future. 
-
-        TODO: move to scheduler 
-    '''
-    def read_from_setup(self, file):  # TODO: deadlock detection algorithm
-        # Read from setup file and distrubute to worker threads - Read number of threads
-        f = open(
-            self.module_location + file, "r"
-        )  # Open up file "setup" in well-known directory
-        n = int(
-            f.readline()
-        )  # First line should contain an integer, corresponds to number of threads
-
-        # For each thread
-        for i in range(n):  # Starts reading names and files to be run
-            # Get identification
-            name_or_id = f.readline().strip()  # Remove newline
-
-            # Find entry for that id or name (spin to wait for it)
-            args = []
-            args.append(name_or_id)
-            status = retry(
-                self,
-                self.node_ready,
-                self.node_wait_attempts,
-                self.node_wait_timeout,
-                args,
-            )  # retry function
-            if status == self.status["ERROR"] or status == self.status["FATAL"]:
-                self.get_logger().error(
-                    "Unable to find node %s" % name_or_id
-                )  # Node isn't registered
-                return self.status["ERROR"]
-            else:
-                entry = self.search_for_node(
-                    name_or_id
-                )  # get information about that node
-                id = entry["id"]
-                self.get_logger().info("Node %s found" % name_or_id)  # Found
-
-            # Get files for the worker
-            try:
-                files = f.readline()
-            except Exception as e:
-                self.get_logger().error("Reading from setup error: %r" % (e,))
-                return self.status["ERROR"]  # Error
-
-            split_files = files.split()
-
-            # TODO: Maybe parallelize this part of the program
-            # files get split and have their contents sent one by one to OT-2 controller
-            for i in range(len(split_files)):
-                if(not split_files[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                    load_protocols_to_ot2(self, id, split_files[i])
-
-            # files sent to worker OT-2 to become threads
-            add_work_to_ot2(self, id, files)
-
-            # Setup complete for this thread
-            self.get_logger().info("Setup complete for %s" % name_or_id)
-
-        self.get_logger().info("Setup file read and run complete")
-        return self.status["SUCCESS"]
 
     # Handles get node info service call
     def handle_get_node_info(self, request, response):
@@ -369,39 +316,17 @@ class Master(Node):
 
         # Find node
         entry = self.search_for_node(msg.id)
-        current_state = entry['state']
 
         # set state
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
 
-    # Service to read items from the submitter node
-    def handle_submitter(self, request, response):
-
-        # Create response
-        response = Submitter.Response()
-
-        # Handing over to read from setup
-        status = self.read_from_setup(request.workload)
-
-        # Error handling
-        if(status == self.status['ERROR']):
-            self.get_logger().error("Something went wrong with read_from_setup")
-
-        # Return response
-        response.status = status
-        return response
-
 # This is just for testing, this class can be used anywhere
 def main(args=None):
     rclpy.init(args=args)
     master_controller = Master()
-
-    # Create a thread to run setup_thread
-    spin_thread = Thread(target=master_controller.read_from_setup, args=("setup",)) #TODO: make it so you can press a button to start it
-    spin_thread.start()
-
+    
     # Spin
     try:
         rclpy.spin(master_controller)
@@ -413,7 +338,6 @@ def main(args=None):
         master_controller.get_logger().fatal("Terminating...")
 
     # End
-    spin_thread.join()
     master_controller.destroy_node()
     rclpy.shutdown()
 
