@@ -118,4 +118,4 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
 
 # Diagrams for different components
-TODO
+![Diagram of state](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/stateot2_diagram.png)
