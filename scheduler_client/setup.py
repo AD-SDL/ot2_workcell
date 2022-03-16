@@ -22,7 +22,7 @@ setup(
         'console_scripts': [
             "publish_scheduler_state = scheduler_client.publish_scheduler_state:main_null",
             "add_blocks_scheduler = scheduler_client.add_blocks_scheduler:main_null",
-            "json_scheduler_reader = scheduler_client.json_scheduler_reader:test",
+            "json_scheduler_reader = scheduler_client.json_scheduler_reader:read_workflow_file",
         ],
     },
 )
