@@ -128,14 +128,14 @@ This will cause nodes to be registered with master and start a transfer process 
 
 **workfile file reader test**
 1. `source ~/ot2_ws/install/setup.bash`
-2. `ros2 run scheduler_client json_scheduler_reader`
+2. `ros2 run scheduler_client json_scheduler_reader`  
 This will read the `workflow.json` file in the OT2_modules directory and print it to the screen 
 
 ## Workflow file format
 You specify a list of blocks each block has the following information, 
 1. `block-name`, the unique name of the block, the scheduler showed throw an error if there are duplicate names
 2. `protocols`, a string with all the different protocols that need to be run separated by spaces 
-3. `dependencies`, a string with all the dependencies off that block that are separated by spaces 
+3. `dependencies`, a string with all the dependencies off that block that are separated by spaces   
 This is in the section `blocks`  
 
 After the `blocks` section you have the `meta-data` (dictionary) section which contains 
