@@ -17,6 +17,9 @@ from ot2_workcell_manager_client.register_api import *
 # scheduler_client 
 from scheduler_client.add_blocks_scheduler import add_blocks_scheduler
 
+# JSON library
+import json
+
 '''
     This will add read workflow files and send the blocks over to the scheduler to schedule and break down 
 
@@ -48,17 +51,68 @@ class schedulerWorkAdder(Node):
             % (self.name)
         )
 
+    ''' 
+        Thread target that will continously run and check for new files to submit
+    '''
     def submitter_thread(self):
         while(True):
-            status = self.submitter()
+            status = self.submitter_workflow()
 
             # Error handling
             if(status == self.status['ERROR']):
-                self.get_logger().error("Error occured in the submitter for setup file reads")
-                raise Exception("Error occured in submitter for setup file reads")
+                self.get_logger().error("Error occured in the submitter for file reads")
+                raise Exception("Error occured in submitter for file reads")
 
+    '''
+        This is the submitter for workflow files which follow the JSON format and allow for dependencies and
+        mulitple blocks. 
+    '''
+    def submitter_workflow(self):
+        # Get input
+        workflow_file_name = input("Workflow file name in OT2_modules: ")
 
-    def submitter(self):
+        # Open
+        try:
+            f = open(self.module_location + workflow_file_name) # Test json file 
+            data = json.load(f)
+        except Exception as e: 
+            self.get_logger().error("Error occured when opening workflow file: %r"%(e,))
+            return self.status['ERROR']
+
+        # See if workflow is setup correctly  (NOT NECESSARY)
+        try: 
+            temp = data['blocks'] # both must be there 
+            temp = data['meta-data']
+        except Exception as e: 
+            self.get_logger().error("Workflow file skeleton incorrect, error: %r"%(e,)) 
+            return self.status['ERROR']
+
+        # Get blocks
+        blocks = []
+        for block in data['blocks']:
+            # TODO: in the future we need to pass in dependencies and name (the full dict object)
+            try: 
+                blocks.append(block['protocols']) # Append protocol
+            except Exception as e: 
+                self.get_logger().error("Error occured when getting protocols from block error: %r"%(e,))
+                return self.status['ERROR']
+        
+        # Send blocks to schedulerManager
+        status = add_blocks_scheduler(self, blocks)
+
+        # Error handling
+        if(status == self.status['ERROR']):
+            self.get_logger().error("Setup file read for %s failed"%(workflow_file_name,))
+            return self.status['ERROR']
+        else:
+            self.get_logger().info("Setup file: %s read completed"%(workflow_file_name,))
+            return self.status["SUCCESS"]
+
+    '''
+        This is the submitter for our setup files which follow plain text format and don't allow for dependencies
+        but is easier to see and read.
+    '''
+    def submitter_setup(self):
         # get input 
         setup_file_name = input("Setup file name in OT2_modules: ")
 
@@ -102,10 +156,10 @@ def main(args=None):
     scheduler_work_adder  = schedulerWorkAdder("pigeon")
 
     try:
-        spin_thread = Thread(target=scheduler_work_adder.submitter_thread)
+        spin_thread = Thread(target=scheduler_work_adder.submitter_thread) # create thread 
         spin_thread.start()
 
-        rclpy.spin(scheduler_work_adder)
+        rclpy.spin(scheduler_work_adder) # spin work adder node
     except Exception as e: 
         scheduler_work_adder.get_logger().error("Error occured: %r"%(e,))
     except:
