@@ -32,6 +32,7 @@ from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 
 # scheduler_client 
 from scheduler_client.publish_scheduler_state import _update_scheduler_state, update_scheduler_state
+from scheduler_client.transfer_deadlock_detection import arm_transfer_detection 
 
 '''
     The schedulerManager node is responsible for scheduling protocols across the OT2s this means it requires state information and needs to interact with the database. 
