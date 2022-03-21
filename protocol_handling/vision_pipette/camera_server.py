@@ -2,10 +2,9 @@ import pickle
 import socket
 import struct
 import sys
-import zmq
+
 import cv2
 import numpy as np
-import time
 
 def find_draw_fiducial(img):
     # Made by hand. Should be calculated by calibration for better results
@@ -119,9 +118,9 @@ def locate_pipette(img):
     # cv2.imshow('5 component', componentMask)
 
     if numLabels == 2:
-        return (x+20, y+20), (x+w+20, y+h+20), True
+        return (x+20, y+20), (x+w+20, y+h+20)
     else:
-        return (0, 0), (0, 0), False
+        return (0, 0), (0, 0)
 
     # params = cv2.SimpleBlobDetector_Params()
     # params.filterByArea = False
@@ -189,8 +188,19 @@ def draw_pipette(img, tl, ptl, pbr):
             255,
             1)
 
-def main():
+#def launch_camera():
+
+def listener():
     # All interfaces, port 8080
+    addr = ('', 8080 if len(sys.argv) < 2 else int(sys.argv[1]))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(addr)
+    sock.listen(5)
+
+    print('Listening at:', addr)
+
+def main():
+    
     addr = ('', 8080 if len(sys.argv) < 2 else int(sys.argv[1]))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(addr)
@@ -243,18 +253,23 @@ def main():
 
                 if img_pipette.size > 10:
                     # Narrow down the pipette top left and bottom right points
-                    ptl, pbr, is_tip = locate_pipette(img_pipette)
+                    ptl, pbr = locate_pipette(img_pipette)
 
                     # Draw a marker around it if it exists
                     if ptl != (0, 0) and pbr != (0, 0):
                         draw_pipette(img, tl, ptl, pbr)
-                    
-                    send_massage_external(is_tip)
-                    
-                    #cv2.imshow('Annotated video', img)
+
+                    cv2.imshow('Annotated video', img)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+                if ptl == (0, 0) and pbr == (0, 0):
+                    ms = "False"
+                    sockClient.send(ms.encode())
+                else:
+                    ms = "True" 
+
+                    sockClient.send(ms.encode())
 
         except struct.error as e:
             print('Lost connection from:', addrClient)
@@ -265,23 +280,6 @@ def main():
             # sockClient.shutdown(socket.SHUT_RDWR)
             sockClient.close()
             exit()
-
-def send_massage_external(msg):
-    ctx = zmq.Context()
-    sock = ctx.socket(zmq.PUB)
-    sock.bind("tcp://IP:1234")
-
-    print("Starting loop...")
-    while True:
-        if msg == True:
-            sock.send_string("True")
-        elif msg == False:
-            sock.send_string("False")
-        
-        #print("Sent string: %s ..." % msg)
-        time.sleep(1)
-
-   
 
 if __name__ == '__main__':
     main()

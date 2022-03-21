@@ -18,24 +18,25 @@ Contains error handling functions to recover from failures using the external ca
 def client_external(message):
 
     ctx = zmq.Context()
-    sock = ctx.socket(zmq.PUB)
-    sock.bind("tcp://127.0.0.1:1234")
+    sock = ctx.socket(zmq.REQ)
+    sock.connect("tcp://127.0.0.1:1234")
+    #sock.subscribe("") # Subscribe to all topics
 
-    print("Starting loop...")
-
+    print("Starting message loop ...")
     while True:
-        msg = message
-        sock.send_string(msg)
-        print("Sent string: %s ..." % msg)
-        time.sleep(1)
-        #result, msg_error, msg_output = sock.recv_string()
-        #if msg_error != None or msg_output != None:
-        #    return msg_error, msg_output
+        #msg = "Is_Tip"
+        if message == "Is_Tip":
+            sock.send_string(message)
+            msg = sock.recv_string()
+            print("Received message: %s " % msg)
+            if msg != None:
+                return msg
+            
  
 
 def pick_another_tip(p20, protocol):
-    protocol.pause()
-    print("!!!Tip could not be picked up. Picking up a new tip ...!!!")
+    #protocol.pause()
+    print("!!!Tip is not attached. Picking up a new tip ...!!!")
     p20.drop_tip()
     p20.pick_up_tip()
 
@@ -51,26 +52,28 @@ def drop_tip(p20, protocol):
     p20.drop_tip()
 
 def is_tip_attached(p20, protocol):
-    #TODO: Return error detection message from Rory's code
-    #message = "No Tip"
-    #message = "Yes"
-    message = "Impropriate Tip"
+    message = "Is_Tip"
+    message = client_external(message)
 
-    if  message == "Impropriate Tip":
-        return_tip(p20, protocol)
+    # if  message == "Impropriate Tip":
+    #     return_tip(p20, protocol)
 
-    elif  message == "No Tip":
+    if message.strip() == "False":
         pick_another_tip(p20, protocol)
-    
     else:
         print("Tip is attached properly")
  
 def is_tip_dropped(p20, protocol):
-    #TODO: opent
-    message = "No"
-    #message = "Yes"
-    
-    if  message == "No":
+    message = "Is_Tip"
+    message = client_external(message)
+
+    # if  message == "Impropriate Tip":
+    #     return_tip(p20, protocol)
+
+    if  message.strip() == "False":
+        print("Tip was dropped. No error!")
+    else:
+        print("Tip is still attached")
         drop_tip(p20, protocol)
 
 def repeat_aspirate():

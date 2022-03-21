@@ -5,7 +5,7 @@ from pathlib import Path
 # this is needed to find config.py outside of the repo
 home = str(Path.home())
 sys.path.insert(0, home)
-import config as config
+import config_SDl_DB as config
 
 
 

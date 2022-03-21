@@ -5,17 +5,20 @@ import zmq
 
 def listen():
     ctx = zmq.Context()
-    sock = ctx.socket(zmq.SUB)
-    sock.connect("tcp://127.0.0.1:1234")
-    sock.subscribe("") # Subscribe to all topics
-
-    print("Starting receiver loop ...")
+    sock = ctx.socket(zmq.REP)
+    sock.bind("tcp://*:8085")
+    print("Starting loop...")
+    i = 1
     while True:
         msg = sock.recv_string()
-        result, msg_error, msg_output = execute_command.execute_command(msg)
-        sock.send_strting(msg_error, msg_output)
+        print(msg)
+        i += 1
+        time.sleep(1)
+        if msg != None:
+            msg_output, msg_error = execute_command(msg)
+            sock.send_string(msg_output + '@' + msg_error)
 
-    
+
     sock.close() 
 
 def execute_command(command):
@@ -23,7 +26,8 @@ def execute_command(command):
     result = run(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, shell=True)
     print(result.stdout)
     print(result.stderr)
-    return result, result.stdout, result.stderr
+    print (result)
+    return str(result.stdout), str(result.stderr)
 
 if __name__ == "__main__":
     listen()

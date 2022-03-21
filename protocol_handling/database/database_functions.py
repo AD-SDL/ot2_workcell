@@ -1,6 +1,6 @@
 import mysql.connector
 import sys
-from connect import connect, close
+from database.connect import connect, close
 from datetime import datetime
 
 #-----------------------------------------------
@@ -79,8 +79,8 @@ def pull_protocol(protocol_ID):
         pull_protocol = "SELECT Protocol_File, Protocol_Name from Protocol Where Protocol_ID = %s"
         cursor.execute(pull_protocol, (protocol_ID,))
         protocol = cursor.fetchall()
-        filename = "~/tmp/" + protocol[0][1]
-        protocol = protocol[0][0]
+        filename = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocols/" + protocol[0][1]
+  
         try:
             file = open(filename, 'wb')
         except OSError as err:
@@ -88,15 +88,18 @@ def pull_protocol(protocol_ID):
             sys.exit()
         else:   
             with file:
-                file.write(protocol)     
+                file.write(protocol[0][0])     
 
     except mysql.connector.Error as err:
         print(err)
-    
-    finally:
-        disconnect_Database(cursor,cnx)
+
+    else:
         return filename, protocol[0][1]
 
+    finally:
+        disconnect_Database(cursor,cnx)
+   
+    
 def display():
 
     cursor, cnx = connect_Database()  
