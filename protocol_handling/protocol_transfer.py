@@ -3,7 +3,7 @@ import paramiko
 from scp import SCPClient
 from rich import print, pretty, inspect
 
-def transfer(loca_path):
+def transfer(local_path):
 	pretty.install()
 	host_ip = '0.0.0.0'
 	user = 'ubuntu'
@@ -18,7 +18,7 @@ def transfer(loca_path):
 		client.connect(host_ip, username= user, password = passwd)
 		#Setup SCP transfer
 		scp = SCPClient(client.get_transport())
-		scp.put(loca_path, recursive=True, remote_path='/data/')
+		scp.put(local_path, recursive=True, remote_path='/data/')
 
 	
 	except paramiko.AuthenticationException:

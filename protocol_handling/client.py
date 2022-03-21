@@ -14,9 +14,9 @@ def handler(Protocol_ID):
     path, protocol = pull_protocol(Protocol_ID)  
     print("Protocol saved into " + path + "directory")
     #protocol_transfer.traprotocol_transfernsfer(path)
-    protocol = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocols/Protocol_2022-02-18_17:13:44.py"
-    msg_error, msg_output = send_message_to_OT2("conda run -n myenv --no-capture-output --live-stream python "+ protocol)
-    return msg_output
+    protocol_path = "/data" + protocol
+    msg_error, msg_output = send_message_to_OT2("python3 "+ protocol_path)
+    return msg_output, msg_error
 
 def send_message_to_OT2(message):
 
