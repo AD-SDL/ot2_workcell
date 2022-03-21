@@ -1,15 +1,20 @@
+# ROS Library
 import rclpy
 from rclpy.node import Node
+
+# Other
 from threading import Thread, Lock
 import sys
 import time
-from workcell_interfaces.srv import *
-import os
-import os.path
-from os import path
 from pathlib import Path
 import importlib.util
 from random import random
+
+# ROS messages and services
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
+
+# OT2_workcell_manager API
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _register, _deregister_node
@@ -21,6 +26,10 @@ from ot2_workcell_manager_client.worker_info_api import (
 )
 
 # TODO: figure out how to integrate arm code
+'''
+    This class is the ArmManager class. The purpose of the ArmManager is to maintain the queue information for transfer requests, maintain state information, and provide a path to
+    to the master's services. 
+'''
 class ArmManager(Node):
     def __init__(self, name):
         super().__init__("Temp" + str(int(random() * 17237534)))
@@ -53,6 +62,7 @@ class ArmManager(Node):
             "BUSY": 1,
             "READY": 0,
             "ERROR": 2,
+            "QUEUED": 3,
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
@@ -72,7 +82,7 @@ class ArmManager(Node):
         args.append("arm")  # Type
         args.append(name)  # Name
         status = retry(
-            self, _register, 10, 1, args
+            self, _register, 1000, 1, args
         )  # Setups up a retry system for a function
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().fatal("Unable to register with master, exiting...")
@@ -94,7 +104,7 @@ class ArmManager(Node):
         # Create subscribers
         self.arm_state_update_sub = self.create_subscription(
             ArmStateUpdate,
-            "/arm/%s/arm_state_update" % self.id,
+            "/arm/arm_state_update",
             self.arm_state_update_callback,
             10,
         )
@@ -108,7 +118,7 @@ class ArmManager(Node):
         self.completed_transfer_sub  # prevent unused warning
         self.state_reset_sub = self.create_subscription(
             ArmReset,
-            "/arm/%s/arm_state_reset" % self.id,
+            "/arm/arm_state_reset",
             self.state_reset_callback,
             10,
         )
@@ -263,6 +273,10 @@ class ArmManager(Node):
 
     # Function to reset the state of the transfer handler
     def state_reset_callback(self, msg): #TODO: More Comprehensive Reset
+        # Check for id
+        if(self.id != msg.id):
+            return 
+
         self.get_logger().warning("Resetting state...")
 
         # Get state lock
@@ -275,22 +289,21 @@ class ArmManager(Node):
 
     # Service to update the state of the arm
     def arm_state_update_callback(self, msg):
-        # Lock the state
-        self.state_lock.acquire()
+        # Check if the update is for our node 
+        if(msg.id != self.id):
+            return 
+
+        # Bring to attention
+        self.get_logger().warning("Arm state for id %s is now: %s"%(msg.id, msg.state)) #TODO: maybe convert to text instead of num code
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
             self.get_logger().error("Can't change state, the state of the arm is already error")
-            self.state_lock.release() # release lock
             return # exit out of function
 
-        # Recieve request
+        self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
-
-        # TODO: sync state with master
-
-        self.state_lock.release() # release lock
-
+        self.state_lock.release() # Exit Critical Section
 
     # Service to retrieve ID of the robot
     def get_id_handler(self, request, response):

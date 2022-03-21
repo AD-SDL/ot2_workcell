@@ -1,4 +1,4 @@
-string files
+string[] protocols
 ---
 int64 WARNING = 2 
 int64 ERROR = 1

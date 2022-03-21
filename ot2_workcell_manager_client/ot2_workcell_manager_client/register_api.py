@@ -1,7 +1,14 @@
+# ROS Library
 import rclpy
 from rclpy.node import Node
+
+# Sys Library 
 import sys
+
+# ROS services
 from workcell_interfaces.srv import *
+
+# Retry API
 from ot2_workcell_manager_client.retry_api import *
 
 # registers a worker with the master node
@@ -55,8 +62,8 @@ def register(self, type, name):
             self.get_logger().info("Registration complete id: %s" % self.id)
             return self.status["SUCCESS"]
     else:  # This should never happen FATAL
-        rospy.get_logger().fatal("future failed, critical failure")
-        rospy.get_logger().fatal(
+        self.get_logger().fatal("future failed, critical failure")
+        self.get_logger().fatal(
             "Program is now terminating, PLEASE NOTE: System may be unstable"
         )
         sys.exit(1)
@@ -105,8 +112,8 @@ def deregister_node(self):
             self.get_logger().error("Error occured: %r" % (e,))
             return self.status["ERROR"]
     else:  # This should never happen
-        rospy.get_logger().fatal("future failed, critical failure")
-        rospy.get_logger().fatal(
+        self.get_logger().fatal("future failed, critical failure")
+        self.get_logger().fatal(
             "Program is now terminating, PLEASE NOTE: System may be unstable"
         )
         sys.exit(1)

@@ -2,8 +2,8 @@ build/*
 install/*
 log/*
 src/ros_tutorials/
-*.save
 *.swp
+*.save
 
 # Python
 
@@ -195,3 +195,7 @@ _deps
 *.exe
 *.out
 *.app
+
+# Textbook
+Texts/OS_Textbook.pdf
+*.DS_Store

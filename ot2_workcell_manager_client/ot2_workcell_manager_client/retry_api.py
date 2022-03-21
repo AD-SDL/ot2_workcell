@@ -1,6 +1,9 @@
+# Time Library
 import time
-from workcell_interfaces.srv import *
 
+# ROS messages and services 
+from workcell_interfaces.srv import *
+from workcell_interfaces.msg import *
 
 # Tries until sucessfully executes, parameters: object of function, function, maximum number of attempts, and the timeout if failed (seconds), and a list of args
 def retry(self, function, max_attempts, timeout, args):
@@ -20,9 +23,9 @@ def retry(self, function, max_attempts, timeout, args):
                 status = function()  # No debug information, function assumed to have it
 
             # Error checking
-            if status == self.status["ERROR"] or status == self.status["FATAL"]:
+            if status == self.status["ERROR"] or status == self.status["FATAL"] or status == self.status["WAITING"]: # keep looping
                 raise Exception
-            if status not in range(0, 4):
+            if status not in range(0, 11):
                 self.get_logger().error(
                     "Function doesn't return standard status output, stopping..."
                 )
@@ -45,6 +48,8 @@ def retry(self, function, max_attempts, timeout, args):
         return self.status["ERROR"]  # Fatal error stopping attempts
     elif status == self.status["SUCCESS"] or status == self.status["WARNING"]:
         return status  # Returns a success or warning status to caller
+    elif status == self.status["WAITING"]:
+        return self.status['ERROR'] # return error as we are still waiting
     else:  # Never should happen
         self.get_logger().fatal("Something unexpected occured in retry function")
         return self.status["FATAL"]  # Let caller know a unknown error occured

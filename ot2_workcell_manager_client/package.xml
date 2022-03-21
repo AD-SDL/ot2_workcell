@@ -3,7 +3,7 @@
 <package format="3">
   <name>ot2_workcell_manager_client</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>This package provides the ability to use the services provided by the master, including node search, registration with the system, and retrying different functions.</description>
   <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
   <license>MIT License</license>
 

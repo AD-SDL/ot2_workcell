@@ -1,17 +1,26 @@
+# ROS libraries 
 import rclpy
 from rclpy.node import Node
-import threading
-from threading import Thread, Lock
+
+# Time Library 
 import time
+
+# ROS Messages and Services
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
+
+# OT2_workcell_manager API
 from ot2_workcell_manager_client.worker_info_api import *
 from ot2_workcell_manager_client.worker_info_api import (
     _get_node_info,
     _get_node_list,
     get_node_info,
 )
+'''
+ This is an API that will begin a transfer request from_node to_node on the designated arm_name_or_id. 
 
+ Note: item is currently unused as we don't have anything programmed for it yet so it is just ignored
+'''
 def load_transfer(
     self, from_name_or_id, to_name_or_id, item, arm_name_or_id
 ):  #TODO: do something with item
@@ -49,7 +58,13 @@ def load_transfer(
     request.to_id = to_id
     request.to_name = to_name
     request.item = item
-    if self.type == "master":
+
+    '''
+        Setup request information, if you are master you can override and directly initiate a transfer or else it has to come from one of the nodes involved. 
+
+        The master bypass is a bit iffy and probably will be removed as the master will need to make 2 separate transfer requests based on the way it is currently setup. 
+    '''
+    if self.type == "master": 
         # Bypass restrictions on who does what transfer
         request.cur_name = "master"  # Only the master can remove it from the queue
         request.other_name = "master"
@@ -92,7 +107,7 @@ def load_transfer(
             try:
                 response = future.result()
 
-                # Error handling
+                # Error handling - TODO: if an error occured we want to deal with that separately 
                 if (
                     response.status == response.ERROR
                     or response.status == response.FATAL

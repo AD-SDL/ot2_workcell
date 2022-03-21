@@ -1,16 +1,21 @@
+# ROS Libraries
 import rclpy
 from rclpy.node import Node
-import threading
-from threading import Thread, Lock
+
+# Time library
 import time
+
+# ROS messages and services 
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Calls a service created by the ot2 manager to udpate the state of the ot2
+'''
+    Internal interface for communication between the OT2 nodes to syncronize the state information
+'''
 def update_ot2_state(self, current_state):
 
     # Error checking
-    if current_state > 2 or current_state < 0:
+    if not (current_state in self.state.values()):
         return self.status["ERROR"]  # Error
 
     # Create a request
@@ -20,7 +25,7 @@ def update_ot2_state(self, current_state):
 
     # Create client and wait for service
     ot2_state_update_pub = self.create_publisher(
-        OT2StateUpdate, "/OT_2/%s/ot2_state_update" % self.id, 10
+        OT2StateUpdate, "/OT_2/ot2_state_update", 10
     )
     time.sleep(1)  # wait for it to start
 

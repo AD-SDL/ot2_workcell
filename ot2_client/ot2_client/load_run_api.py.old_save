@@ -9,6 +9,8 @@ from workcell_interfaces.srv import *
 from pathlib import Path
 from ot2_workcell_manager_client.retry_api import *
 
+#TODO: This file no longer seems neccessary 
+
 # Runs a module on the node (id)
 def run(self, file, id):
     # Check node online?
