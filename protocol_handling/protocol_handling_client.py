@@ -11,11 +11,11 @@ from zeroMQ_OT2 import *
 
 
 def handler(Protocol_ID):
-    # path, protocol = pull_protocol(Protocol_ID)  
-    # print("Protocol saved into " + path + "directory")
-    #protocol_transfer.traprotocol_transfernsfer(path)
-    protocol = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocols/Protocol_2022-02-18_17:13:44.py"
-    msg_error, msg_output, msg_errorcode = send_message_to_OT2("conda run -n myenv --no-capture-output --live-stream python "+ protocol)
+    path, protocol = pull_protocol(Protocol_ID)  
+    print("Protocol saved into " + path + "directory")
+    protocol_transfer.transfer(path)
+    #protocol = "/path/to/Protocol_2022-02-18_17:13:44.py"
+    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/data/" + protocol)
     
     return msg_output, msg_error, msg_errorcode
 
@@ -23,9 +23,9 @@ def send_message_to_OT2(message):
 
     ctx = zmq.Context()
     sock = ctx.socket(zmq.REQ)
-    sock.connect("tcp://192.168.1.81:8085")
+    sock.connect("tcp://IP:8085")
 
-    print("Starting protocol transfer client...")
+    print("Starting protocol handling client...")
     while True:
         sock.send_string(message)
         print("Sent string: %s ..." % message)
@@ -40,8 +40,8 @@ def send_message_to_OT2(message):
 
 if __name__ == "__main__":
     filename = "/ot2_workcell/protocol_handling/protocol.py"
-    # new_name = protocol_parser(filename)
-    # protocol_ID = insert_protocol(new_name, "OT2_1")
+    new_name = protocol_parser(filename)
+    protocol_ID = insert_protocol(new_name, "OT2_1")
     protocol_ID = 7
     handler(protocol_ID)
  
