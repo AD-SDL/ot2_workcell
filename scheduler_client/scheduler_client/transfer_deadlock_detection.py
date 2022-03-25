@@ -133,11 +133,44 @@ def arm_circular_wait(self, blocks):
             stack_trace.append(cur_block)
             break 
     while(num_transfers != 0) { # while there are still transfers
-        cur_node = transfer_list[cur_block][0] # get the top item 
+        cur_transfer = transfer_list[cur_block][0][0] # get the top item 
+        next_block = transfer_list[cur_block][0][1]
 
         # checks 
-        if(visited[cur_node+":"+cur_block] == False):
-            pass #TODO
+        if(not str(cur_transfer+":"+cur_block]) in visited):
+            # if we move to the next ones 
+            if(not str(cur_transfer+":"+next_block) in visited): # keep searching
+                stack.append(next_block)
+                cur_block = next_block
+            elif(str(cur_transfer+":"+next_block) in visited): # if the counter part transfer has been initiated 
+                num_transfers -= 2 
+                transfer_list[cur_block].pop(0)
+                transfer_list[next_block].pop(0)
+
+                # find the next cur_block 
+                cur_block = -1 
+                if(num_transfers == 0):
+                    return self.status['SUCCESS'], [], []
+                if(len(transfer_list[next_block]) > 0): # if the next block has elements to start 
+                    cur_block = next_block
+                else: # following stack trace 
+                    next_block = -1 
+                    while(len(stack_trace) > 0) {
+                        next_block = stack_trace[-1] # top of the stack 
+                        stack_trace.pop(-1) # pop the top of the stack 
+                        if(len(transfer_list[next_block]) > 0):
+                            cur_block = next_block
+                            break 
+                    }
+
+                    # if the stack trace failed then find the one with items left
+                    if(next_block == -1):
+                        cur_block = -1 
+                        for key in transfer_list:
+                            if(len(transfer_list[key]) > 0): 
+                                cur_block = key 
+                                stack_trace.append(cur_block)
+                                break 
         else: # circular wait
             return self.status['ERROR'], [cur_node], stack_trace
     }    
