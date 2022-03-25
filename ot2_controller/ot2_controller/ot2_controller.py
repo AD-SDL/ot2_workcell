@@ -311,7 +311,10 @@ class OT2(Node):
 
         # Check state of OT-2, wait for READY state
         if self.current_state == self.state['BUSY']:
-            time.sleep(5) # Protocol running, wait 5 seconds
+            response = Protocol.Response()
+            response.status = response.WAITING
+            self.work_list_lock.release() # Release lock
+            return response 
         elif self.current_state == self.state['READY'] or self.current_state == self.state['QUEUED']:
             self.get_logger().info("OT-2 ready for new protocol")
         elif self.current_state == self.state['ERROR']: #Error
@@ -334,7 +337,7 @@ class OT2(Node):
         try:
             # Extract file name from temp list
             name = self.temp_list[0]
-            response.file = name
+            response.protocol_id = name
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error

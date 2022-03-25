@@ -8,4 +8,4 @@ int64 WAITING = 10
 
 int64 status
 
-string file
+string protocol_id

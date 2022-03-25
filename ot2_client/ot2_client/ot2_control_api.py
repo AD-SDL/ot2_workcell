@@ -15,6 +15,13 @@ from ot2_workcell_manager_client.retry_api import *
 
 # Transfer api import
 from arm_client.transfer_api import _load_transfer
+
+# Database 
+from database.database_functions import *
+from database.database_functions import insert_protocol
+from database.protocol_parser import *
+from database.protocol_parser import protocol_parser
+
     
 '''
     These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
@@ -58,45 +65,15 @@ def load_protocols_to_ot2(self, entry, name):
     except Exception as e:
         self.get_logger().error("Error occured: %r" % (e,))
         return self.status["ERROR"]
-    
 
-    # Create client that calls load_protocols servive on controller
-    script_cli = self.create_client(LoadProtocols, "/%s/%s/load_protocols" % (type, id))  # format of service is /{type}/{id}/{service name}
-    while not script_cli.wait_for_service(timeout_sec=2.0):
-        self.get_logger().info("Service not available, trying again...")
+    # insert error handling 
+    protocol_path = protocol_parser(self.module_location + name)
 
-    # extract name and contents of each first file in list
-    with open(self.module_location + name, 'r') as file:
-        contents = file.read()
+    # insert protocol into database 
+    protocol_id = insert_protocol(protocol_path, target_node['id'])
 
-    # Client ready
-    script_request = LoadProtocols.Request()
-    script_request.name = name # name of file
-    script_request.contents = contents # contents of file
-    script_request.replace = True # Replace file of same name (default true)
-
-    # Call service
-    future = script_cli.call_async(script_request)
-
-    # Waiting on future
-    while future.done() == False:
-        time.sleep(1)  # timeout 1 second
-    if future.done():
-        try:
-            response = future.result()
-        except Exception as e:
-            self.get_logger().error("Error occured %r" % (e,))
-            return self.status["ERROR"]  # Error
-        else:
-            # Error checking
-            if response.status == response.ERROR:
-                self.get_logger().error(
-                    "Error occured when sending script %s at id: %s" % (name, id)
-                )
-                return self.status["ERROR"]  # Error
-            else:
-                self.get_logger().info("File %s contents loaded" % name)
-                return self.status["SUCCESS"]  # All good
+    # return id 
+    return protocol_id
 
 # Creates client that sends files to worker OT-2 to create threads
 def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of current job
