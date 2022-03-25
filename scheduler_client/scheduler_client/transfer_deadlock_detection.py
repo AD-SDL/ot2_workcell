@@ -45,7 +45,7 @@ def full_check(self, blocks):
     NOTE: Currently also blocks 4 transfers with the same name (this will need to change), matching up first to first doesn't work as it might not be what we want
     so for future versions it will be beneficial to allow the user to specific a key to match up different transfers with the same command to start it. 
     TODO: self.status['WARNING'] if the blocks might just stall for some time 
-    TODO the transfer can't be in the same block
+    TODO: the transfer can't be in the same block
 '''
 def arm_transfer_detection(self, blocks):
     # in order to ensure that both transfer commands exist just create a map 
@@ -82,6 +82,7 @@ def arm_transfer_detection(self, blocks):
         return self.status['SUCCESS'], []
 
 '''
+    Input: The JSON dict with block-name and protocols
     Checks for arm transfer circular wait conditions. Same input and output as arm_transfer_detection. 
 
     Assumptions- All assumptions should be met after running arm_transfer_detection! 
@@ -89,11 +90,10 @@ def arm_transfer_detection(self, blocks):
                 2) All transfers are formatted correctly (Each have a pair) 
                 3) Pairs of tranfers don't share the same command string the (transfer:...:...:...)
                 4) One block doesn't contain the pair (must be split between 2 different blocks) 
-
-    Algorithm: 
+                5) The transfers are in the new format of block to block instead of ot2 to ot2 
     Iterate through all the transfers and if there is a cycle then return error 
 '''
-def arm_circular_wait(self, blocks):
+def arm_circular_wait(self, blocks): 
     # Item declaration 
     transfer_list = {}
     num_transfers = 0 
@@ -101,22 +101,25 @@ def arm_circular_wait(self, blocks):
     stack_trace = [] # stack to allow us to backtrack up the dfs 
 
     # Populate transfer_list and num_transfers 
-    protocol_to_block_map = {}
-    protocol_to_block_id = 0 
     for block in blocks: 
-        block_split = block.split()
+        name = block['block-name']
+        block_split = block['protocols'].split()
         for protocol in block_split:
             if(protocol.split(":")[0] == 'transfer'): # it is a transfer 
-                if(not protocol in protocol_to_block_map):
-                    protocol_to_block_map[protocol] = protocol_to_block_id
-
-                if(not protocol_to_block_id in transfer_list):
-                    transfer_list[protocol_to_block_id] = []
-                transfer_list[protocol_to_block_id].append(protocol_to_block_id)
-
+                a = protocol.split(":")[1]
+                b = protocol.split(":")[2]
+                cur = -1 
+                to = -1 
+                if(a == name):
+                    cur = a 
+                    to = b 
+                else:
+                    to = a
+                    cur = b
+                if(not cur in transfer_list): # to the current block attach what it is conectted to 
+                    transfer_list[cur] = []
+                transfer_list[cur].append((to, protocol))
                 num_transfers += 1 
-                
-        protocol_to_block_id += 1
 
     # Circular wait check 
     # find suitable cur block 
@@ -131,14 +134,10 @@ def arm_circular_wait(self, blocks):
 
         # checks 
         if(visited[cur_node+":"+cur_block] == False):
-            a = cur_node.split(":")[1]
-            b = cur_node.split(":")[2]
-
-            
+            pass #TODO
         else: # circular wait
             return self.status['ERROR'], [cur_node], stack_trace
-    }
-                
+    }    
     return self.status['SUCCESS']
 
 def main_null():
