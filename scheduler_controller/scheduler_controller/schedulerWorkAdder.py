@@ -20,6 +20,10 @@ from scheduler_client.add_blocks_scheduler import add_blocks_scheduler
 # JSON library
 import json
 
+# Deadlock Library
+from scheduler_client.transfer_deadlock_detection import *
+from scheduler_client.transfer_deadlock_detection import full_check, arm_transfer_detection 
+
 '''
     This will add read workflow files and send the blocks over to the scheduler to schedule and break down 
 
@@ -97,15 +101,25 @@ class schedulerWorkAdder(Node):
                 self.get_logger().error("Error occured when getting protocols from block error: %r"%(e,))
                 return self.status['ERROR']
         
+        # Deadlock checks
+        status = full_check(self, blocks)
+
+        # Error handling
+        if(status == self.status['ERROR']):
+            self.get_logger().error("Deadlock check failed for %s"%(workflow_file_name,))
+            return self.status['ERROR']
+        else:
+            self.get_logger().info("Deadlock check passed for  %s"%(workflow_file_name,))
+
         # Send blocks to schedulerManager
         status = add_blocks_scheduler(self, blocks)
 
         # Error handling
         if(status == self.status['ERROR']):
-            self.get_logger().error("Setup file read for %s failed"%(workflow_file_name,))
+            self.get_logger().error("Workflow file read for %s failed"%(workflow_file_name,))
             return self.status['ERROR']
         else:
-            self.get_logger().info("Setup file: %s read completed"%(workflow_file_name,))
+            self.get_logger().info("Workflow file: %s read completed"%(workflow_file_name,))
             return self.status["SUCCESS"]
 
     '''

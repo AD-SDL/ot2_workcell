@@ -8,6 +8,16 @@
                     "block-name": "test2",
                     "protocols": "item2.py item2.py item2.py",
                     "dependencies": "test1"
+                },
+                {
+                    "block-name": "transfer1",
+                    "protocols": "transfer:bob:alex:10:army item1.py item1.py item2.py",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transfer2",
+                    "protocols": "item1.py item2.py transfer:bob:alex:10:army item2.py",
+                    "dependencies": ""  
                 }
               ],
     "meta-data": {

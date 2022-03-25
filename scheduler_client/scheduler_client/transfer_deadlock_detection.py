@@ -17,13 +17,35 @@ from workcell_interfaces.msg import *
     tranfer is initiated, but both robots stall since they are both waiting for a separate transfer. 
 '''
 
+'''
+    This function takes in a list of blocks and runs all the checks we have on them and returns 'SUCCESS' if none are detected
+'''
+def full_check(self, blocks):
+    # Matched up check 
+    status, invalid_transfers = arm_transfer_detection(self, blocks)
+    if(status == self.status['ERROR']): # error check 
+        self.get_logger().error("Invalid transfers (mismatch) for the transfers " + str(invalid_transfers)) # show error
+        return self.status['ERROR'] # error 
+
+    # Circular wait check 
+    '''
+    status, invalid_transfers, stack_trace = arm_circular_wait(self, blocks)
+    if(status == self.status['ERROR']):
+        self.get_logger().error("Invalid transfer (circular wait) for the transfer " + str(invalid_transfers)) # show error 
+        return self.status['ERROR'] # error
+    '''
+    # All checks passed
+    return self.status['SUCCESS'] 
 
 '''
     This function will scan blocks to ensure that each transfer is matched up, self.status['SUCCESS'] if that is the case
     self.status['ERROR'] if that isn't the case. Then returns invalid transfers 
 
+    NOTE: Currently blocking arm transfers to themselves, this might be changed for future versions.
+    NOTE: Currently also blocks 4 transfers with the same name (this will need to change), matching up first to first doesn't work as it might not be what we want
+    so for future versions it will be beneficial to allow the user to specific a key to match up different transfers with the same command to start it. 
     TODO: self.status['WARNING'] if the blocks might just stall for some time 
-    TODO: circular wait
+    TODO the transfer can't be in the same block
 '''
 def arm_transfer_detection(self, blocks):
     # in order to ensure that both transfer commands exist just create a map 
@@ -42,14 +64,82 @@ def arm_transfer_detection(self, blocks):
     # Check all the keys 
     invalid_transfers = []
     for transfer_key in valid_map: 
-        if(valid_map[transfer_key] % 2 != 0):
+        if(valid_map[transfer_key] != 2):
             invalid_transfers.append(transfer_key)
+
+    # Check blocks for transfers to themselves 
+    for block in blocks: 
+        block_split = block.split()
+        for protocol in block_split: 
+            transfer_split = protocol.split(":")
+            if(protocol.split(":")[0] == 'transfer' and protocol.split(":")[1] == protocol.split(":")[2]): # if transfer to themselves 
+                invalid_transfers.append(protocol) # then invalid
     
     # all good 
     if(len(invalid_transfers) > 0):
         return self.status['ERROR'], invalid_transfers
     else: 
         return self.status['SUCCESS'], []
+
+'''
+    Checks for arm transfer circular wait conditions. Same input and output as arm_transfer_detection. 
+
+    Assumptions- All assumptions should be met after running arm_transfer_detection! 
+                1) No self transfers 
+                2) All transfers are formatted correctly (Each have a pair) 
+                3) Pairs of tranfers don't share the same command string the (transfer:...:...:...)
+                4) One block doesn't contain the pair (must be split between 2 different blocks) 
+
+    Algorithm: 
+    Iterate through all the transfers and if there is a cycle then return error 
+'''
+def arm_circular_wait(self, blocks):
+    # Item declaration 
+    transfer_list = {}
+    num_transfers = 0 
+    visited = {}
+    stack_trace = [] # stack to allow us to backtrack up the dfs 
+
+    # Populate transfer_list and num_transfers 
+    protocol_to_block_map = {}
+    protocol_to_block_id = 0 
+    for block in blocks: 
+        block_split = block.split()
+        for protocol in block_split:
+            if(protocol.split(":")[0] == 'transfer'): # it is a transfer 
+                if(not protocol in protocol_to_block_map):
+                    protocol_to_block_map[protocol] = protocol_to_block_id
+
+                if(not protocol_to_block_id in transfer_list):
+                    transfer_list[protocol_to_block_id] = []
+                transfer_list[protocol_to_block_id].append(protocol_to_block_id)
+
+                num_transfers += 1 
+                
+        protocol_to_block_id += 1
+
+    # Circular wait check 
+    # find suitable cur block 
+    cur_block = -1 
+    for key in transfer_list:
+        if(len(transfer_list[key]) > 0): 
+            cur_block = key 
+            stack_trace.append(cur_block)
+            break 
+    while(num_transfers != 0) { # while there are still transfers
+        cur_node = transfer_list[cur_block][0] # get the top item 
+
+        # checks 
+        if(visited[cur_node+":"+cur_block] == False):
+            a = cur_node.split(":")[1]
+            b = cur_node.split(":")[2]
+
+            
+        else: # circular wait
+            return self.status['ERROR'], [cur_node], stack_trace
+    }
+                
+    return self.status['SUCCESS']
 
 def main_null():
     print("this is not meant to have a main function")
