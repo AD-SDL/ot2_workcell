@@ -67,10 +67,10 @@ def load_protocols_to_ot2(self, entry, name):
         return self.status["ERROR"]
 
     # insert error handling 
-    protocol_path = protocol_parser(self.module_location + name)
+    protocol_new_name = protocol_parser(self.module_location + name)
 
     # insert protocol into database 
-    protocol_id = insert_protocol(protocol_path, target_node['id'])
+    protocol_id = insert_protocol(self.module_location + protocol_new_name, target_node['id'])
 
     # return id 
     return protocol_id
