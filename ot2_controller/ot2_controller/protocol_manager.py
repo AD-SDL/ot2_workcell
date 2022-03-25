@@ -175,14 +175,11 @@ class OT2ProtocolManager(Node):
                     self.get_logger().info("Load succeeded")
 
         # Begin running the next protocol
-        # TODO: actually incorporate runs
-
-        # set state to busy
         try:
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
             # Conducting an arm transfer
-            if(protocol_id.split(":")[0] == "transfer"):
+            if(str(protocol_id).split(":")[0] == "transfer"):
                 temp = protocol_id.split(":")
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
             # Run protocol on OT2, use load_and_run function
@@ -191,11 +188,12 @@ class OT2ProtocolManager(Node):
                 msg_error, msg_output, status = handler(protocol_id)
 
             # Check to see if run was success
-            if status == self.status['ERROR']:
+            if status == self.status['SUCCESS']:
+                self.get_logger().info("Protocol %s was run successfully" % protocol_id)
+            else: 
                 self.get_logger().error("Error: protocol %s was not run successfully" % protocol_id)
                 return self.status['ERROR'] # thread will handle state update 
-            elif status == self.status['SUCCESS']:
-                self.get_logger().info("Protocol %s was run successfully" % protocol_id)
+
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
             return self.status['ERROR'] # thread will handle state update 

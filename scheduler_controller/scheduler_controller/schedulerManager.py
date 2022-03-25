@@ -243,7 +243,7 @@ class schedulerManager(Node):
                             protocol_ids.append(load_protocols_to_ot2(self, node, next_block[i])) # add protocol ids in database 
                         else:
                             protocol_ids.append(next_block[i]) # add the arm transfer request 
-                    add_work_to_ot2(self, node, protocol_ids)
+                    add_work_to_ot2(self, node, protocol_ids) # [0, 1, 2, "transfer:...:...:...:", 123, 13, 12 ]
                 except Exception:
                     self.get_logger().error("Load/Add protocols failed to OT2: %s"%(node['id']))
                     return self.status['ERROR']
