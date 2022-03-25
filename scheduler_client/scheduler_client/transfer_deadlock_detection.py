@@ -92,6 +92,9 @@ def arm_transfer_detection(self, blocks):
                 4) One block doesn't contain the pair (must be split between 2 different blocks) 
                 5) The transfers are in the new format of block to block instead of ot2 to ot2 
     Iterate through all the transfers and if there is a cycle then return error 
+
+    A -> 1 2 
+    B -> 2 1 
 '''
 def arm_circular_wait(self, blocks): 
     # Item declaration 
