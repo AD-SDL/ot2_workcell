@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 import importlib.util
 from random import random
+import json
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -70,6 +71,9 @@ class schedulerManager(Node):
         # Protocol queue
         self.queue_lock = Lock()
         self.protocol_queue = [] # protocols to run 
+
+        # Block to robot map 
+        self.block_to_robot_map = {}
 
         # State information
         self.current_state = self.state["READY"]  # Start ready
@@ -143,7 +147,7 @@ class schedulerManager(Node):
 
         The request is a list of strings (each string is a block and will be split the same way the read_from_setup functions splits) 
 
-        TODO: deadlock detection + error handling
+        TODO: error handling
     '''
     def add_work_handler(self, request, response): 
 
@@ -151,13 +155,14 @@ class schedulerManager(Node):
         response = SchedulerWork.Response()
 
         # Get blocks 
-        blocks = request.protocols 
+        datastr = request.jsonblocks
+        data = json.loads(datastr)
+        blocks = data['blocks'] 
 
         # Parse and add each block 
         self.queue_lock.acquire() # Enter critical section 
         for block in blocks: 
-            split_block = block.split()
-            self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
+            self.protocol_queue.append(block) # Add to batch queue for scheduling 
         self.queue_lock.release()
 
         # return status 
@@ -188,7 +193,7 @@ class schedulerManager(Node):
                 status = self.distribute_blocks()
 
                 if(status == self.status['ERROR']):
-                    raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
+                    raise Exception("Unexpected Error occured in protocol_manager distribute_blocks operation")
             except Exception as e: 
                 self.get_logger().error("Error occured: %r" % (e,))
                 self.set_state(self.state['ERROR']) # Alert system that state is error 
@@ -232,14 +237,17 @@ class schedulerManager(Node):
                 # Get first job on queue and remove from queue 
                 self.queue_lock.acquire() # enter critical section
                 next_block = self.protocol_queue[0]
+                next_block = next_block['tasks'].split()
                 self.protocol_queue.pop(0) 
                 self.queue_lock.release() 
 
                 # Load/Add the Protocols
                 try:
                     for i in range(len(next_block)):
+                        # TODO TODO convert transfers to robot-names
+
                         if(not next_block[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                            load_protocols_to_ot2(self, node, next_block[i])
+                            load_protocols_to_ot2(self, node, next_block)
                     add_work_to_ot2(self, node, next_block)
                 except Exception:
                     self.get_logger().error("Load/Add protocols failed to OT2: %s"%(node['id']))

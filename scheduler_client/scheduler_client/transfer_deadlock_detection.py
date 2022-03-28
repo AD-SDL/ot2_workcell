@@ -50,7 +50,7 @@ def arm_transfer_detection(self, blocks):
 
     # Scan
     for block in blocks: 
-        block_split = block.split()
+        block_split = block['tasks'].split()
         for protocol in block_split: 
             if(protocol.split(":")[0] == 'transfer'): # if transfer
                 if(not protocol in valid_map):
@@ -66,7 +66,7 @@ def arm_transfer_detection(self, blocks):
 
     # Check blocks for transfers to themselves 
     for block in blocks: 
-        block_split = block.split()
+        block_split = block['tasks'].split()
         for protocol in block_split: 
             transfer_split = protocol.split(":")
             if(protocol.split(":")[0] == 'transfer'): # if transfer to themselves 
@@ -191,5 +191,5 @@ if __name__ == '__main__':
     blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
               {"block-name":"test2", "tasks":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
     test_class = test()
-    status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks)
-    print("Invalid transfers: " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace))
+    status, invalid_transfers = arm_transfer_detection(test_class, blocks)
+    print("Invalid transfers: " + str(invalid_transfers))

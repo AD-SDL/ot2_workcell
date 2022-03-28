@@ -24,6 +24,7 @@ setup(
             "add_blocks_scheduler = scheduler_client.add_blocks_scheduler:main_null",
             "json_scheduler_reader = scheduler_client.json_scheduler_reader:main_null",
             "transfer_deadlock_detection = scheduler_client.transfer_deadlock_detection:main_null",
+            "test_bench = scheduler_client.test_bench:main"
         ],
     },
 )

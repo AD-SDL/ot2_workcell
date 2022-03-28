@@ -16,6 +16,7 @@ from ot2_workcell_manager_client.register_api import *
 
 # scheduler_client 
 from scheduler_client.add_blocks_scheduler import add_blocks_scheduler
+from scheduler_client.json_scheduler_reader import read_workflow_file
 
 # JSON library
 import json
@@ -76,11 +77,10 @@ class schedulerWorkAdder(Node):
         workflow_file_name = input("Workflow file name in OT2_modules: ")
 
         # Open
-        try:
-            f = open(self.module_location + workflow_file_name) # Test json file 
-            data = json.load(f)
-        except Exception as e: 
-            self.get_logger().error("Error occured when opening workflow file: %r"%(e,))
+        status, datastr = read_workflow_file(self, workflow_file_name)  
+        data = json.loads(datastr)
+        if(status == self.status['ERROR']):
+            self.get_logger().error("Error reading from that workflow file")
             return self.status['ERROR']
 
         # See if workflow is setup correctly  (NOT NECESSARY)
@@ -96,11 +96,12 @@ class schedulerWorkAdder(Node):
         for block in data['blocks']:
             # TODO: in the future we need to pass in dependencies and name (the full dict object)
             try: 
-                blocks.append(block['tasks']) # Append protocol
+                #blocks.append((block['block-name'], block['tasks'], block['dependencies'])) # Append protocol
+                blocks.append(block) # append block
             except Exception as e: 
                 self.get_logger().error("Error occured when getting tasks from block error: %r"%(e,))
                 return self.status['ERROR']
-        
+
         # Deadlock checks
         status = full_check(self, blocks)
 
@@ -112,7 +113,7 @@ class schedulerWorkAdder(Node):
             self.get_logger().info("Deadlock check passed for  %s"%(workflow_file_name,))
 
         # Send blocks to schedulerManager
-        status = add_blocks_scheduler(self, blocks)
+        status = add_blocks_scheduler(self, datastr) # send over the json as a string
 
         # Error handling
         if(status == self.status['ERROR']):
