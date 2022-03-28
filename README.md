@@ -44,9 +44,16 @@ This workcell will eventually support:
 		* load_run_api.py 
 		* publish_ot2_state_api.py (api to publish the state of the ot2 to manager)
 
-* **sceduler/**
-	* **scheduler/**
-		* schedulerManager.py (Scheduler)
+* **sceduler_controller/**
+	* **scheduler_controller/**
+		* schedulerManager.py (Scheduler)  
+		* schedulerWorkAdder.py (Add work to the scheduler)  
+
+* **scheduler_client/**
+	* **scheduler_client/**  
+		* add_blocks_scheduler.py
+		* json_scheduler_reader.py
+		* publish_scheduler_state.py
 
 * **workcell_interfaces/**
 	* **srv/**
@@ -93,7 +100,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 3. `colcon build`
 4. `source install/setup.bash`
 
-## Launching
+## Launching OT2_workcell
 
 **Workcell Manager**
 1. `source ~/ot2_ws/install/setup.bash`
@@ -111,11 +118,33 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 launch ot2_controller ot2_alex_bringup.launch.py`
 
-**Scheduler**
+**Scheduler Manager**
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 run scheduler_controller scheduler_manager`
 
+**Scheduler Work Adder**
+1. `source ~/ot2_ws/install/setup.bash`
+2. `ros2 run scheduler_controller scheduler_work_adder`
+
 This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
 
+## Launching Workflow json file testing
+
+**workfile file reader test**
+1. `source ~/ot2_ws/install/setup.bash`
+2. `ros2 run scheduler_client json_scheduler_reader`  
+This will read the `workflow.json` file in the OT2_modules directory and print it to the screen 
+
+## Workflow file format
+The first section is the `blocks` section. You specify a list of blocks each block has the following information, 
+1. `block-name`, the unique name of the block, the scheduler showed throw an error if there are duplicate names
+2. `protocols`, a string with all the different protocols that need to be run separated by spaces 
+3. `dependencies`, a string with all the dependencies off that block that are separated by spaces 
+
+After the `blocks` section you have the `meta-data` (dictionary) section which contains 
+1. `author`, the creator of the workflow file
+2. `email`, the email of the creator 
+3. `description`, describes what the workflow file does 
+
 # Diagrams for different components
-TODO
+![Diagram of state](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/stateot2_diagram.png)
