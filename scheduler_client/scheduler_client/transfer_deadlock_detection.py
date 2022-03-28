@@ -12,9 +12,6 @@ from workcell_interfaces.msg import *
 
     TODO: currently, will only scan to ensure counterpart transfers exist, it doesn't have dynamic detection, like if a
     OT2 breaks and doesn't execute the other command or if a robot will end up waiting a long time for a transfer. 
-
-    TODO: Doesn't check for curcular wait! If A waits on B for transfer 1, B then waits on A but for transfer 2, no 
-    tranfer is initiated, but both robots stall since they are both waiting for a separate transfer. 
 '''
 
 '''
@@ -72,8 +69,9 @@ def arm_transfer_detection(self, blocks):
         block_split = block.split()
         for protocol in block_split: 
             transfer_split = protocol.split(":")
-            if(protocol.split(":")[0] == 'transfer' and protocol.split(":")[1] == protocol.split(":")[2]): # if transfer to themselves 
-                invalid_transfers.append(protocol) # then invalid
+            if(protocol.split(":")[0] == 'transfer'): # if transfer to themselves 
+                if(protocol.split(":")[1] == protocol.split(":")[2]):
+                    invalid_transfers.append(protocol) # then invalid
     
     # all good 
     if(len(invalid_transfers) > 0):
@@ -82,8 +80,12 @@ def arm_transfer_detection(self, blocks):
         return self.status['SUCCESS'], []
 
 '''
-    Input: The JSON dict with block-name and protocols
-    Checks for arm transfer circular wait conditions. Same input and output as arm_transfer_detection. 
+    Input: ROS object, The JSON dict with block-name and protocols
+    Output: status, list invalid_transfers, list stack_trace
+
+    Checks for arm transfer circular wait conditions, assumes the following assumptions, if those assumptions are not met 
+    the code may break as we assume the these issues were caught in arm_transfer_detecton, this function only checks
+    for circular wait. 
 
     Assumptions- All assumptions should be met after running arm_transfer_detection! 
                 1) No self transfers 
@@ -91,10 +93,6 @@ def arm_transfer_detection(self, blocks):
                 3) Pairs of tranfers don't share the same command string the (transfer:...:...:...)
                 4) One block doesn't contain the pair (must be split between 2 different blocks) 
                 5) The transfers are in the new format of block to block instead of ot2 to ot2 
-    Iterate through all the transfers and if there is a cycle then return error 
-
-    A -> 1 2 
-    B -> 2 1 
 '''
 def arm_circular_wait(self, blocks): 
     # Item declaration 
@@ -119,7 +117,7 @@ def arm_circular_wait(self, blocks):
                 else:
                     to = a
                     cur = b
-                if(not cur in transfer_list): # to the current block attach what it is conectted to 
+                if(not cur in transfer_list): # to the current block attach what it is connected to 
                     transfer_list[cur] = []
                 transfer_list[cur].append((to, protocol))
                 num_transfers += 1 
@@ -129,18 +127,25 @@ def arm_circular_wait(self, blocks):
     cur_block = -1 
     for key in transfer_list:
         if(len(transfer_list[key]) > 0): 
-            cur_block = key 
-            stack_trace.append(cur_block)
+            cur_block = key
             break 
-    while(num_transfers != 0) { # while there are still transfers
-        cur_transfer = transfer_list[cur_block][0][0] # get the top item 
-        next_block = transfer_list[cur_block][0][1]
+
+    while(num_transfers != 0): # while there are still transfers
+        cur_transfer = transfer_list[cur_block][0][1] # get the top item 
+        next_block = transfer_list[cur_block][0][0]
+
+        # Error handling - this should never happen (2 transfers in the same block)
+        if(cur_block == next_block):
+            stack_trace.append(cur_transfer+"-"+cur_block)
+            return self.status['ERROR'], [cur_transfer], stack_trace
 
         # checks 
-        if(not str(cur_transfer+":"+cur_block]) in visited):
+        if(not str(cur_transfer+":"+cur_block) in visited):
+            visited[str(cur_transfer+":"+cur_block)] = True # mark as visited
+
             # if we move to the next ones 
             if(not str(cur_transfer+":"+next_block) in visited): # keep searching
-                stack.append(next_block)
+                stack_trace.append(cur_transfer+"-"+cur_block)
                 cur_block = next_block
             elif(str(cur_transfer+":"+next_block) in visited): # if the counter part transfer has been initiated 
                 num_transfers -= 2 
@@ -148,33 +153,32 @@ def arm_circular_wait(self, blocks):
                 transfer_list[next_block].pop(0)
 
                 # find the next cur_block 
-                cur_block = -1 
                 if(num_transfers == 0):
                     return self.status['SUCCESS'], [], []
-                if(len(transfer_list[next_block]) > 0): # if the next block has elements to start 
-                    cur_block = next_block
+                if(len(transfer_list[cur_block]) > 0): # if the cur block has elements to start 
+                    pass
                 else: # following stack trace 
                     next_block = -1 
-                    while(len(stack_trace) > 0) {
-                        next_block = stack_trace[-1] # top of the stack 
+                    while(len(stack_trace) > 0): 
+                        next_block = stack_trace[-1].split("-")[1] # top of the stack 
                         stack_trace.pop(-1) # pop the top of the stack 
                         if(len(transfer_list[next_block]) > 0):
                             cur_block = next_block
                             break 
-                    }
-
+                    
                     # if the stack trace failed then find the one with items left
                     if(next_block == -1):
                         cur_block = -1 
                         for key in transfer_list:
                             if(len(transfer_list[key]) > 0): 
                                 cur_block = key 
-                                stack_trace.append(cur_block)
+                                #stack_trace.append(cur_transfer+"-"+cur_block)
                                 break 
         else: # circular wait
-            return self.status['ERROR'], [cur_node], stack_trace
-    }    
-    return self.status['SUCCESS']
+            stack_trace.append(cur_transfer+"-"+cur_block)
+            return self.status['ERROR'], [cur_transfer], stack_trace
+      
+    return self.status['SUCCESS'], [], []
 
 def main_null():
     print("this is not meant to have a main function")
@@ -184,7 +188,8 @@ class test():
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
 if __name__ == '__main__':
-    blocks = ["asdf asdf asdfa sdf transfer:A transfer:B", "transfer:A transfer:B"]
+    blocks = [{"block-name":"test1", "protocols":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+              {"block-name":"test2", "protocols":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
     test_class = test()
-    status, invalid_transfers = arm_transfer_detection(test_class, blocks)
-    print("Invalid transfers: " + str(invalid_transfers))
+    status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks)
+    print("Invalid transfers: " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace))
