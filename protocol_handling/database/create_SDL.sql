@@ -26,7 +26,6 @@ use SDL;
  *
  *------------------------------------------------------------------------------*/
 
-sudo vi /etc/mysql/mysql.conf.d/mysql.cnf ->> sudo systemctl restart mysql
 
 
 create table Protocol
