@@ -138,7 +138,7 @@ This will read the `workflow.json` file in the OT2_modules directory and print i
 ## Workflow file format
 The first section is the `blocks` section. You specify a list of blocks each block has the following information, 
 1. `block-name`, the unique name of the block, the scheduler showed throw an error if there are duplicate names
-2. `protocols`, a string with all the different protocols that need to be run separated by spaces 
+2. `tasks`, a string with all the different task that need to be run separated by spaces 
 3. `dependencies`, a string with all the dependencies off that block that are separated by spaces 
 
 After the `blocks` section you have the `meta-data` (dictionary) section which contains 

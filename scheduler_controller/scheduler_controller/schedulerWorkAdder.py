@@ -96,9 +96,9 @@ class schedulerWorkAdder(Node):
         for block in data['blocks']:
             # TODO: in the future we need to pass in dependencies and name (the full dict object)
             try: 
-                blocks.append(block['protocols']) # Append protocol
+                blocks.append(block['tasks']) # Append protocol
             except Exception as e: 
-                self.get_logger().error("Error occured when getting protocols from block error: %r"%(e,))
+                self.get_logger().error("Error occured when getting tasks from block error: %r"%(e,))
                 return self.status['ERROR']
         
         # Deadlock checks

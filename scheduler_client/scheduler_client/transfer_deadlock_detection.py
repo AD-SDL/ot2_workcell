@@ -80,7 +80,7 @@ def arm_transfer_detection(self, blocks):
         return self.status['SUCCESS'], []
 
 '''
-    Input: ROS object, The JSON dict with block-name and protocols
+    Input: ROS object, The JSON dict with block-name and tasks
     Output: status, list invalid_transfers, list stack_trace
 
     Checks for arm transfer circular wait conditions, assumes the following assumptions, if those assumptions are not met 
@@ -104,7 +104,7 @@ def arm_circular_wait(self, blocks):
     # Populate transfer_list and num_transfers 
     for block in blocks: 
         name = block['block-name']
-        block_split = block['protocols'].split()
+        block_split = block['tasks'].split()
         for protocol in block_split:
             if(protocol.split(":")[0] == 'transfer'): # it is a transfer 
                 a = protocol.split(":")[1]
@@ -188,8 +188,8 @@ class test():
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
 if __name__ == '__main__':
-    blocks = [{"block-name":"test1", "protocols":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
-              {"block-name":"test2", "protocols":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
+    blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+              {"block-name":"test2", "tasks":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
     test_class = test()
     status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks)
     print("Invalid transfers: " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace))

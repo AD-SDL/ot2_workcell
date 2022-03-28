@@ -31,7 +31,7 @@ def read_workflow_file():
     # Print
     for block in data['blocks']:
         print(block['block-name'])
-        print(block['protocols'])
+        print(block['tasks'])
         print(block['dependencies'])
         print("-------------------")
     print(data['meta-data']['author'])
