@@ -40,13 +40,13 @@ def load_transfer(
     if(block1_status == self.status['SUCCESS']):
         from_name_or_id = block1_robot
     else: # doesn't exist
-        return self.state['WAITING'] # alert WAITING
+        return self.status['WAITING'] # alert WAITING
 
     # Block2 mapping exists
     if(block2_status == self.status['SUCCESS']):
         to_name_or_id = block2_robot
     else: # doesn't exist
-        return self.state['WAITING']
+        return self.status['WAITING']
 
     # Get destination node info
     to_entry = get_node_info(self, to_name_or_id)
