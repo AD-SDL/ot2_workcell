@@ -24,7 +24,7 @@ def add_blocks_scheduler(self, datastr):
 
     # Client setup
     add_block_cli = self.create_client(
-        SchedulerWork, "/scheduler/%s/AddWork" % ("ana"),
+        SchedulerWork, "/scheduler/add_work",
     )  
     while not add_block_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")

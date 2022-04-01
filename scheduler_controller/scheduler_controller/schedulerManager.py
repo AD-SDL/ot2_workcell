@@ -106,9 +106,12 @@ class schedulerManager(Node):
             self.get_logger().fatal("Unable to register with master, exiting...")
             sys.exit(1)  # Can't register node even after retrying
 
-        # TODO: services and topics
+        # Services and Subscribers
         self.get_id_service = self.create_service( # Service to add work to the queue 
-            SchedulerWork, "/scheduler/%s/AddWork" % self.name, self.add_work_handler #TODO: SchedulerWork service type has response of string[] 
+            SchedulerWork, "/scheduler/add_work", self.add_work_handler 
+        )
+        self.get_id_service = self.create_service( # Service to get robot-name from block-name
+            BlockToRobot, "/scheduler/block_to_robot", self._ 
         )
 
         # Initialization Complete
