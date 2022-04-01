@@ -193,3 +193,5 @@ if __name__ == '__main__':
     test_class = test()
     status, invalid_transfers = arm_transfer_detection(test_class, blocks)
     print("Invalid transfers: " + str(invalid_transfers))
+    status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks)
+    print("Invalid transfers: " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace))

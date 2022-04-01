@@ -17,11 +17,13 @@ from ot2_workcell_manager_client.retry_api import *
 from arm_client.transfer_api import _load_transfer
     
 '''
-    These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
+    Input: ROS object,  node entry, Single string with the protocol name
+    Output: Status signal (self.status)
 
+    These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
+    Creates client that sends contents of files to OT-2
     TODO: eliminate the need for master (switch to get_node_info)
 '''
-# Creates client that sends contents of files to OT-2
 def load_protocols_to_ot2(self, entry, name):
 
     # Check node online?
@@ -59,13 +61,12 @@ def load_protocols_to_ot2(self, entry, name):
         self.get_logger().error("Error occured: %r" % (e,))
         return self.status["ERROR"]
     
-
     # Create client that calls load_protocols servive on controller
     script_cli = self.create_client(LoadProtocols, "/%s/%s/load_protocols" % (type, id))  # format of service is /{type}/{id}/{service name}
     while not script_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")
 
-    # extract name and contents of each first file in list
+    # extract name and contents of each first file in list #TODO: not neccesary with database
     with open(self.module_location + name, 'r') as file:
         contents = file.read()
 
@@ -98,7 +99,12 @@ def load_protocols_to_ot2(self, entry, name):
                 self.get_logger().info("File %s contents loaded" % name)
                 return self.status["SUCCESS"]  # All good
 
-# Creates client that sends files to worker OT-2 to create threads
+'''
+    Input: ROS object,  node entry, list of strings (protocols)
+    Output: status signal (self.status)
+
+    Creates client that sends files to worker OT-2 to create threads
+'''
 def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of current job
 
     # Check node online?
