@@ -79,6 +79,7 @@ class OT2ProtocolManager(Node):
 
         # State of the ot2
         self.current_state = self.state["READY"]
+        self.cur_block_name = ""
 
         # Path setup
         path = Path()
@@ -217,6 +218,7 @@ class OT2ProtocolManager(Node):
 
         self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
+        self.cur_block_name = msg.block_name
         self.state_lock.release() # Exit Critical Section
 
     # Function to reset the state of the transfer handler
@@ -274,6 +276,7 @@ class OT2ProtocolManager(Node):
         args = []
         args.append(self)
         args.append(new_state)
+        args.append(self.cur_block_name)
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(

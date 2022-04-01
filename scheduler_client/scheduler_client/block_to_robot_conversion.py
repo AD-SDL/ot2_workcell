@@ -6,6 +6,8 @@ from rclpy.node import Node
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
+# time library
+import time
 
 '''
     This function converts a given block name to a robot name

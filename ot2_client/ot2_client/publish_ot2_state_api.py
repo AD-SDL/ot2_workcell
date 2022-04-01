@@ -40,7 +40,7 @@ def update_ot2_state(self, current_state, cur_block_name):
 
 # Middleman function to segway from retry functions to update_state
 def _update_ot2_state(args):
-    return update_ot2_state(args[0], args[1])  # self, current_state
+    return update_ot2_state(args[0], args[1], args[2])  # self, current_state
 
 
 def main_null():

@@ -11,12 +11,12 @@
                 },
                 {
                     "block-name": "transfer1",
-                    "tasks": "transfer:bob:alex:10:army item1.py item1.py item2.py",
+                    "tasks": "transfer:transfer1:transfer2:10:army item1.py item1.py item2.py",
                     "dependencies": ""  
                 },
                 {
                     "block-name": "transfer2",
-                    "tasks": "item1.py item2.py transfer:bob:alex:10:army item2.py",
+                    "tasks": "item1.py item2.py transfer:transfer1:transfer2:10:army item2.py",
                     "dependencies": ""  
                 }
               ],
