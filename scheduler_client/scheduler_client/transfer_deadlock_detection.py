@@ -25,12 +25,11 @@ def full_check(self, blocks):
         return self.status['ERROR'] # error 
 
     # Circular wait check 
-    '''
     status, invalid_transfers, stack_trace = arm_circular_wait(self, blocks)
     if(status == self.status['ERROR']):
-        self.get_logger().error("Invalid transfer (circular wait) for the transfer " + str(invalid_transfers)) # show error 
+        self.get_logger().error("Invalid transfer (circular wait) for the transfer " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace)) # show error 
         return self.status['ERROR'] # error
-    '''
+    
     # All checks passed
     return self.status['SUCCESS'] 
 
