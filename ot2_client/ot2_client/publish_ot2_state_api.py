@@ -12,7 +12,7 @@ from workcell_interfaces.msg import *
 '''
     Internal interface for communication between the OT2 nodes to syncronize the state information
 '''
-def update_ot2_state(self, current_state):
+def update_ot2_state(self, current_state, cur_block_name):
 
     # Error checking
     if not (current_state in self.state.values()):
@@ -22,6 +22,7 @@ def update_ot2_state(self, current_state):
     msg = OT2StateUpdate()
     msg.state = current_state
     msg.id = self.id
+    msg.block_name = cur_block_name
 
     # Create client and wait for service
     ot2_state_update_pub = self.create_publisher(

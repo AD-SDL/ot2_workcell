@@ -1,4 +1,5 @@
 string[] files
+string block_name
 ---
 int64 WARNING = 2 
 int64 ERROR = 1

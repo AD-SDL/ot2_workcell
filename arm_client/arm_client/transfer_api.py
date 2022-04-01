@@ -22,10 +22,15 @@ from ot2_workcell_manager_client.worker_info_api import (
  Note: item is currently unused as we don't have anything programmed for it yet so it is just ignored
 '''
 def load_transfer(
-    self, from_name_or_id, to_name_or_id, item, arm_name_or_id
+    self, block_name1, block_name2, item, arm_name_or_id
 ):  #TODO: do something with item
 
     #TODO: Intercept and check for unknowns (block-name to robot-name map)
+    
+    
+
+    from_name_or_id
+    to_name_or_id
 
     # Get destination node info
     to_entry = get_node_info(self, to_name_or_id)
