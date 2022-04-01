@@ -181,7 +181,9 @@ class OT2ProtocolManager(Node):
             # Conducting an arm transfer
             if(file_name.split(":")[0] == "transfer"):
                 temp = file_name.split(":")
-                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
+                status = self.status['WAITING']
+                while(status == self.status['WAITING']): # Continue running transfer if we are waiting for mapping 
+                    status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
             # Run protocol on OT2, use load_and_run function
             else:
                 self.get_logger().info("Running protocol")
