@@ -112,10 +112,11 @@ class OT2(Node):
         self.protocol_service = self.create_service(
             Protocol, "/OT_2/%s/protocol" % self.id, self.protocol_handler
         )
+'''
         self.script_service = self.create_service(
             LoadProtocols, "/OT_2/%s/load_protocols" % self.id, self.load_protocols_handler
         )
-
+'''
         # Create subscribers
         self.ot2_state_update_sub = self.create_subscription(
             OT2StateUpdate,
@@ -138,7 +139,7 @@ class OT2(Node):
         self.get_logger().info(
             "ID: %s name: %s initialization completed" % (self.id, self.name)
         )
-    
+'''
     # Handles load_protocols service calls, creates files and loads contents into them
     def load_protocols_handler(self, request, response):
 
@@ -182,12 +183,12 @@ class OT2(Node):
             # release lock
             self.file_lock.release()
             return response
-
+'''
     # Handles add_work service calls
     def add_work_handler(self, request, response):
 
         # Get request information
-        files = request.files
+        protocol_id_list = request.protocol_id_list
         block_name = request.block_name
         #files = files.split() 
 
@@ -210,7 +211,7 @@ class OT2(Node):
             # Get lock
 
             # Append files to work list
-            self.work_list.append(files)
+            self.work_list.append(protocol_id_list)
             self.block_name_list.append(block_name)
             self.work_length += 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
@@ -345,8 +346,8 @@ class OT2(Node):
 
         try:
             # Extract file name from temp list
-            name = self.temp_list[0]
-            response.protocol_id = name
+            protocol_id = self.temp_list[0]
+            response.protocol_id = protocol_id
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error

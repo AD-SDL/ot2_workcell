@@ -1,4 +1,4 @@
-string[] files
+string[] protocol_id_list
 string block_name
 ---
 int64 WARNING = 2 

@@ -140,9 +140,6 @@ class OT2ProtocolManager(Node):
                 return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
-        # Get the next protocol
-        file_name = ""
-
         # Client ready, get name of file - No request info needed
         protocol_request = Protocol.Request()
 
@@ -180,14 +177,8 @@ class OT2ProtocolManager(Node):
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
             # Conducting an arm transfer
-<<<<<<< HEAD
             if(str(protocol_id).split(":")[0] == "transfer"):
                 temp = protocol_id.split(":")
-=======
-            if(file_name.split(":")[0] == "transfer"):
-                temp = file_name.split(":")
-                # Continue running transfer if we are waiting for mapping 
->>>>>>> master
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
             # Run protocol on OT2, use load_and_run function
             else:

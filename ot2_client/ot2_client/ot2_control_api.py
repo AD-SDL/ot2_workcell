@@ -83,7 +83,7 @@ def load_protocols_to_ot2(self, entry, name):
 
     Creates client that sends files to worker OT-2 to create threads
 '''
-def add_work_to_ot2(self, entry, files, block_name):  # self, id of robot, files of current job, and block name
+def add_work_to_ot2(self, entry, protocol_id_list, block_name):  # self, id of robot, protocol ids or transfer command, and block name
 
     # Check node online?
     '''
@@ -135,7 +135,7 @@ def add_work_to_ot2(self, entry, files, block_name):  # self, id of robot, files
     # Create a request
     send_request = AddWork.Request()
     # send_request.numFiles = len(files) # number of files to be sent to worker node
-    send_request.files = files  # string of file names list
+    send_request.protocol_id_list = protocol_id_list  # string of file names list
     send_request.block_name = block_name # block name
 
     # Call Service to load module
