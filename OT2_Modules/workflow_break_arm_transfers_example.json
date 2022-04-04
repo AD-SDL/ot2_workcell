@@ -1,0 +1,28 @@
+{
+    "blocks": [ {
+                    "block-name": "transfer1",
+                    "tasks": "transfer:transfer1:transfer2:10:army",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transfer2",
+                    "tasks": "transfer:transfer1:transfer2:10:army transfer:transfer2:transfer3:10:army",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transferBreak",
+                    "tasks": "transfer:transferBreak:transfer3:10:army",
+                    "dependencies": ""
+                },
+                {
+                    "block-name": "transfer3",
+                    "tasks": "transfer:transfer2:transfer3:10:army transfer:transferBreak:transfer3:10:army",
+                    "dependencies": ""
+                }
+              ],
+    "meta-data": {
+                    "author": "Alan wang",
+                    "email": "alan.wang@anl.gov", 
+                    "description": " Example workflow file that can break our current deadlock detection algorithms. This is not due to circular wait but due to limited OT2s causing the transfer to kind of get cut off "
+                 }    
+}
