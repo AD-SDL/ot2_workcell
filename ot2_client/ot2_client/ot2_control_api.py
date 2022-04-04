@@ -24,11 +24,13 @@ from database.protocol_parser import protocol_parser
 
     
 '''
-    These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
+    Input: ROS object,  node entry, Single string with the protocol name
+    Output: Status signal (self.status)
 
+    These functions will load a protocol file to the respective OT2 and provide the ability to add a protocol to the run queue of the OT2. 
+    Creates client that sends contents of files to OT-2
     TODO: eliminate the need for master (switch to get_node_info)
 '''
-# Creates client that sends contents of files to OT-2
 def load_protocols_to_ot2(self, entry, name):
 
     # Check node online?
@@ -75,8 +77,13 @@ def load_protocols_to_ot2(self, entry, name):
     # return id 
     return protocol_id
 
-# Creates client that sends files to worker OT-2 to create threads
-def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of current job
+'''
+    Input: ROS object,  node entry, list of strings (protocols)
+    Output: status signal (self.status)
+
+    Creates client that sends files to worker OT-2 to create threads
+'''
+def add_work_to_ot2(self, entry, files, block_name):  # self, id of robot, files of current job, and block name
 
     # Check node online?
     '''
@@ -129,6 +136,7 @@ def add_work_to_ot2(self, entry, files):  # self, id of robot, and files of curr
     send_request = AddWork.Request()
     # send_request.numFiles = len(files) # number of files to be sent to worker node
     send_request.files = files  # string of file names list
+    send_request.block_name = block_name # block name
 
     # Call Service to load module
     future = send_cli.call_async(send_request)

@@ -1,5 +1,4 @@
-string[] files
-string block_name
+string block_name 
 ---
 int64 WARNING = 2 
 int64 ERROR = 1
@@ -8,3 +7,4 @@ int64 FATAL = 3
 int64 WAITING = 10
 
 int64 status
+string robot_name
