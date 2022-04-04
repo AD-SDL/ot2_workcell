@@ -79,6 +79,7 @@ class OT2ProtocolManager(Node):
 
         # State of the ot2
         self.current_state = self.state["READY"]
+        self.cur_block_name = ""
 
         # Path setup
         path = Path()
@@ -181,6 +182,7 @@ class OT2ProtocolManager(Node):
             # Conducting an arm transfer
             if(file_name.split(":")[0] == "transfer"):
                 temp = file_name.split(":")
+                # Continue running transfer if we are waiting for mapping 
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
             # Run protocol on OT2, use load_and_run function
             else:
@@ -215,6 +217,7 @@ class OT2ProtocolManager(Node):
 
         self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
+        self.cur_block_name = msg.block_name
         self.state_lock.release() # Exit Critical Section
 
     # Function to reset the state of the transfer handler
@@ -272,6 +275,7 @@ class OT2ProtocolManager(Node):
         args = []
         args.append(self)
         args.append(new_state)
+        args.append(self.cur_block_name)
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
@@ -314,7 +318,7 @@ class OT2ProtocolManager(Node):
         args.append(to_name)
         args.append(item)
         args.append(arm_name)
-        status = retry(self, _load_transfer, 20, 4, args)
+        status = retry(self, _load_transfer, 200, 4, args)
         return status
 
 def main(args=None):

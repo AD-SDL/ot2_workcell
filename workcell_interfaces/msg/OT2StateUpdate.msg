@@ -4,3 +4,4 @@ int64 ERROR = 2
 
 int64 state
 string id
+string block_name

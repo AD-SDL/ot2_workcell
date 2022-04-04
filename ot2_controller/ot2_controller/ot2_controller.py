@@ -77,9 +77,14 @@ class OT2(Node):
         self.home_location = str(path.home())
         self.module_location = self.home_location + "/ot2_ws/src/ot2_workcell/OT2_Modules/"
 
-        self.work_list = []  # list of files list recieved from jobs
-        self.work_length = 0  # size of work we have
-        self.temp_list = [] # List that stores individual jobs for the protocol handler
+        # Queue attributes
+        self.work_list = []                 # list of files list recieved from jobs
+        self.block_name_list = []           # list of block_names that correlate to the blocks in the work_list 
+        self.work_length = 0                # size of work we have
+        self.temp_list = []                 # List that stores individual jobs for the protocol handler
+
+        # Current block attribute 
+        self.cur_block_name = ""            # The current block name that is being run on this OT2
 
         # Node timeout info
         self.node_wait_timeout = 2  # 2 seconds
@@ -183,6 +188,7 @@ class OT2(Node):
 
         # Get request information
         files = request.files
+        block_name = request.block_name
         #files = files.split() 
 
         if(len(files) == 0):
@@ -205,6 +211,7 @@ class OT2(Node):
 
             # Append files to work list
             self.work_list.append(files)
+            self.block_name_list.append(block_name)
             self.work_length += 1 # Counts total number of jobs given to this OT-2
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
@@ -302,12 +309,14 @@ class OT2(Node):
             response = Protocol.Response()
             response.status = response.WAITING
             self.work_list_lock.release() # Release lock
-            if(self.current_state == self.state['QUEUED']): # to not flood it with ready state updates 
-                self.set_state(self.state['READY']) # set state to ready 
+            if(self.current_state == self.state['QUEUED']):     # to not flood it with ready state updates 
+                self.set_state(self.state['READY'])             # set state to ready
+                self.cur_block_name = ""                        # Set cur_block_name to null to avoid trigger
             return response
         elif(len(self.temp_list) == 0):
             # Selecting job
-            self.temp_list = self.work_list.pop(0) #Adds new job (set of files) to the temp_list and removes
+            self.temp_list = self.work_list.pop(0)              # Adds new job (set of files) to the temp_list and removes
+            self.cur_block_name = self.block_name_list.pop(0)   # Gets the block_name for that block 
 
         # Check state of OT-2, wait for READY state
         if self.current_state == self.state['BUSY']:
@@ -355,6 +364,7 @@ class OT2(Node):
         args = []
         args.append(self)
         args.append(new_state)
+        args.append(self.cur_block_name) # current block name 
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
