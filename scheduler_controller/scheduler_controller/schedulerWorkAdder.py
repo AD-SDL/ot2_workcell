@@ -126,6 +126,8 @@ class schedulerWorkAdder(Node):
     '''
         This is the submitter for our setup files which follow plain text format and don't allow for dependencies
         but is easier to see and read.
+
+        TODO: Switch to signal to interrupt the input thread (since you can't kill this program right now)
     '''
     def submitter_setup(self):
         # get input 
