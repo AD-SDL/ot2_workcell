@@ -49,6 +49,9 @@ def protocol_parser(filename):
                                 new_file.write(line)
                 return protocol_name
 
+def main_null():
+        print("This function is not meant to have a main")
+
 if __name__ == "__main__":
         #TODO Pull protocol file & name from database
         filename = "/path/to/protocol.py"

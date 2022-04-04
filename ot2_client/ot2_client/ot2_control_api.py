@@ -17,10 +17,10 @@ from ot2_workcell_manager_client.retry_api import *
 from arm_client.transfer_api import _load_transfer
 
 # Database 
-from protocol_handling.database.database_functions import *
-from protocol_handling.database.database_functions import insert_protocol
-from protocol_handling.database.protocol_parser import *
-from protocol_handling.database.protocol_parser import protocol_parser
+from database.database_functions import *
+from database.database_functions import insert_protocol
+from database.protocol_parser import *
+from database.protocol_parser import protocol_parser
 
     
 '''

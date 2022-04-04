@@ -36,6 +36,8 @@ def main(args):
     cnx = connect()
     close(cnx)
 
+def main_null():
+    print("This function is not meant to have a main")
 
 if __name__ == "__main__":
     # execute only if run as a script

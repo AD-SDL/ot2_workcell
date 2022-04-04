@@ -180,7 +180,7 @@ class OT2ProtocolManager(Node):
             if(str(protocol_id).split(":")[0] == "transfer"):
                 temp = protocol_id.split(":")
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
-            # Run protocol on OT2, use load_and_run function
+            # Run protocol on OT2, use handler function
             else:
                 self.get_logger().info("Running protocol")
                 msg_error, msg_output, status = handler(protocol_id)
@@ -228,6 +228,7 @@ class OT2ProtocolManager(Node):
         self.state_lock.release() # Exit critical section
 
     # Takes filename, unpacks script from file, and runs the script
+    '''
     def load_and_run(self, file):
 
         # Call handler 
@@ -255,7 +256,7 @@ class OT2ProtocolManager(Node):
         else:
             self.get_logger().info("Module %s successfully ran to completion" % filepath)
             return self.status['SUCCESS']
-
+    '''
     # Helper function
     def set_state(self, new_state):
         args = []
