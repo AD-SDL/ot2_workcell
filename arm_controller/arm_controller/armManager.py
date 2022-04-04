@@ -197,7 +197,6 @@ class ArmManager(Node):
         return response
 
     # handler for the next transfer service call
-    # TODO: check translations here (either we will get node info or check for the unknown robot name)
     def load_transfer_handler(self, request, response):  # TODO: error handling
         # Acquire lock
         self.arm_lock.acquire()
