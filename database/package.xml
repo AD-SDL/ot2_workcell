@@ -3,7 +3,7 @@
 <package format="3">
   <name>database</name>
   <version>0.0.0</version>
-  <description>Files for the database</description>
+  <description>Database and protocol parser files for communication between ROS and database and ROS and internal pis</description>
   <maintainer email="dozgulbas@anl.gov">Doga</maintainer>
   <license>MIT license</license>
 

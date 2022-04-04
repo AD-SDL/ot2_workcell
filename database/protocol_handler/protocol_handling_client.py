@@ -1,14 +1,12 @@
-import zmq
+#import zmq
 import time
-from multiprocessing.connection import Listener
+#from multiprocessing.connection import Listener
 import sys
 from database.database_functions import *
-from database import connect
-import protocol_transfer 
-from protocol_parser import *
-from zeroMQ_OT2 import *
-
-
+#from database import connect
+#import protocol_transfer 
+#from protocol_parser import *
+#from zeroMQ_OT2 import *
 
 def handler(Protocol_ID):
     path, protocol = pull_protocol(Protocol_ID)  
@@ -37,6 +35,9 @@ def send_message_to_OT2(message):
             print("Client recived the output message from the completed protocol. Sending message to the ROS Master")
             return msg_error, msg_output, int(msg_errorcode)
     sock.close()
+
+def main_null():
+    print("This is not meant to have a main function")
 
 if __name__ == "__main__":
     filename = "/ot2_workcell/protocol_handling/protocol.py"

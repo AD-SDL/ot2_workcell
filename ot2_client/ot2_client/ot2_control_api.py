@@ -19,8 +19,8 @@ from arm_client.transfer_api import _load_transfer
 # Database 
 from database.database_functions import *
 from database.database_functions import insert_protocol
-from database.protocol_parser import *
-from database.protocol_parser import protocol_parser
+from protocol_handler.protocol_parser import *
+from protocol_handler.protocol_parser import protocol_parser
 
     
 '''

@@ -40,8 +40,8 @@ from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
 # Database functions
-from database.protocol_handling_client import *
-from database.protocol_handling_client import handler
+from protocol_handler.protocol_handling_client import *
+from protocol_handler.protocol_handling_client import handler
 '''
     The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
     It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
