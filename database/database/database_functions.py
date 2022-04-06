@@ -116,6 +116,9 @@ def display():
         print(tables[k])
 
 
+def main_null():
+    print("This function is not meant to have a main")
+
 if __name__ == "__main__":
     #insert_protocol("protocol_file_name", "OT2")
     display()

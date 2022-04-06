@@ -9,24 +9,29 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-def add_blocks_scheduler(self, blocks): 
-    
+# json library
+import json
+
+def add_blocks_scheduler(self, datastr): 
+    data = json.loads(datastr)
+    blocks = data['blocks']
+
     # Confirm type is correct 
     for block in blocks:
-        if(isinstance(block, str) == False):
+        if(isinstance(block['tasks'], str) == False):
             self.get_logger().error("the block %s, is not a string!"%(str(block),))
             return self.status['ERROR'] # block contains incorrect type 
 
     # Client setup
     add_block_cli = self.create_client(
-         SchedulerWork, "/scheduler/%s/AddWork" %("ana"),
+        SchedulerWork, "/scheduler/add_work",
     )  
     while not add_block_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")
 
     # create request
     schedule_request = SchedulerWork.Request() 
-    schedule_request.protocols = blocks 
+    schedule_request.jsonblocks = datastr 
 
     # call async
     future = add_block_cli.call_async(schedule_request)

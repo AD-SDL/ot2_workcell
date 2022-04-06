@@ -16,14 +16,37 @@ from ot2_workcell_manager_client.worker_info_api import (
     _get_node_list,
     get_node_info,
 )
+
+# Scheduler client
+from scheduler_client.block_to_robot_conversion import *
+from scheduler_client.block_to_robot_conversion import convert_block_name
 '''
  This is an API that will begin a transfer request from_node to_node on the designated arm_name_or_id. 
 
  Note: item is currently unused as we don't have anything programmed for it yet so it is just ignored
 '''
 def load_transfer(
-    self, from_name_or_id, to_name_or_id, item, arm_name_or_id
+    self, block_name1, block_name2, item, arm_name_or_id
 ):  #TODO: do something with item
+    # Robot names
+    from_name_or_id = ""
+    to_name_or_id = ""
+
+    # If mappings exist
+    block1_status, block1_robot = convert_block_name(self, block_name1)
+    block2_status, block2_robot = convert_block_name(self, block_name2)
+
+    # Block1 mapping exists
+    if(block1_status == self.status['SUCCESS']):
+        from_name_or_id = block1_robot
+    else: # doesn't exist
+        return self.status['WAITING'] # alert WAITING
+
+    # Block2 mapping exists
+    if(block2_status == self.status['SUCCESS']):
+        to_name_or_id = block2_robot
+    else: # doesn't exist
+        return self.status['WAITING']
 
     # Get destination node info
     to_entry = get_node_info(self, to_name_or_id)

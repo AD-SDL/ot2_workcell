@@ -47,6 +47,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/LoadProtocols.srv"
   "srv/SchedulerWork.srv"
   "msg/Heartbeat.msg"
+  "srv/BlockToRobot.srv"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

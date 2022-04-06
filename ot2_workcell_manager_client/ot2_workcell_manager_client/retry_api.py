@@ -23,9 +23,12 @@ def retry(self, function, max_attempts, timeout, args):
                 status = function()  # No debug information, function assumed to have it
 
             # Error checking
-            if status == self.status["ERROR"] or status == self.status["FATAL"] or status == self.status["WAITING"]: # keep looping
-                raise Exception
-            if status not in range(0, 11):
+            if status == self.status["ERROR"] or status == self.status["FATAL"]: # keep looping
+                raise Exception("Retry module error")
+            elif status == self.status["WAITING"]: # Waiting 
+                self.get_logger().info("Waiting")
+                continue 
+            if status not in self.status.values():
                 self.get_logger().error(
                     "Function doesn't return standard status output, stopping..."
                 )

@@ -31,7 +31,7 @@ def heartbeat_transmitter(self):
     return 
 
 
-def update_ot2_state(self, current_state):
+def update_ot2_state(self, current_state, cur_block_name):
 
     # Error checking
     if not (current_state in self.state.values()):
@@ -41,6 +41,7 @@ def update_ot2_state(self, current_state):
     msg = OT2StateUpdate()
     msg.state = current_state
     msg.id = self.id
+    msg.block_name = cur_block_name
 
     # Create client and wait for service
     ot2_state_update_pub = self.create_publisher(
@@ -58,7 +59,7 @@ def update_ot2_state(self, current_state):
 
 # Middleman function to segway from retry functions to update_state
 def _update_ot2_state(args):
-    return update_ot2_state(args[0], args[1])  # self, current_state
+    return update_ot2_state(args[0], args[1], args[2])  # self, current_state
 
 
 def main_null():

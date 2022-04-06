@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 import importlib.util
 from random import random
+import json
 
 # ROS messages and services
 from workcell_interfaces.srv import *
@@ -71,6 +72,19 @@ class schedulerManager(Node):
         self.queue_lock = Lock()
         self.protocol_queue = [] # protocols to run 
 
+        # Block to robot map 
+        ''' Structure 
+            Maps "Block-name":"Robot-name" 
+
+            Common Case) 
+            If the block has been assigned to a robot then the translation is easy, just replace all block names with the robot name 
+
+            Edge Case) 
+            If the block has not yet been assigned to a robot we then assign it the robot name "unknown", it is then up to the arm to communicate with the scheduler to continue polling 
+            for a new robot-name other than "unknown". (To link the unknown back to the transfer we need to attach the block-name to the end of the string)
+        '''
+        self.block_to_robot_map = {}
+
         # State information
         self.current_state = self.state["READY"]  # Start ready
         self.dead = False # kill command
@@ -92,10 +106,16 @@ class schedulerManager(Node):
             self.get_logger().fatal("Unable to register with master, exiting...")
             sys.exit(1)  # Can't register node even after retrying
 
-        # TODO: services and topics
+        # Services and Subscribers
         self.get_id_service = self.create_service( # Service to add work to the queue 
-            SchedulerWork, "/scheduler/%s/AddWork" % self.name, self.add_work_handler #TODO: SchedulerWork service type has response of string[] 
+            SchedulerWork, "/scheduler/add_work", self.add_work_handler 
         )
+        self.get_id_service = self.create_service( # Service to get robot-name from block-name
+            BlockToRobot, "/scheduler/block_to_robot", self.block_to_robot_handler
+        )
+        # This subscriber lets us know which block has finished 
+        self.OT2_state_subscriber = self.create_subscription(OT2StateUpdate, "/OT_2/ot2_state_update", self.node_state_update_callback, 10) 
+        self.OT2_state_subscriber 
 
         # Initialization Complete
         self.get_logger().info(
@@ -143,7 +163,7 @@ class schedulerManager(Node):
 
         The request is a list of strings (each string is a block and will be split the same way the read_from_setup functions splits) 
 
-        TODO: deadlock detection + error handling
+        TODO: error handling
     '''
     def add_work_handler(self, request, response): 
 
@@ -151,13 +171,14 @@ class schedulerManager(Node):
         response = SchedulerWork.Response()
 
         # Get blocks 
-        blocks = request.protocols 
+        datastr = request.jsonblocks
+        data = json.loads(datastr)
+        blocks = data['blocks'] 
 
         # Parse and add each block 
         self.queue_lock.acquire() # Enter critical section 
         for block in blocks: 
-            split_block = block.split()
-            self.protocol_queue.append(split_block) # Add to batch queue for scheduling 
+            self.protocol_queue.append(block) # Add to batch queue for scheduling 
         self.queue_lock.release()
 
         # return status 
@@ -165,6 +186,49 @@ class schedulerManager(Node):
         return response
 
    
+    '''
+        Processes the block_to_robot service call.
+        If status == success the mapping was a success
+        if status == error then their is no mapping currently 
+    '''
+    def block_to_robot_handler(self, request, response): 
+
+        # create Response 
+        response = BlockToRobot.Response() 
+
+        # Get block name
+        block_name = request.block_name
+
+        # Search datastructure for block name 
+        if block_name in self.block_to_robot_map: # exists 
+            response.status = response.SUCCESS
+            response.robot_name = self.block_to_robot_map[block_name]
+        else: 
+            response.status = response.ERROR # doesn't exist
+            response.robot_name = "unknown"
+
+        # return response
+        return response 
+
+    '''
+        This subscriber latches onto the OT2 state update, upon a state transfer to READY we know that the robot just finished a block and we will then delete
+        that block from our dictionary marking it as finished
+    '''
+    def node_state_update_callback(self, msg):
+
+        # Check state 
+        if(msg.state != self.state['READY']):
+            return # don't care 
+
+        # Get block name 
+        block_name = msg.block_name
+
+        # Check if the mapping needs to be updated 
+        if block_name in self.block_to_robot_map:
+            self.block_to_robot_map.pop(block_name) # remove it 
+
+        # TODO: This is DEBUG
+        self.get_logger().warn("Block name %s processed" %(block_name,)) 
 
     # Helper function TODO
     def set_state(self, new_state):
@@ -190,7 +254,7 @@ class schedulerManager(Node):
                 status = self.distribute_blocks()
 
                 if(status == self.status['ERROR']):
-                    raise Exception("Unexpected Error occured in protocol_manager get_next_protocol operation")
+                    raise Exception("Unexpected Error occured in protocol_manager distribute_blocks operation")
             except Exception as e: 
                 self.get_logger().error("Error occured: %r" % (e,))
                 self.set_state(self.state['ERROR']) # Alert system that state is error 
@@ -234,17 +298,25 @@ class schedulerManager(Node):
                 # Get first job on queue and remove from queue 
                 self.queue_lock.acquire() # enter critical section
                 next_block = self.protocol_queue[0]
+                block_name = next_block['block-name']
+                protocols = next_block['tasks'].split()
                 self.protocol_queue.pop(0) 
                 self.queue_lock.release() 
 
+                # Update our map 
+                self.block_to_robot_map[block_name] = node['name'] # block-name to name (Switch to ID?)
+
                 # Load/Add the Protocols
+                protocol_id_list = []
                 try:
-                    for i in range(len(next_block)):
-                        if(not next_block[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                            load_protocols_to_ot2(self, node, next_block[i])
-                    add_work_to_ot2(self, node, next_block)
-                except Exception:
-                    self.get_logger().error("Load/Add protocols failed to OT2: %s"%(node['id']))
+                    for i in range(len(protocols)):
+                        if(not protocols[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+                            protocol_id_list.append(load_protocols_to_ot2(self, node, protocols[i]))
+                        else:
+                            protocol_id_list.append(protocols[i])
+                    add_work_to_ot2(self, node, protocol_id_list, block_name)
+                except Exception as e:
+                    self.get_logger().error("Load/Add protocols failed to OT2: %s, Exception: %r"%(node['id'], e))
                     return self.status['ERROR']
             elif node['state'] == self.state['ERROR']: # alert at error 
                 self.get_logger().warn("Node %s is in errored state and must be handled immediately!"%(node['name']))

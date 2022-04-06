@@ -39,6 +39,9 @@ from arm_client.transfer_api import _load_transfer
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
+# Database functions
+from protocol_handler.protocol_handling_client import *
+from protocol_handler.protocol_handling_client import handler
 '''
     The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
     It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
@@ -79,6 +82,7 @@ class OT2ProtocolManager(Node):
 
         # State of the ot2
         self.current_state = self.state["READY"]
+        self.cur_block_name = ""
 
         # Path setup
         path = Path()
@@ -136,9 +140,6 @@ class OT2ProtocolManager(Node):
                 return self.status['FATAL']
             self.get_logger().info("Service not available, trying again...")
 
-        # Get the next protocol
-        file_name = ""
-
         # Client ready, get name of file - No request info needed
         protocol_request = Protocol.Request()
 
@@ -158,8 +159,8 @@ class OT2ProtocolManager(Node):
                 self.get_logger().error("Error occured %r" % (e,))
                 return self.status["ERROR"]  # Error
             else:
-                # Get file name
-                file_name = response.file
+                # Get protocol id 
+                protocol_id = response.protocol_id
                 # Error handling
                 if response.status == response.ERROR:
                     self.get_logger().error(
@@ -172,29 +173,25 @@ class OT2ProtocolManager(Node):
                     self.get_logger().info("Load succeeded")
 
         # Begin running the next protocol
-        # TODO: actually incorporate runs
-
-        # set state to busy
         try:
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
             # Conducting an arm transfer
-            if(file_name.split(":")[0] == "transfer"):
-                temp = file_name.split(":")
+            if(str(protocol_id).split(":")[0] == "transfer"):
+                temp = protocol_id.split(":")
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
-            # Run protocol on OT2, use load_and_run function
+            # Run protocol on OT2, use handler function
             else:
                 self.get_logger().info("Running protocol")
-                status = self.load_and_run(file_name)
+                msg_error, msg_output, status = handler(protocol_id)
 
             # Check to see if run was success
-            if status == self.status['ERROR']:
-                self.get_logger().error("Error: protocol %s was not run successfully" % file_name)
+            if status == self.status['SUCCESS']:
+                self.get_logger().info("Protocol %s was run successfully" % protocol_id)
+            else: 
+                self.get_logger().error("Error: protocol %s was not run successfully" % protocol_id)
                 return self.status['ERROR'] # thread will handle state update 
-            elif status == self.status['SUCCESS']:
-                self.get_logger().info("Protocol %s was run successfully" % file_name)
-            elif status == self.status['FATAL']: # TODO: implement this in transfer_api
-                return self.status['FATAL']
+
         except Exception as e:
             self.get_logger().error("Error occured: %r"%(e,))
             return self.status['ERROR'] # thread will handle state update 
@@ -215,6 +212,7 @@ class OT2ProtocolManager(Node):
 
         self.state_lock.acquire() # Enter critical section
         self.current_state = msg.state
+        self.cur_block_name = msg.block_name
         self.state_lock.release() # Exit Critical Section
 
     # Function to reset the state of the transfer handler
@@ -230,19 +228,11 @@ class OT2ProtocolManager(Node):
         self.state_lock.release() # Exit critical section
 
     # Takes filename, unpacks script from file, and runs the script
+    '''
     def load_and_run(self, file):
 
-        # Set variable with file path
-        filepath = (self.module_location + file)
-
-        # Error check
-        if path.exists(filepath) == False:  # File doesn't exist
-            self.get_logger().error("File: %s doesn't exist" % (self.temp_list[0]))
-            return self.status['ERROR']
-
-        # Import file as module
-        self.get_logger().info("Importing module...")
-
+        # Call handler 
+        self.get_logger().info("Calling handler...")
         try:
             # Load and attach module to program
             spec = importlib.util.spec_from_file_location(file, filepath)
@@ -266,12 +256,13 @@ class OT2ProtocolManager(Node):
         else:
             self.get_logger().info("Module %s successfully ran to completion" % filepath)
             return self.status['SUCCESS']
-
+    '''
     # Helper function
     def set_state(self, new_state):
         args = []
         args.append(self)
         args.append(new_state)
+        args.append(self.cur_block_name)
         status = retry(self, _update_ot2_state, 10, 2, args)
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().error(
@@ -314,7 +305,7 @@ class OT2ProtocolManager(Node):
         args.append(to_name)
         args.append(item)
         args.append(arm_name)
-        status = retry(self, _load_transfer, 20, 4, args)
+        status = retry(self, _load_transfer, 200, 4, args)
         return status
 
 def main(args=None):
