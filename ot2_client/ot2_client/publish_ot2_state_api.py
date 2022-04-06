@@ -12,6 +12,25 @@ from workcell_interfaces.msg import *
 '''
     Internal interface for communication between the OT2 nodes to syncronize the state information
 '''
+# Function to transmit the heartbeat to the master
+def heartbeat_transmitter(self):
+
+    while rclpy.ok():    
+        # Create a request for heartbeat message 
+        msg = Heartbeat()
+        msg.id = self.id
+
+        # Create publisher object 
+        transmit_heartbeat = self.creat_publisher(Heartbeat, "/heartbeat/heartbeat_update", 15)
+
+        time.sleep(1)
+
+        # Publish the heartbeat
+        transmit_heartbeat.publish(msg)
+
+    return 
+
+
 def update_ot2_state(self, current_state):
 
     # Error checking

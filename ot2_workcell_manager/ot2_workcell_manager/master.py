@@ -15,6 +15,7 @@ from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 # Other Libraries
 from threading import Thread, Lock
 import time
+from datetime import datetime
 from pathlib import Path
 
 # Only one master node can be running at anytime, or else you will cause issues
@@ -45,6 +46,7 @@ class Master(Node):
         # Readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
+        self.hearbeat = datetime
 
         # Path setup
         path = Path()
@@ -55,6 +57,7 @@ class Master(Node):
         self.id = "M-1"  # Ultimate position, before 0
         self.type = "master"  # Of type master
         self.name = "master"  # name is master
+
 
         # Service setup
         self.register_service = self.create_service(
@@ -83,9 +86,15 @@ class Master(Node):
         self.OT2_state_reset_subscriber
         self.sch_state_reset_subscriber = self.create_subscription(SchReset, "/sch/sch_state_reset", self.state_reset_callback, 10)
         self.sch_state_reset_subscriber
+        self.heartbeat_subscriber = self.create_subscription(Heartbeat, "/heartbeat/heartbeat_update", self.heartbeat_callback, 10)
+        self.heartbeat_subscriber
 
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
+
+        # Create a thread to run check_heartbeat
+        check_heartbeat_thread = Thread(target=self.check_heartbeat,args=((Heartbeat()),))
+        check_heartbeat_thread.start()
 
     # Registers a worker with the master so modules can be distrubuted
     def handle_register(self, request, response):
@@ -106,6 +115,7 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
+                "heartbeat": self.hearbeat
             }
 
             self.get_logger().info(
@@ -121,6 +131,8 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
+                "heartbeat": self.hearbeat
+
             }
 
             self.get_logger().info(
@@ -136,6 +148,8 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"], 
                 "name": request.name,
+                "heartbeat": self.hearbeat
+
             }
 
             self.get_logger().info(
@@ -160,12 +174,15 @@ class Master(Node):
         self.nodes += 1
         self.nodes_list.append(dict)
 
+
         # Release lock and exit
         self.node_lock.release()
         self.get_logger().info(
             "Registration of ID: %s name: %s complete" % (dict["id"], dict["name"])
         )
         return response
+
+       
 
     # Removes node information upon service call
     def handle_destroy_worker(
@@ -224,7 +241,7 @@ class Master(Node):
         self.node_lock.release()
 
         # Not found
-        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1"}
+        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1", "heartbeat": "-1"}
         return dict
 
     # Checks to see if the node/worker is ready (registered with the master)
@@ -321,6 +338,51 @@ class Master(Node):
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
+    
+    # Function to receive the robot heartbeats
+    def heartbeat_callback(self, msg):
+
+        self.get_logger().warning("Receiving heartbeat of id: %s..."%msg.id)
+
+        # Find node
+        entry = self.search_for_node(msg.id)
+
+        # Set current time
+        current_time = datetime.now()
+
+        # set hearbeat timestamp
+        self.node_lock.acquire()
+        entry['heartbeat'] = current_time
+        self.node_lock.release() 
+
+    #Scaning the heartbeat record and checing the current time
+    def check_heartbeat(self, msg):
+         # Runs every 15 seconds
+        while rclpy.ok():
+            
+            time.sleep(15)
+          
+            # Recive last updated heartbeat time
+            last_timestamp = self.hearbeat
+            # Set current time
+            current_time = datetime.now()
+            is_node_alive = current_time - last_timestamp
+
+            if(is_node_alive.seconds <= 30):
+                print("Node id:" + self.id + "is alaive. Last Heartbeat recived in", is_node_alive.seconds,"seconds")   
+
+            
+            elif(is_node_alive.seconds > 30):
+                # Find node
+                entry = self.search_for_node(msg.id)
+
+                # set state
+                self.node_lock.acquire()
+                entry['state'] = "ERROR"
+                self.node_lock.release()
+                print("Heartbeat does not response. Last Heartbeat update:", last_timestamp)
+                return; # Exit out 
+            
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):
