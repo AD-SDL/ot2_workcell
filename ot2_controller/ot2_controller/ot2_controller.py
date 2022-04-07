@@ -143,9 +143,10 @@ class OT2(Node):
         )
         
         # Create a thread to run heartbeat_transmitter
-        heartbeat_thread = Thread(target=heartbeat_transmitter)
+        heartbeat_thread = Thread(target=heartbeat_transmitter,args=(self,))
         heartbeat_thread.start()
     
+  
     '''
     # Handles load_protocols service calls, creates files and loads contents into them
     def load_protocols_handler(self, request, response):
