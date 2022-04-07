@@ -11,7 +11,7 @@ from workcell_interfaces.msg import *
 
 '''
     Internal interface for communication between the OT2 nodes to syncronize the state information
-'''
+''' 
 # Function to transmit the heartbeat to the master
 def heartbeat_transmitter(self):
 
