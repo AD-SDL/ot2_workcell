@@ -355,10 +355,11 @@ class Master(Node):
         # set hearbeat timestamp
         self.node_lock.acquire()
         entry['heartbeat'] = now
+        self.node_lock.release() 
         self.get_logger().info(str(now))
         self.get_logger().info("heartbeat_callback --- msg id: %s, self id: %s, entry id %s"%(msg.id, self.id, entry['id']))
 
-        self.node_lock.release() 
+        
 
 
     #Scaning the heartbeat record and checkworkcell_ming the current time
@@ -368,7 +369,6 @@ class Master(Node):
             
             time.sleep(15)
             # Find node
-            self.node_lock.acquire()
             for dict in self.nodes_list:
                 self.get_logger().info("check_heartbeat  -- dict id: %s,heartbeat: %s" % (dict["id"], dict["heartbeat"]))            
                 
@@ -385,12 +385,10 @@ class Master(Node):
 
                 if(is_node_alive.seconds <= 30):
                     self.get_logger().info("Node id: %s is alive. Last Heartbeat recived in %s seconds ago" % (dict["id"], is_node_alive.seconds))   
-                    self.node_lock.release()
 
                 elif(is_node_alive.seconds > 30):
                     
                     dict['state'] = "ERROR"
-                    self.node_lock.release()
                     self.get_logger().info("Heartbeat is not responding. Last Heartbeat update: %s %s" %(dict["id"], last_timestamp))
             
 
