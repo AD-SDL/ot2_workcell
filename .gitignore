@@ -5,6 +5,7 @@ src/ros_tutorials/
 *.swp
 *.save
 
+Protocol_Modules/*
 # Python
 
 # Byte-compiled / optimized / DLL files

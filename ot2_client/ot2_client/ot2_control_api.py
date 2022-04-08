@@ -72,6 +72,7 @@ def load_protocols_to_ot2(self, entry, name):
     protocol_new_name = protocol_parser(self.module_location + name)
 
     # insert protocol into database 
+    protocol_module_location = self.home_location + "/ot2_ws/src/ot2_workcell/Protocol_Modules/" # Get Protocol_Module location
     protocol_id = insert_protocol(self.module_location + protocol_new_name, target_node['id'])
 
     # return id 
