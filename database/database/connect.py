@@ -7,8 +7,6 @@ home = str(Path.home())
 sys.path.insert(0, home)
 import config_SDl_DB as config
 
-
-
 def connect():
     print("Using database {} as user {}".format(config.DBNAME, config.DBUSER))
 
@@ -26,7 +24,6 @@ def connect():
         sys.exit()
 
     return cnx
-
 
 def close(cnx):
     cnx.close()
