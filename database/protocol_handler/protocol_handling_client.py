@@ -1,12 +1,12 @@
-#import zmq
+import zmq
 import time
-#from multiprocessing.connection import Listener
+#from multiprocessing.connection import Listener #This also doesn't seem necessary
 import sys
 from database.database_functions import *
-#from database import connect
-#import protocol_transfer 
-#from protocol_parser import *
-#from zeroMQ_OT2 import *
+from database.connect import connect
+import protocol_handler.protocol_transfer 
+from protocol_handler.protocol_parser import *
+# from zeroMQ_OT2 import #This doesn't seem necesary
 
 def handler(Protocol_ID):
     path, protocol = pull_protocol(Protocol_ID)  

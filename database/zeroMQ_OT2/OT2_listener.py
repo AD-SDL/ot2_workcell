@@ -29,5 +29,8 @@ def execute_command(command):
     print("Output Message:\n" + result.stdout)
     return result.stdout, result.stderr, result.returncode
 
+def main_null():
+    print("This function is not meant to have a main function")
+
 if __name__ == "__main__":
     listen()
