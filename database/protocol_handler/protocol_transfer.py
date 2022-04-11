@@ -6,7 +6,7 @@ from rich import print, pretty, inspect
 def transfer(local_path):
 	pretty.install()
 	host_ip = '0.0.0.0'
-	user = 'ubuntu'
+	user = 'nerra'
 	passwd = 'password'
 	try:
 		client = SSHClient()

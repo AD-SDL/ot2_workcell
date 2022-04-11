@@ -183,7 +183,7 @@ class OT2ProtocolManager(Node):
             # Run protocol on OT2, use handler function
             else:
                 self.get_logger().info("Running protocol")
-                msg_error, msg_output, status = handler(protocol_id)
+                msg_error, msg_output, status = handler(int(protocol_id))
 
             # Check to see if run was success
             if status == self.status['SUCCESS']:

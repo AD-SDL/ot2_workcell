@@ -3,15 +3,16 @@ import time
 #from multiprocessing.connection import Listener #This also doesn't seem necessary
 import sys
 from database.database_functions import *
+from database.database_functions import pull_protocol
 from database.connect import connect
-import protocol_handler.protocol_transfer 
+from protocol_handler.protocol_transfer import transfer
 from protocol_handler.protocol_parser import *
 # from zeroMQ_OT2 import #This doesn't seem necesary
 
 def handler(Protocol_ID):
     path, protocol = pull_protocol(Protocol_ID)  
     print("Protocol saved into " + path + "directory")
-    protocol_transfer.transfer(path)
+    transfer(path)
     #protocol = "/path/to/Protocol_2022-02-18_17:13:44.py"
     msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/data/" + protocol)
     

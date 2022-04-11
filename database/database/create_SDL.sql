@@ -32,10 +32,10 @@ create table Protocol
 (
 Protocol_ID int(11) PRIMARY KEY NOT NULL AUTO_INCREMENT, 
 Protocol_Name VARCHAR(255),
-Type VARCHAR(30), 
+Type VARCHAR(30),
 Robot_Name VARCHAR(50) NOT NULL, 
 Protocol_File LONGBLOB, 
-Process_Status VARCHAR(15) defult 'New', 
+Process_Status VARCHAR(15) default 'new', 
 Date_created VARCHAR(50), 
 Time_created VARCHAR(50)
 );

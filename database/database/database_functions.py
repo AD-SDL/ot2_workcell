@@ -35,7 +35,7 @@ def disconnect_Database(cursor,cnx):
     #cursor.close()
     close(cnx)
 
-def insert_protocol(protocol_file_name: str, robot_name:str):
+def insert_protocol(scheduler_node, protocol_file_name: str, robot_name:str):
 
     try:
         try:
@@ -79,7 +79,7 @@ def pull_protocol(protocol_ID):
         pull_protocol = "SELECT Protocol_File, Protocol_Name from Protocol Where Protocol_ID = %s"
         cursor.execute(pull_protocol, (protocol_ID,))
         protocol = cursor.fetchall()
-        filename = "/Users/dozgulbas/Desktop/OT2/ot2_workcell/protocol_handling/protocols/" + protocol[0][1]
+        filename = protocol[0][1]
   
         try:
             file = open(filename, 'wb')
