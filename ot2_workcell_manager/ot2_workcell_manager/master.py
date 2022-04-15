@@ -1,4 +1,6 @@
 # ROS libraries 
+from atexit import unregister
+from sqlite3 import Timestamp
 import rclpy
 from rclpy.node import Node
 
@@ -47,7 +49,8 @@ class Master(Node):
         # Readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
-        self.hearbeat = datetime.now() #datetime(2022,1,1,1,1,1,1) for low number
+        self.heartbeat = datetime.now() #datetime(2022,1,1,1,1,1,1) for low number
+        self.heartbeat_node_list = []
 
         # Path setup
         path = Path()
@@ -116,7 +119,7 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
-                "heartbeat": self.hearbeat
+                "heartbeat": self.heartbeat
             }
 
             self.get_logger().info(
@@ -132,7 +135,7 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
-                "heartbeat": self.hearbeat
+                "heartbeat": self.heartbeat
 
             }
 
@@ -149,7 +152,7 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"], 
                 "name": request.name,
-                "heartbeat": self.hearbeat
+                "heartbeat": self.heartbeat
 
             }
 
@@ -350,14 +353,22 @@ class Master(Node):
 
         # Set current time
         now = datetime.now()
-        #current_time = now.strftime("%H:%M:%S")
  
         # set hearbeat timestamp
         self.node_lock.acquire()
         entry['heartbeat'] = now
         self.node_lock.release() 
-        self.get_logger().info(str(now))
-        self.get_logger().info("heartbeat_callback --- msg id: %s, self id: %s, entry id %s"%(msg.id, self.id, entry['id']))
+
+        count = 0
+        for index in range(len(self.heartbeat_node_list)):
+            if self.heartbeat_node_list[index][0] == entry["id"]:
+                self.heartbeat_node_list[index][1] =  now
+                count+=1
+        if count == 0:
+            self.heartbeat_node_list.append([entry["id"], now])
+
+        #self.get_logger().info(str(now))
+        #self.get_logger().info("heartbeat_callback --- msg id: %s, self id: %s, entry id %s"%(msg.id, self.id, entry['id']))
 
         
 
@@ -368,12 +379,11 @@ class Master(Node):
         while rclpy.ok():
             
             time.sleep(15)
+                     
             # Find node
-            for dict in self.nodes_list:
-                self.get_logger().info("check_heartbeat  -- dict id: %s,heartbeat: %s" % (dict["id"], dict["heartbeat"]))            
-                
+            for index in range(len(self.heartbeat_node_list)):            
                 #  Recive last updated heartbeat time
-                last = dict["heartbeat"]
+                last = self.heartbeat_node_list[index][1]
 
                 last_timestamp = datetime.strptime(str(last), "%Y-%m-%d %H:%M:%S.%f")
 
@@ -384,13 +394,15 @@ class Master(Node):
                 is_node_alive = current_time - last_timestamp
 
                 if(is_node_alive.seconds <= 30):
-                    self.get_logger().info("Node id: %s is alive. Last Heartbeat recived in %s seconds ago" % (dict["id"], is_node_alive.seconds))   
-
+                    self.get_logger().info("Node ID: %s is alive. Last Heartbeat recived in %s seconds ago." % (self.heartbeat_node_list[index][0], is_node_alive.seconds))   
+            
                 elif(is_node_alive.seconds > 30):
                     
-                    dict['state'] = "ERROR"
-                    self.get_logger().info("Heartbeat is not responding. Last Heartbeat update: %s %s" %(dict["id"], last_timestamp))
+                    #dict['state'] = "ERROR"
+                    self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(self.heartbeat_node_list[index][0], last_timestamp))
+                
             
+
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):

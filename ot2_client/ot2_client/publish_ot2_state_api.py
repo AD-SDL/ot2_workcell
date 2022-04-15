@@ -4,6 +4,7 @@ from rclpy.node import Node
 
 # Time library
 import time
+from datetime import datetime
 
 # ROS messages and services 
 from workcell_interfaces.srv import *
@@ -27,8 +28,9 @@ def heartbeat_transmitter(self):
 
         # Publish the heartbeat
         transmit_heartbeat.publish(msg)
-
-        self.get_logger().info("---------Heartbeat transmitted---------")
+        now = datetime.now()
+        current_time = datetime.strptime(str(now), "%Y-%m-%d %H:%M:%S.%f")
+        self.get_logger().info("--------- Heartbeat transmitted at %s ----------"% datetime.now())
        
     return
      
