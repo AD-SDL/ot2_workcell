@@ -129,6 +129,7 @@ def arm_circular_wait(self, blocks):
             cur_block = key
             break 
 
+    # Depth control 
     while(num_transfers != 0): # while there are still transfers
         cur_transfer = transfer_list[cur_block][0][1] # get the top item 
         next_block = transfer_list[cur_block][0][0]
@@ -139,7 +140,7 @@ def arm_circular_wait(self, blocks):
             return self.status['ERROR'], [cur_transfer], stack_trace
 
         # checks 
-        if(not str(cur_transfer+":"+cur_block) in visited):
+        if(not str(cur_transfer+":"+cur_block) in visited and len(stack_trace) <= 2):
             visited[str(cur_transfer+":"+cur_block)] = True # mark as visited
 
             # if we move to the next ones 
