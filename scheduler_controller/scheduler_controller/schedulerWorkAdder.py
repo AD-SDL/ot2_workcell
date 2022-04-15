@@ -103,7 +103,7 @@ class schedulerWorkAdder(Node):
                 return self.status['ERROR']
 
         # Deadlock checks
-        status = full_check(self, blocks)
+        status = full_check(self, blocks, 2) #TODO: dynamically decide the number of robots
 
         # Error handling
         if(status == self.status['ERROR']):

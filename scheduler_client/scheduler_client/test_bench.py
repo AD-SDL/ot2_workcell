@@ -106,7 +106,7 @@ def not_enough_robots_tests():
     assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 2) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
-    # no circular wait test with enough robots
+    # no circular wait with enough robots test
     print("Basic no Circular Wait Test Enough Robots -")
     blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
                 {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
@@ -114,13 +114,84 @@ def not_enough_robots_tests():
     assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 2) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
-    # no circular wait test without enough robots
+    # no circular wait without enough robots test
     print("Basic no Circular Wait Test Not Enough Robots -")
     blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
                 {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
     status, invalid_transfers, stack_trace = 1, ["transfer:test1:test2:20:army-test2"], ["transfer:test1:test2:20:army-test1"]
     assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1) == (status, invalid_transfers, stack_trace)
     print("PASSED")
+
+    # no circular wait with enough robots test 2
+    print("Basic no Circular Wait Test 2 Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"item1.py item2.py item3.py transfer:test3:test1:10:army"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py transfer:test2:test3:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test1:10:army item2.py a transfer:test2:test3:10:army"},
+             ]
+    status, invalid_transfers, stack_trace = 0, [], []  
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 2) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait without enough robots test 2
+    print("Basic no Circular Wait Test 2 Not Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"item1.py item2.py item3.py transfer:test3:test1:10:army"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py transfer:test2:test3:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test1:10:army item2.py a transfer:test2:test3:10:army"},
+             ]
+    status, invalid_transfers, stack_trace = 1, ["transfer:test3:test1:10:army-test3"], ["transfer:test3:test1:10:army-test1"]  
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait with enough robots test 3
+    print("Basic no Circular Wait Test 3 Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"transfer:test2:test1:10:army "}, 
+                {"block-name":"test2", "tasks":"transfer:test2:test3:10:army transfer:test2:test1:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test4:10:army transfer:test2:test3:10:army"},
+                {"block-name":"test4", "tasks":"transfer:test4:test5:10:army transfer:test3:test4:10:army"},
+                {"block-name":"test5", "tasks":"transfer:test6:test5:10:army transfer:test4:test5:10:army"},
+                {"block-name":"test6", "tasks":"transfer:test6:test7:10:army transfer:test6:test5:10:army"},
+                {"block-name":"test7", "tasks":"transfer:test6:test7:10:army"},
+             ]
+    status, invalid_transfers, stack_trace = 0, [], []  
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 7) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait without enough robots test 3
+    print("Basic no Circular Wait Test 3 Not Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"transfer:test2:test1:10:army "}, 
+                {"block-name":"test2", "tasks":"transfer:test2:test3:10:army transfer:test2:test1:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test4:10:army transfer:test2:test3:10:army"},
+                {"block-name":"test4", "tasks":"transfer:test4:test5:10:army transfer:test3:test4:10:army"},
+                {"block-name":"test5", "tasks":"transfer:test6:test5:10:army transfer:test4:test5:10:army"},
+                {"block-name":"test6", "tasks":"transfer:test6:test7:10:army transfer:test6:test5:10:army"},
+                {"block-name":"test7", "tasks":"transfer:test6:test7:10:army"},
+             ]
+    status, invalid_transfers, stack_trace = 1, ["transfer:test6:test7:10:army-test7"], ["transfer:test2:test1:10:army-test1", 
+                                                                                         "transfer:test2:test3:10:army-test2", 
+                                                                                         "transfer:test3:test4:10:army-test3", 
+                                                                                         "transfer:test4:test5:10:army-test4",
+                                                                                         "transfer:test6:test5:10:army-test5",
+                                                                                         "transfer:test6:test7:10:army-test6"]  
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 6) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait without enough robots test 3.5
+    print("Basic no Circular Wait Test 3.5 Not Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"transfer:test2:test1:10:army "}, 
+                {"block-name":"test2", "tasks":"transfer:test2:test3:10:army transfer:test2:test1:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test4:10:army transfer:test2:test3:10:army"},
+                {"block-name":"test4", "tasks":"transfer:test4:test5:10:army transfer:test3:test4:10:army"},
+                {"block-name":"test5", "tasks":"transfer:test6:test5:10:army transfer:test4:test5:10:army"},
+                {"block-name":"test6", "tasks":"transfer:test6:test7:10:army transfer:test6:test5:10:army"},
+                {"block-name":"test7", "tasks":"transfer:test6:test7:10:army"},
+             ]
+    status, invalid_transfers, stack_trace = 1, ["transfer:test6:test5:10:army-test5"], ["transfer:test2:test1:10:army-test1", 
+                                                                                         "transfer:test2:test3:10:army-test2", 
+                                                                                         "transfer:test3:test4:10:army-test3", 
+                                                                                         "transfer:test4:test5:10:army-test4"]  
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 4) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
 
 class test():
     def __init__(self):

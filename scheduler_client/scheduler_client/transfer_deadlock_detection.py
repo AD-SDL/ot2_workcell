@@ -162,6 +162,8 @@ def arm_circular_wait(self, blocks, num_of_OT2):
                 transfer_list[cur_block].pop(0)
                 transfer_list[next_block].pop(0)
                 robots_in_use.remove(cur_block)
+                if(len(transfer_list[next_block]) == 0):
+                    robots_in_use.remove(next_block)
 
                 # find the next cur_block 
                 if(num_transfers == 0):
