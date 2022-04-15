@@ -15,9 +15,10 @@ def handler(Protocol_ID):
     status = transfer(path)
     if(status == 1): # error 
         return "", "", 1
-        
+
     #protocol = "/path/to/Protocol_2022-02-18_17:13:44.py"
-    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/data/" + protocol)
+    print(protocol)
+    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1])
     
     return msg_output, msg_error, msg_errorcode
 

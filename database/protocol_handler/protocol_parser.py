@@ -31,7 +31,7 @@ def protocol_parser(filename):
                 sys.exit()
         else:
                 lines = file.readlines()
-                new_file.write("import error_handling\n")
+                #new_file.write("import error_handling\n") TODO
                 for line in lines:
                         pick_up_indx = line.find(".pick_up_tip")
                         drop_indx = line.find(".drop_tip")

@@ -13,7 +13,6 @@ def transfer(local_path):
 	path = Path()
 	home_location = str(path.home())
 	try:
-		print("Starting")
 		client = SSHClient()
 
 		#LOAD HOST KEYS
@@ -26,7 +25,7 @@ def transfer(local_path):
 
 		#Setup SCP transfer
 		scp = SCPClient(client.get_transport())
-		scp.put(local_path, recursive=True, remote_path='/data/')
+		scp.put(local_path, recursive=True, remote_path='/tmp') #TODO: OT2 have a folder called data where the protocols are suppose to be stored 
 	except paramiko.AuthenticationException:
 		print("Authentication failed, please verify your credentials: %s")
 		return 1 # error
