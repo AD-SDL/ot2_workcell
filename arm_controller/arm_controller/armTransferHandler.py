@@ -33,6 +33,8 @@ from ot2_workcell_manager_client.worker_info_api import (
 # Arm Library
 from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
+from arm_client.publish_arm_state import heartbeat_transmitter
+
 
 # TODO: figure out how to integrate arm code
 '''
@@ -115,6 +117,10 @@ class ArmTransferHandler(Node):
 
         # Kill thread 
         self.dead = False 
+        
+        # Create a thread to run heartbeat_transmitter
+        heartbeat_thread = Thread(target=heartbeat_transmitter,args=(self,))
+        heartbeat_thread.start()
 
     '''
         Retrieves the next transfer to run in the queue

@@ -15,6 +15,12 @@ from workcell_interfaces.msg import *
 ''' 
 # Function to transmit the heartbeat to the master
 def heartbeat_transmitter(self):
+    """heartbeat_transmitter
+
+        Description: Function to transmit the heartbeat to the master.
+                     Creates and publishes the Heartbeat topic to the master.
+                        
+    """
 
     while rclpy.ok():    
         # Create a request for heartbeat message 
@@ -28,11 +34,9 @@ def heartbeat_transmitter(self):
 
         # Publish the heartbeat
         transmit_heartbeat.publish(msg)
-        now = datetime.now()
-        current_time = datetime.strptime(str(now), "%Y-%m-%d %H:%M:%S.%f")
         self.get_logger().info("--------- Heartbeat transmitted at %s ----------"% datetime.now())
        
-    return
+    
      
 
 

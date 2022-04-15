@@ -343,8 +343,14 @@ class Master(Node):
         entry['state'] = msg.state
         self.node_lock.release()
     
-    # Function to receive the robot heartbeats
     def heartbeat_callback(self, msg):
+        """heartbeat_callback
+
+            Description: Function to receive the robot heartbeats. Updates the heartbeat time in the "nodes_list" and "hearbeat_node_list" lists.
+            
+            Parameters: 
+                        -msg: Message, that is recived from the nodes. Only contains the robot id.
+        """
 
         self.get_logger().info("Receiving heartbeat of id: %s..."%msg.id)
         
@@ -364,7 +370,7 @@ class Master(Node):
             if self.heartbeat_node_list[index][0] == entry["id"]:
                 self.heartbeat_node_list[index][1] =  now
                 count+=1
-        if count == 0:
+        if count == 0 and entry["id"] != "-1" :
             self.heartbeat_node_list.append([entry["id"], now])
 
         #self.get_logger().info(str(now))
@@ -375,6 +381,13 @@ class Master(Node):
 
     #Scaning the heartbeat record and checkworkcell_ming the current time
     def check_heartbeat(self):
+        """check_heartbeat
+
+            Description: Triggered by the thread. 
+                         Scans the heartbeat record of the each node and finds the elapsed time since the last heartbeat update. 
+                         Considers the node dead if the last heartbeat update was more then 30 seconds.
+
+        """
          # Runs every 15 seconds
         while rclpy.ok():
             
@@ -397,8 +410,8 @@ class Master(Node):
                     self.get_logger().info("Node ID: %s is alive. Last Heartbeat recived in %s seconds ago." % (self.heartbeat_node_list[index][0], is_node_alive.seconds))   
             
                 elif(is_node_alive.seconds > 30):
-                    
-                    #dict['state'] = "ERROR"
+                    entry = self.search_for_node(self.heartbeat_node_list[index][0])
+                    entry['state'] = "ERROR"
                     self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(self.heartbeat_node_list[index][0], last_timestamp))
                 
             
