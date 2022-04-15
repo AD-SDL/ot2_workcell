@@ -17,15 +17,15 @@ from workcell_interfaces.msg import *
 '''
     This function takes in a list of blocks and runs all the checks we have on them and returns 'SUCCESS' if none are detected
 '''
-def full_check(self, blocks):
+def full_check(self, blocks, num_of_OT2):
     # Matched up check 
     status, invalid_transfers = arm_transfer_detection(self, blocks)
     if(status == self.status['ERROR']): # error check 
         self.get_logger().error("Invalid transfers (mismatch) for the transfers " + str(invalid_transfers)) # show error
         return self.status['ERROR'] # error 
 
-    # Circular wait check 
-    status, invalid_transfers, stack_trace = arm_circular_wait(self, blocks)
+    # Circular wait check and not enough robots check
+    status, invalid_transfers, stack_trace = arm_circular_wait(self, blocks, num_of_OT2)
     if(status == self.status['ERROR']):
         self.get_logger().error("Invalid transfer (circular wait) for the transfer " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace)) # show error 
         return self.status['ERROR'] # error
@@ -92,6 +92,9 @@ def arm_transfer_detection(self, blocks):
                 3) Pairs of tranfers don't share the same command string the (transfer:...:...:...)
                 4) One block doesn't contain the pair (must be split between 2 different blocks) 
                 5) The transfers are in the new format of block to block instead of ot2 to ot2 
+
+    Assumptions for not enough robots-
+                1) Doesn't support out of order robot transfers, as in the file needs to be organized correctly or else it might pass the checks
 '''
 def arm_circular_wait(self, blocks, num_of_OT2): 
     # Item declaration 
