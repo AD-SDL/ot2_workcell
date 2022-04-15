@@ -11,6 +11,7 @@ import transfer_deadlock_detection
 def full_test():
     basic_arm_tests()
     circular_wait_tests()
+    #not_enough_robots_tests()
 
 '''
     Basic arm tests to make sure workflow file is formatted correctly. Tests the following,
@@ -33,7 +34,7 @@ def circular_wait_tests():
               {"block-name":"test2", "tasks":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
     status, invalid_transfers, stack_trace = 1, ['transfer:test1:test2:20:army'], ['transfer:test1:test2:20:army-test1', 'transfer:test1:test2:15:army-test2', 'transfer:test1:test2:20:army-test1']
     test_class = test()
-    assert str(transfer_deadlock_detection.arm_circular_wait(test_class, blocks)) == str((status, invalid_transfers, stack_trace))
+    assert str(transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000)) == str((status, invalid_transfers, stack_trace))
     print("PASSED")
 
     # no circular wait test
@@ -41,7 +42,7 @@ def circular_wait_tests():
     blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
                 {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
     status, invalid_transfers, stack_trace = 0, [], []
-    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks) == (status, invalid_transfers, stack_trace)
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
     # no transfer test 
@@ -49,7 +50,7 @@ def circular_wait_tests():
     blocks = [{"block-name":"test1", "tasks":"item1.py item2.py item3.py"}, 
                 {"block-name":"test2", "tasks":"item1.py item2.py item3.py"}]
     status, invalid_transfers, stack_trace = 0, [], []
-    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks) == (status, invalid_transfers, stack_trace)
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
     # Complicated no circular wait 
@@ -59,7 +60,7 @@ def circular_wait_tests():
                 {"block-name":"test3", "tasks":"transfer:test3:test1:10:army item2.py a transfer:test2:test3:10:army"},
              ]
     status, invalid_transfers, stack_trace = 0, [], []  
-    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks) == (status, invalid_transfers, stack_trace)
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
     # Complicated circular wait 
@@ -73,7 +74,7 @@ def circular_wait_tests():
                 {"block-name":"test7", "tasks":"transfer:test7:test1:10:army"},
              ]
     status, invalid_transfers, stack_trace = 1,  ['transfer:test2:test1:10:army'], ['transfer:test2:test1:10:army-test1', 'transfer:test2:test3:10:army-test2', 'transfer:test3:test4:10:army-test3', 'transfer:test4:test5:10:army-test4', 'transfer:test6:test5:10:arm-test5', 'transfer:test6:test7:10:army-test6', 'transfer:test7:test1:10:army-test7', 'transfer:test2:test1:10:army-test1']
-    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks) == (status, invalid_transfers, stack_trace)
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
     # Points 2 transfers in the same block test 
@@ -81,15 +82,50 @@ def circular_wait_tests():
     blocks = [  {"block-name":"test1", "tasks":"transfer:test1:test1:10:army" }
              ]
     status, invalid_transfers, stack_trace = 1,  ['transfer:test1:test1:10:army'], ['transfer:test1:test1:10:army-test1']
-    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks) == (status, invalid_transfers, stack_trace)
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1000) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
     # No errors
     print("Errors: ")
+
+'''
+    Not enough robots tests: checks to see if the transfers will work given a limited number of robots, tests the following
+    - No transfers
+    - Correct transfers with enough robots
+    - Correct transfers without enough robots
+'''
+def not_enough_robots_tests():
+    # Test class setup 
+    test_class = test()
+
+    # no transfer test 
+    print("No Transfer Test -")
+    blocks = [{"block-name":"test1", "tasks":"item1.py item2.py item3.py"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py"}]
+    status, invalid_transfers, stack_trace = 0, [], []
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 2) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait test with enough robots
+    print("Basic no Circular Wait Test Enough Robots -")
+    blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+                {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
+    status, invalid_transfers, stack_trace = 0, [], []
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 2) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
+
+    # no circular wait test without enough robots
+    print("Basic no Circular Wait Test Not Enough Robots -")
+    blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+                {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
+    status, invalid_transfers, stack_trace = 1, ["transfer:test1:test2:20:army-test2"], ["transfer:test1:test2:20:army-test1"]
+    assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 1) == (status, invalid_transfers, stack_trace)
+    print("PASSED")
 
 class test():
     def __init__(self):
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
 if __name__ == '__main__':
-    full_test()
+    #full_test()
+    not_enough_robots_tests()

@@ -93,12 +93,13 @@ def arm_transfer_detection(self, blocks):
                 4) One block doesn't contain the pair (must be split between 2 different blocks) 
                 5) The transfers are in the new format of block to block instead of ot2 to ot2 
 '''
-def arm_circular_wait(self, blocks): 
+def arm_circular_wait(self, blocks, num_of_OT2): 
     # Item declaration 
     transfer_list = {}
     num_transfers = 0 
     visited = {}
     stack_trace = [] # stack to allow us to backtrack up the dfs 
+    robots_in_use = set([]) # list of robots for not enough robots check
 
     # Populate transfer_list and num_transfers 
     for block in blocks: 
@@ -129,8 +130,12 @@ def arm_circular_wait(self, blocks):
             cur_block = key
             break 
 
-    # Depth control 
+    # circular wait algorithm
+    robots_in_use.add(cur_block)
     while(num_transfers != 0): # while there are still transfers
+        #print("top")
+        #print(robots_in_use)
+        #print(stack_trace)
         cur_transfer = transfer_list[cur_block][0][1] # get the top item 
         next_block = transfer_list[cur_block][0][0]
 
@@ -139,31 +144,39 @@ def arm_circular_wait(self, blocks):
             stack_trace.append(cur_transfer+"-"+cur_block)
             return self.status['ERROR'], [cur_transfer], stack_trace
 
-        # checks 
-        if(not str(cur_transfer+":"+cur_block) in visited and len(stack_trace) <= 2):
+        # Not Enough Robot Check
+        if(len(robots_in_use) > num_of_OT2): 
+            return self.status['ERROR'], [cur_transfer+"-"+cur_block], stack_trace
+
+        # Circular Wait Check
+        if(not str(cur_transfer+":"+cur_block) in visited): 
             visited[str(cur_transfer+":"+cur_block)] = True # mark as visited
 
             # if we move to the next ones 
             if(not str(cur_transfer+":"+next_block) in visited): # keep searching
                 stack_trace.append(cur_transfer+"-"+cur_block)
                 cur_block = next_block
+                robots_in_use.add(cur_block)
             elif(str(cur_transfer+":"+next_block) in visited): # if the counter part transfer has been initiated 
                 num_transfers -= 2 
                 transfer_list[cur_block].pop(0)
                 transfer_list[next_block].pop(0)
+                robots_in_use.remove(cur_block)
 
                 # find the next cur_block 
                 if(num_transfers == 0):
                     return self.status['SUCCESS'], [], []
                 if(len(transfer_list[cur_block]) > 0): # if the cur block has elements to start 
-                    pass
+                    robots_in_use.add(cur_block) 
                 else: # following stack trace 
                     next_block = -1 
                     while(len(stack_trace) > 0): 
                         next_block = stack_trace[-1].split("-")[1] # top of the stack 
                         stack_trace.pop(-1) # pop the top of the stack 
+                        robots_in_use.remove(next_block)
                         if(len(transfer_list[next_block]) > 0):
                             cur_block = next_block
+                            robots_in_use.add(cur_block)
                             break 
                     
                     # if the stack trace failed then find the one with items left
@@ -172,6 +185,7 @@ def arm_circular_wait(self, blocks):
                         for key in transfer_list:
                             if(len(transfer_list[key]) > 0): 
                                 cur_block = key 
+                                robots_in_use.append(cur_block)
                                 #stack_trace.append(cur_transfer+"-"+cur_block)
                                 break 
         else: # circular wait
