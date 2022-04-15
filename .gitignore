@@ -6,6 +6,7 @@ src/ros_tutorials/
 *.save
 
 Protocol_Modules/*
+.vscode/*
 # Python
 
 # Byte-compiled / optimized / DLL files

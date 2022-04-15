@@ -2,37 +2,45 @@ from paramiko import SSHClient, AutoAddPolicy
 import paramiko
 from scp import SCPClient
 from rich import print, pretty, inspect
+from pathlib import Path
 
 def transfer(local_path):
 	pretty.install()
-	host_ip = '0.0.0.0'
+	host_ip = '127.0.0.1'
 	user = 'nerra'
-	passwd = 'password'
+
+	# Get home path
+	path = Path()
+	home_location = str(path.home())
 	try:
+		print("Starting")
 		client = SSHClient()
+
 		#LOAD HOST KEYS
-		#client.load_host_keys('~/.ssh/known_hosts')
-		client.load_host_keys('~/.ssh/id_rsa.pub')
+		key_path = home_location + "/.ssh/id_rsa.pub"
+		client.load_host_keys(key_path)
 		client.load_system_host_keys()
 		client.set_missing_host_key_policy(AutoAddPolicy())
-		client.connect(host_ip, username= user, password = passwd)
+		#client.connect(host_ip, username= user, password = passwd)
+		client.connect(host_ip, username=user)
+
 		#Setup SCP transfer
 		scp = SCPClient(client.get_transport())
 		scp.put(local_path, recursive=True, remote_path='/data/')
-
-	
 	except paramiko.AuthenticationException:
 		print("Authentication failed, please verify your credentials: %s")
-	
+		return 1 # error
 	except paramiko.SSHException as sshException:
 		print("Unable to establish SSH connection: %s" % sshException)
-	
+		return 1 # error
 	except paramiko.BadHostKeyException as badHostKeyException:
 		print("Unable to verify server's host key: %s" % badHostKeyException)
-	
-	except paramiko.SCPException as err:
-		print(err)	
-	
+		return 1 # error
+	except Exception as e: 
+		print("Error occured in transfer: %r"%(e,))
+		return 1 # error
+	else:
+		return 0 # all good 
 	finally:
 		client.close()
 		scp.close()

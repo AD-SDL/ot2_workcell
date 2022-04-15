@@ -12,7 +12,10 @@ from protocol_handler.protocol_parser import *
 def handler(Protocol_ID):
     path, protocol = pull_protocol(Protocol_ID)  
     print("Protocol saved into " + path + "directory")
-    transfer(path)
+    status = transfer(path)
+    if(status == 1): # error 
+        return "", "", 1
+        
     #protocol = "/path/to/Protocol_2022-02-18_17:13:44.py"
     msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/data/" + protocol)
     
