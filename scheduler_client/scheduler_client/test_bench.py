@@ -11,7 +11,7 @@ import transfer_deadlock_detection
 def full_test():
     basic_arm_tests()
     circular_wait_tests()
-    #not_enough_robots_tests()
+    not_enough_robots_tests()
 
 '''
     Basic arm tests to make sure workflow file is formatted correctly. Tests the following,
