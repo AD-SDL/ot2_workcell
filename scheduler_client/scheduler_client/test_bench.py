@@ -289,6 +289,6 @@ class test():
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
 if __name__ == '__main__':
-    #full_test()
+    full_test()
     #not_enough_robots_tests()
-    simulate_tests()
+    #simulate_tests()
