@@ -203,7 +203,7 @@ def arm_circular_wait(self, blocks, num_of_OT2):
     A simulation check, where it will simulate how the transfer work. This should catch any remaining errors that 
     exist on the system. 
     Input: ROS object, The JSON dict with block-name and tasks, and number of OT2s
-    Output: status, list invalid_transfers, list stack_trace 
+    Output: status, string error message
 '''
 def simulate_check(self, blocks, num_of_OT2):
     # Set up simulated OT2 
@@ -218,7 +218,7 @@ def simulate_check(self, blocks, num_of_OT2):
         for protocol in block_split:
             if(protocol.split(":")[0] == 'transfer'): # it is a transfer 
                 transfers.append(protocol)
-        block_queue.append( (name, tranfers) ) # append block-name and transfers as a tuple 
+        block_queue.append( (name, transfers) ) # append block-name and transfers as a tuple 
 
     # Simulation
     while True: 
@@ -250,10 +250,10 @@ def simulate_check(self, blocks, num_of_OT2):
         if(change == False and len(block_queue) == 0):
             for item in blocks_cur_running:
                 if(item != None):
-                     return self.status['ERROR']
-            return self.status['SUCCESS']
-        elif(change == False and len(block_queue) == 0):
-            return self.status['ERROR']
+                     return self.status['ERROR'], item[0]
+            return self.status['SUCCESS'], None
+        elif(change == False and len(block_queue) != 0):
+            return self.status['ERROR'],  "Unable to finish simulation"
 
     # Error with algorithm, should never reach here 
     return self.status['FATAL']
@@ -270,7 +270,15 @@ if __name__ == '__main__':
     blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
               {"block-name":"test2", "tasks":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
     test_class = test()
+
+    # Basic checks 
     status, invalid_transfers = arm_transfer_detection(test_class, blocks)
     print("Invalid transfers: " + str(invalid_transfers))
-    status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks)
+
+    # Circular wait / inorder num of robots check
+    status, invalid_transfers, stack_trace = arm_circular_wait(test_class, blocks, 2)
     print("Invalid transfers: " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace))
+
+    # Simulate check
+    status, invalid_transfers = simulate_check(test_class, blocks, 2)
+    print("Invalid transfers: " + str(invalid_transfers))
