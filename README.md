@@ -97,7 +97,7 @@ After the `blocks` section you have the `meta-data` (dictionary) section which c
 		"author": "[Author Name]",
 		"email": "[Author Email]", 
 		"description": "[Description of the Workflow File]"
-	   }    
+	     }    
 ```  
 Example workflow file is in the `OT2_Modules/workflow.json`.
 
