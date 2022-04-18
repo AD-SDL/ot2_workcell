@@ -29,6 +29,12 @@ def full_check(self, blocks, num_of_OT2):
     if(status == self.status['ERROR']):
         self.get_logger().error("Invalid transfer (circular wait) for the transfer " + str(invalid_transfers) + " Stack Trace: " + str(stack_trace)) # show error 
         return self.status['ERROR'] # error
+
+    # Simulate check
+    status, invalid_transfers  = simulate_check(self, blocks, num_of_OT2)
+    if(status == self.status['ERROR']):
+        self.get_logger().error("Invalid transfer (simulate check) for the transfer " + str(invalid_transfers)) # show error 
+        return self.status['ERROR'] # error
     
     # All checks passed
     return self.status['SUCCESS'] 
@@ -218,7 +224,8 @@ def simulate_check(self, blocks, num_of_OT2):
         for protocol in block_split:
             if(protocol.split(":")[0] == 'transfer'): # it is a transfer 
                 transfers.append(protocol)
-        block_queue.append( (name, transfers) ) # append block-name and transfers as a tuple 
+        if(len(transfers) != 0): # Filter out bad objects
+            block_queue.append( (name, transfers) ) # append block-name and transfers as a tuple 
 
     # Simulation
     while True: 
@@ -227,24 +234,31 @@ def simulate_check(self, blocks, num_of_OT2):
             if(blocks_cur_running[i] == None and len(block_queue) > 0): # If empty and still have blocks to assign
                 blocks_cur_running[i] = block_queue[0] # Next block assigned 
                 block_queue.pop(0)
-        
+
         # Check if any transfers are satisified (Keep eliminating till you can't no more)
         change = False
         for i in range(num_of_OT2): # O(N^2) bad, but don't expect N to be more than 100
+            # Check if the robots have items running 
+            if(blocks_cur_running[i] == None or len(blocks_cur_running[i][1]) == 0):
+                blocks_cur_running[i] = None
+                continue 
             for j in range(i+1, num_of_OT2): 
                 # Check if the robots have items running 
-                if(blocks_cur_running[i] == None or len(blocks_cur_running[i][1]) == 0):
-                    blocks_cur_running[i] = None
-                    break 
                 if(blocks_cur_running[j] == None or len(blocks_cur_running[j][1]) == 0):
-                    blocks_cur_running[i] = None
+                    blocks_cur_running[j] = None
                     continue
                 
                 # Transfer match check 
                 if(blocks_cur_running[i][1][0] == blocks_cur_running[j][1][0]):
                     blocks_cur_running[i][1].pop(0) # Remove from list
                     blocks_cur_running[j][1].pop(0)
-                    change = True
+                    change = True # There was change
+                    if(len(blocks_cur_running[i][1]) == 0): # Empty robots now?
+                        blocks_cur_running[i] = None
+                        break
+                    if(len(blocks_cur_running[j][1]) == 0):
+                        blocks_cur_running[j] = None
+                        continue
 
         # Exit Condition
         if(change == False and len(block_queue) == 0):

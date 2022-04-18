@@ -12,6 +12,7 @@ def full_test():
     basic_arm_tests()
     circular_wait_tests()
     not_enough_robots_tests()
+    simulate_tests()
 
 '''
     Basic arm tests to make sure workflow file is formatted correctly. Tests the following,
@@ -192,6 +193,96 @@ def not_enough_robots_tests():
     assert transfer_deadlock_detection.arm_circular_wait(test_class, blocks, 4) == (status, invalid_transfers, stack_trace)
     print("PASSED")
 
+'''
+    Tests to check the simulate check from the transfer deadlock client python, checks the following
+    - No deadlock issues
+    - Basic deadlock 
+    - Not enough robots without deadlocks (out of order)
+    - Complicated simulations with and without enough robots
+'''
+def simulate_tests():
+    # Test class setup 
+    test_class = test()
+
+    # no transfer test 
+    print("No Transfer Test -")
+    blocks = [{"block-name":"test1", "tasks":"item1.py item2.py item3.py"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py"}]
+    status, invalid_transfers = 0, None
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 2) == (status, invalid_transfers)
+    print("PASSED")
+
+    # no circular wait with enough robots test
+    print("Basic no Circular Wait Test Enough Robots -")
+    blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+                {"block-name":"test2", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}]
+    status, invalid_transfers = 0, None
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 2) == (status, invalid_transfers)
+    print("PASSED")
+
+    # basic circular wait test 
+    print("Basic Circular Wait Test -")
+    blocks = [{"block-name":"test1", "tasks":"transfer:test1:test2:20:army transfer:test1:test2:15:army"}, 
+              {"block-name":"test2", "tasks":"transfer:test1:test2:15:army transfer:test1:test2:20:army"}]
+    status, invalid_transfers = 1, 'test1'
+    assert str(transfer_deadlock_detection.simulate_check(test_class, blocks, 1000)) == str((status, invalid_transfers))
+    print("PASSED")
+
+    # Complicated no circular wait 
+    print("Complicated no Circular Wait Test -")
+    blocks = [  {"block-name":"test1", "tasks":"item1.py item2.py item3.py transfer:test3:test1:10:army"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py transfer:test2:test3:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test1:10:army item2.py a transfer:test2:test3:10:army"},
+             ]
+    status, invalid_transfers = 0, None
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 3) == (status, invalid_transfers)
+    print("PASSED")
+
+    # Complicated no circular wait not enough robots
+    print("Complicated no Circular Wait Test Not Enough Robots -")
+    blocks = [  {"block-name":"test1", "tasks":"item1.py item2.py item3.py transfer:test3:test1:10:army"}, 
+                {"block-name":"test2", "tasks":"item1.py item2.py item3.py transfer:test2:test3:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test1:10:army item2.py a transfer:test2:test3:10:army"},
+             ]
+    status, invalid_transfers = 1, "Unable to finish simulation"
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 2) == (status, invalid_transfers)
+    print("PASSED")
+
+    # Complicated circular wait 
+    print("Complicated Circular Wait Test -")
+    blocks = [  {"block-name":"test1", "tasks":"transfer:test2:test1:10:army transfer:test7:test1:10:army transfer:test6:test7:10:army"}, 
+                {"block-name":"test2", "tasks":"transfer:test2:test3:10:army transfer:test3:test4:10:army"},
+                {"block-name":"test3", "tasks":"transfer:test3:test4:10:army transfer:test2:test3:10:army"},
+                {"block-name":"test4", "tasks":"transfer:test4:test5:10:army transfer:test6:test5:10:arm"},
+                {"block-name":"test5", "tasks":"transfer:test6:test5:10:army transfer:test6:test5:10:arm"},
+                {"block-name":"test6", "tasks":"transfer:test6:test7:10:army transfer:test2:test1:10:army"},
+                {"block-name":"test7", "tasks":"transfer:test7:test1:10:army"},
+             ]
+    status, invalid_transfers = 1, "test1"
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 1000) == (status, invalid_transfers)
+    print("PASSED")
+
+    # Out of order not enough robots
+    print("Out of Order not Enough Robots -")
+    blocks = [ {"block-name": "transfer1", "tasks": "transfer:transfer1:transfer2:10:army"},
+               {"block-name": "transfer2", "tasks": "transfer:transfer1:transfer2:10:army transfer:transfer2:transfer3:10:army"},
+               {"block-name": "transferBreak", "tasks": "transfer:transferBreak:transfer3:10:army"},
+               {"block-name": "transfer3", "tasks": "transfer:transfer2:transfer3:10:army transfer:transferBreak:transfer3:10:army"}
+             ]
+    status, invalid_transfers = 1, "Unable to finish simulation"
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 2) == (status, invalid_transfers)
+    print("PASSED")
+
+    # Out of order enough robots
+    print("Out of Order Enough Robots -")
+    blocks = [ {"block-name": "transfer1", "tasks": "transfer:transfer1:transfer2:10:army"},
+               {"block-name": "transfer2", "tasks": "transfer:transfer1:transfer2:10:army transfer:transfer2:transfer3:10:army"},
+               {"block-name": "transferBreak", "tasks": "transfer:transferBreak:transfer3:10:army"},
+               {"block-name": "transfer3", "tasks": "transfer:transfer2:transfer3:10:army transfer:transferBreak:transfer3:10:army"}
+             ]
+    status, invalid_transfers = 0, None
+    assert transfer_deadlock_detection.simulate_check(test_class, blocks, 3) == (status, invalid_transfers)
+    print("PASSED")
 
 class test():
     def __init__(self):
@@ -199,4 +290,5 @@ class test():
 
 if __name__ == '__main__':
     #full_test()
-    not_enough_robots_tests()
+    #not_enough_robots_tests()
+    simulate_tests()
