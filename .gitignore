@@ -4,7 +4,8 @@ log/*
 src/ros_tutorials/
 *.swp
 *.save
-
+.vscode/*
+Protocol_Modules/*
 # Python
 
 # Byte-compiled / optimized / DLL files

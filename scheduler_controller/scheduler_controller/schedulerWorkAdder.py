@@ -103,7 +103,7 @@ class schedulerWorkAdder(Node):
                 return self.status['ERROR']
 
         # Deadlock checks
-        status = full_check(self, blocks)
+        status = full_check(self, blocks, 2) #TODO: dynamically decide the number of robots
 
         # Error handling
         if(status == self.status['ERROR']):
@@ -127,7 +127,8 @@ class schedulerWorkAdder(Node):
         This is the submitter for our setup files which follow plain text format and don't allow for dependencies
         but is easier to see and read.
 
-        TODO: Switch to signal to interrupt the input thread (since you can't kill this program right now)
+        TODO: Switch to signal to interrupt the input thread (since you can't kill this program right now) 
+        https://stackoverflow.com/questions/32031762/python-multithreading-interrupt-input
     '''
     def submitter_setup(self):
         # get input 
