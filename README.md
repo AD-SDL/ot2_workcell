@@ -91,6 +91,7 @@ After the `blocks` section you have the `meta-data` (dictionary) section which c
 1. `author`, the creator of the workflow file
 2. `email`, the email of the creator 
 3. `description`, describes what the workflow file does  
+
 **Format**
 ```
 "meta-data": {
