@@ -81,10 +81,10 @@ Workflow files are json files and must be formatted as such. The first section i
 **Format** 
 ```
 'blocks': [ {'block-name':'[Your Block Name]', 'tasks':'[protocol1 protocol2 protocol3 ...]', 'dependencies':'[block_name_1 block_name_2 ...]'},
-			{'block-name':'[Your Block Name]', 'tasks':'[protocol1 protocol2 protocol3 ...]', 'dependencies':'[block_name_1 block_name_2 ...]'},
-			{'block-name':'[Your Block Name]', 'tasks':'[protocol1 protocol2 protocol3 ...]', 'dependencies':'[block_name_1 block_name_2 ...]'},
-			{...}
-		  ]
+	{'block-name':'[Your Block Name]', 'tasks':'[protocol1 protocol2 protocol3 ...]', 'dependencies':'[block_name_1 block_name_2 ...]'},
+	{'block-name':'[Your Block Name]', 'tasks':'[protocol1 protocol2 protocol3 ...]', 'dependencies':'[block_name_1 block_name_2 ...]'},
+	{...}
+	]
 ```
 
 After the `blocks` section you have the `meta-data` (dictionary) section which contains 
@@ -94,10 +94,10 @@ After the `blocks` section you have the `meta-data` (dictionary) section which c
 **Format**
 ```
 "meta-data": {
-				"author": "[Author Name]",
-				"email": "[Author Email]", 
-				"description": "[Description of the Workflow File]"
-			 }    
+		"author": "[Author Name]",
+		"email": "[Author Email]", 
+		"description": "[Description of the Workflow File]"
+		}    
 ```  
 Example workflow file is in the `OT2_Modules/workflow.json`.
 
