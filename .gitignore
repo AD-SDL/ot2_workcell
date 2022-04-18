@@ -5,7 +5,7 @@ src/ros_tutorials/
 *.swp
 *.save
 
-Protocol_Modules/*
+Protocol_Modules/Protocol*
 .vscode/*
 # Python
 
