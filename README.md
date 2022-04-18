@@ -57,7 +57,8 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 run scheduler_controller scheduler_work_adder`
 
-This will cause nodes to be registered with master and start a transfer process as well as a OT-2 procedure. In the future this won't be able to run conncurentlly as use of a arm will block whatever called it.
+This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
+that workflow to available OT2s.
 
 ## Test Bench for Deadlock Detection 
 1. `source ~/ot2_ws/install/setup.bash`
