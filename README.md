@@ -31,6 +31,13 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 3. `colcon build`
 4. `source install/setup.bash`
 
+## Database Setup 
+1. In `database/protocol_handler/protocol_handling_client.py` in the function`send_message_to_OT2(...)` sock.connect(...) needs to be changed to your IP and whatever port you want 
+2. TODO SQL Database setup 
+3. For testing on the actual OT2! In `database/protocol_handler/protocol_parser.py` in the function `protocol_parser(...)` the commented line `new_file.write("import error_handling\n")` needs to be uncommented 
+4. In `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the `host_ip` and `user` need to be changed to match the database you have 
+5. Protocols need to be added to the `/data` folder, to change this in `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the line `scp.put(local_path, recursive=True, remote_path='/tmp')` the remote path `/tmp` needs to be changed to `/data`. You also need to change in `database/protocol_handler/protocol_handling_client.py` in the function `handler(...)` the line `msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1])` the `/tmp/` needs to be changed to `/data`
+
 ## Launching OT2_workcell
 
 **Workcell Manager**
@@ -56,6 +63,11 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 **Scheduler Work Adder**
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 run scheduler_controller scheduler_work_adder`
+
+**OT2 Client**  
+This is for each OT2 that you plan on recieving jobs on and must be **run on the OT2**.
+1. `source ~/ot2_ws/install/setup.bash`
+2. `python3 ~/ot2_ws/src/ot2_workcell/database/zeroMQ_OT2/ot2_client.py`
 
 This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
 that workflow to available OT2s.
@@ -105,4 +117,4 @@ Example workflow file is in the `OT2_Modules/workflow.json`.
 
 # Diagrams for different components
 ![Diagram of state](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/stateot2_diagram.png)
-![Diagram of ROS to Database](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/scheduler/Diagrams/protocol_handling_diagram.png)
+![Diagram of ROS to Database](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/protocol_handling_diagram.png)
