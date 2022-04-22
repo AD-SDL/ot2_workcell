@@ -105,4 +105,4 @@ Example workflow file is in the `OT2_Modules/workflow.json`.
 
 # Diagrams for different components
 ![Diagram of state](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/stateot2_diagram.png)
-![Diagram of ROS to Database](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/scheduler/Diagrams/protocol_handling_diagram.png)
+![Diagram of ROS to Database](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/protocol_handling_diagram.png)
