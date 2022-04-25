@@ -48,10 +48,10 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 * `FLUSH PRIVILEGES;`
 4. Create a config.py in the home directory and include the below lines
 * #Database variables
-*DBNAME = "DATABASENAME"
-*DBUSER = "USERNAME"
-*DBPASSWD = "USERPASSWORD"
-*DBHOST = "HOST_NAME or HOST_IP_ADDRESS"
+* DBNAME = "DATABASENAME"
+* DBUSER = "USERNAME"
+* DBPASSWD = "USERPASSWORD"
+* DBHOST = "HOST_NAME or HOST_IP_ADDRESS"
 5. For testing on the actual OT2! In `database/protocol_handler/protocol_parser.py` in the function `protocol_parser(...)` the commented line `new_file.write("import error_handling\n")` needs to be uncommented 
 6. In `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the `host_ip` and `user` need to be changed to match the database you have 
 7. Protocols need to be added to the `/data` folder, to change this in `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the line `scp.put(local_path, recursive=True, remote_path='/tmp')` the remote path `/tmp` needs to be changed to `/data`. You also need to change in `database/protocol_handler/protocol_handling_client.py` in the function `handler(...)` the line `msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1])` the `/tmp/` needs to be changed to `/data`
