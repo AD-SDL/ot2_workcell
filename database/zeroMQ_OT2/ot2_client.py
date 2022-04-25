@@ -4,7 +4,7 @@ import time
 if __name__ == '__main__':
     ctx = zmq.Context()
     sock = ctx.socket(zmq.REQ)
-    sock.connect("tcp://127.0.0.1:1234")
+    sock.connect("tcp://127.0.0.1:8085")
     #sock.subscribe("") # Subscribe to all topics
 
     print("Starting receiver loop ...")

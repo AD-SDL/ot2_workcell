@@ -26,7 +26,7 @@ def send_message_to_OT2(message):
 
     ctx = zmq.Context()
     sock = ctx.socket(zmq.REQ)
-    sock.connect("tcp://10.193.254.91:8085") # TODO: instead of 10.193.254.91 put your IP 
+    sock.connect("tcp://10.193.254.91:8085") # TODO: instead of 10.193.254.91 put your IP  TODO: don't hard code the IP, make it a ROS parameter
 
     print("Starting protocol handling client...")
     while True:

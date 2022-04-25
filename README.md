@@ -84,7 +84,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 **OT2 Client**  
 This is for each OT2 that you plan on recieving jobs on and must be **run on the OT2**.
 1. `source ~/ot2_ws/install/setup.bash`
-2. `python3 ~/ot2_ws/src/ot2_workcell/database/zeroMQ_OT2/ot2_client.py`
+2. `python3 ~/ot2_ws/src/ot2_workcell/database/zeroMQ_OT2/OT2_listener.py`
 
 This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
 that workflow to available OT2s.
