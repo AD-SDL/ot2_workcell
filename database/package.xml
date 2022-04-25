@@ -1,19 +1,16 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ot2_workcell_manager_client</name>
+  <name>database</name>
   <version>0.0.0</version>
-  <description>This package provides the ability to use the services provided by the master, including node search, registration with the system, and retrying different functions.</description>
-  <maintainer email="alan.wang@anl.gov">Alan Wang</maintainer>
-  <license>MIT License</license>
+  <description>Database and protocol parser files for communication between ROS and database and ROS and internal pis</description>
+  <maintainer email="dozgulbas@anl.gov">Doga</maintainer>
+  <license>MIT license</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
-
-  <exec_depend>workcell_interfaces</exec_depend>
-  <exec_depend>database</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

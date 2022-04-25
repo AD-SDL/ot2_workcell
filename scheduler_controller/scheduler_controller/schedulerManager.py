@@ -306,11 +306,14 @@ class schedulerManager(Node):
                 self.block_to_robot_map[block_name] = node['name'] # block-name to name (Switch to ID?)
 
                 # Load/Add the Protocols
+                protocol_id_list = []
                 try:
                     for i in range(len(protocols)):
                         if(not protocols[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                            load_protocols_to_ot2(self, node, protocols[i])
-                    add_work_to_ot2(self, node, protocols, block_name)
+                            protocol_id_list.append(str(load_protocols_to_ot2(self, node, protocols[i])))
+                        else:
+                            protocol_id_list.append(protocols[i])
+                    add_work_to_ot2(self, node, protocol_id_list, block_name)
                 except Exception as e:
                     self.get_logger().error("Load/Add protocols failed to OT2: %s, Exception: %r"%(node['id'], e))
                     return self.status['ERROR']

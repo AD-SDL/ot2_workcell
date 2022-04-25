@@ -16,6 +16,7 @@
   <exec_depend>scheduler_client</exec_depend>
   <exec_depend>ot2_workcell_manager_client</exec_depend>
   <exec_depend>ot2_client</exec_depend>
+  <exec_depend>database</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>

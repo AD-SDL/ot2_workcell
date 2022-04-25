@@ -31,6 +31,30 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 3. `colcon build`
 4. `source install/setup.bash`
 
+## Database Setup 
+1. In `database/protocol_handler/protocol_handling_client.py` in the function`send_message_to_OT2(...)` sock.connect(...) needs to be changed to your IP and whatever port you want 
+2. To Install Mysql Database Server.
+* Note: Installation process is included for testing purposes with the local setups. Eventually, Mysql server will be runnnig on the servers located in Argonne National Laboratory and this process will not be necessary. 
+* `sudo apt-get update && sudo apt-get upgrade`
+* `sudo apt install mysql-server`
+* `mysql --version` ->> Check if the installation was successful
+3. Configure Mysql Server for Remote Connections
+* `sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf` ->> Edit "bind-address = 127.0.0.1". Use "0.0.0.0" for all remote connections (not suggested for security reasons) or use the IP address of the machine that will be used for remote connections 
+* `sudo systemctl restart mysql`
+* `sudo mysql -u root` ->> Log in to MySQL Server
+* `CREATE USER 'username'@'remote_server_ip' IDENTIFIED BY 'password';` 
+* `GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT, REFERENCES, RELOAD on *.* TO 'username'@'remote_server_ip' WITH GRANT OPTION;`
+* `FLUSH PRIVILEGES;`
+4. Create a config.py in the home directory and include the below lines
+* #Database variables
+* DBNAME = "DATABASENAME"
+* DBUSER = "USERNAME"
+* DBPASSWD = "USERPASSWORD"
+* DBHOST = "HOST_NAME or HOST_IP_ADDRESS"
+5. For testing on the actual OT2! In `database/protocol_handler/protocol_parser.py` in the function `protocol_parser(...)` the commented line `new_file.write("import error_handling\n")` needs to be uncommented 
+6. In `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the `host_ip` and `user` need to be changed to match the database you have 
+7. Protocols need to be added to the `/data` folder, to change this in `database/protocol_handler/protocol_transfer.py` in the function `transfer(...)` the line `scp.put(local_path, recursive=True, remote_path='/tmp')` the remote path `/tmp` needs to be changed to `/data`. You also need to change in `database/protocol_handler/protocol_handling_client.py` in the function `handler(...)` the line `msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1])` the `/tmp/` needs to be changed to `/data`
+
 ## Launching OT2_workcell
 
 **Workcell Manager**
@@ -56,6 +80,11 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 **Scheduler Work Adder**
 1. `source ~/ot2_ws/install/setup.bash`
 2. `ros2 run scheduler_controller scheduler_work_adder`
+
+**OT2 Client**  
+This is for each OT2 that you plan on recieving jobs on and must be **run on the OT2**.
+1. `source ~/ot2_ws/install/setup.bash`
+2. `python3 ~/ot2_ws/src/ot2_workcell/database/zeroMQ_OT2/ot2_client.py`
 
 This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
 that workflow to available OT2s.

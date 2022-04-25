@@ -15,6 +15,13 @@ from ot2_workcell_manager_client.retry_api import *
 
 # Transfer api import
 from arm_client.transfer_api import _load_transfer
+
+# Database 
+from database.database_functions import *
+from database.database_functions import insert_protocol
+from protocol_handler.protocol_parser import *
+from protocol_handler.protocol_parser import protocol_parser
+
     
 '''
     Input: ROS object,  node entry, Single string with the protocol name
@@ -60,44 +67,16 @@ def load_protocols_to_ot2(self, entry, name):
     except Exception as e:
         self.get_logger().error("Error occured: %r" % (e,))
         return self.status["ERROR"]
-    
-    # Create client that calls load_protocols servive on controller
-    script_cli = self.create_client(LoadProtocols, "/%s/%s/load_protocols" % (type, id))  # format of service is /{type}/{id}/{service name}
-    while not script_cli.wait_for_service(timeout_sec=2.0):
-        self.get_logger().info("Service not available, trying again...")
 
-    # extract name and contents of each first file in list #TODO: not neccesary with database
-    with open(self.module_location + name, 'r') as file:
-        contents = file.read()
+    # insert error handling 
+    protocol_new_name = protocol_parser(self.module_location + name)
 
-    # Client ready
-    script_request = LoadProtocols.Request()
-    script_request.name = name # name of file
-    script_request.contents = contents # contents of file
-    script_request.replace = True # Replace file of same name (default true)
+    # insert protocol into database 
+    protocol_module_location = self.home_location + "/ot2_ws/src/ot2_workcell/Protocol_Modules/" # Get Protocol_Module location
+    protocol_id = insert_protocol(self, protocol_module_location + protocol_new_name, target_node['id'])
 
-    # Call service
-    future = script_cli.call_async(script_request)
-
-    # Waiting on future
-    while future.done() == False:
-        time.sleep(1)  # timeout 1 second
-    if future.done():
-        try:
-            response = future.result()
-        except Exception as e:
-            self.get_logger().error("Error occured %r" % (e,))
-            return self.status["ERROR"]  # Error
-        else:
-            # Error checking
-            if response.status == response.ERROR:
-                self.get_logger().error(
-                    "Error occured when sending script %s at id: %s" % (name, id)
-                )
-                return self.status["ERROR"]  # Error
-            else:
-                self.get_logger().info("File %s contents loaded" % name)
-                return self.status["SUCCESS"]  # All good
+    # return id 
+    return protocol_id
 
 '''
     Input: ROS object,  node entry, list of strings (protocols)
@@ -105,7 +84,7 @@ def load_protocols_to_ot2(self, entry, name):
 
     Creates client that sends files to worker OT-2 to create threads
 '''
-def add_work_to_ot2(self, entry, files, block_name):  # self, id of robot, files of current job, and block name
+def add_work_to_ot2(self, entry, protocol_id_list, block_name):  # self, id of robot, protocol ids or transfer command, and block name
 
     # Check node online?
     '''
@@ -157,7 +136,7 @@ def add_work_to_ot2(self, entry, files, block_name):  # self, id of robot, files
     # Create a request
     send_request = AddWork.Request()
     # send_request.numFiles = len(files) # number of files to be sent to worker node
-    send_request.files = files  # string of file names list
+    send_request.protocol_id_list = protocol_id_list  # string of file names list
     send_request.block_name = block_name # block name
 
     # Call Service to load module
