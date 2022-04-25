@@ -34,10 +34,9 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 ## Database Setup 
 1. In `database/protocol_handler/protocol_handling_client.py` in the function`send_message_to_OT2(...)` sock.connect(...) needs to be changed to your IP and whatever port you want 
 2. To Install Mysql Database Server.
-* Note: Installation process is included for testing purposes with the local setups. Eventually, Mysql server will be runnnig on the servers located in Argonne and this process will not be necessary. 
+* Note: Installation process is included for testing purposes with the local setups. Eventually, Mysql server will be runnnig on the servers located in Argonne National Laboratory and this process will not be necessary. 
 * `sudo apt-get update && sudo apt-get upgrade`
 * `sudo apt install mysql-server`
-* `sudo apt upgrade`
 * `mysql --version` ->> Check if the installation was successful
 3. Configure Mysql Server for Remote Connections
 * `sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf` ->> Edit "bind-address = 127.0.0.1". Use "0.0.0.0" for all remote connections (not suggested for security reasons) or use the IP address of the machine that will be used for remote connections 
