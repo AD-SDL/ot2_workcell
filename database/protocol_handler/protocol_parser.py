@@ -1,7 +1,7 @@
 import os
 import sys
 from datetime import datetime
-
+from pathlib import Path
 
 def protocol_parser(filename):
         '''
@@ -11,21 +11,27 @@ def protocol_parser(filename):
 
         Return: A new protocol name with a time_stamp
         '''
-         
-        try:
+          
+        try: 
+                # get home location 
+                path = Path()
+                home_location = str(path.home())
+                protocol_module_location = home_location + "/ot2_ws/src/ot2_workcell/Protocol_Modules/" #TODO: this might change
+
+                # Protocol parser file setup 
                 file = open(filename, "r")
                 now = datetime.now()
                 current_date = now.strftime("%Y-%m-%d")
                 current_time = now.strftime("%H:%M:%S")
                 protocol_name ="Protocol_" + current_date+ "_" + current_time +".py"
-                new_file = open("/ot2_workcell/protocol_handling/protocols/" + protocol_name, 'w')
+                new_file = open(protocol_module_location + protocol_name, 'w')
                 
         except OSError as err:
                 print(err)
                 sys.exit()
         else:
                 lines = file.readlines()
-                new_file.write("import error_handling\n")
+                #new_file.write("import error_handling\n")   # TODO: Uncomment
                 for line in lines:
                         pick_up_indx = line.find(".pick_up_tip")
                         drop_indx = line.find(".drop_tip")

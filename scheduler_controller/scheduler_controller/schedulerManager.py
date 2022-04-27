@@ -311,7 +311,7 @@ class schedulerManager(Node):
                 try:
                     for i in range(len(protocols)):
                         if(not protocols[i].split(":")[0] == 'transfer'): # Don't send files if transfer
-                            protocol_id_list.append(load_protocols_to_ot2(self, node, protocols[i]))
+                            protocol_id_list.append(str(load_protocols_to_ot2(self, node, protocols[i])))
                         else:
                             protocol_id_list.append(protocols[i])
                     add_work_to_ot2(self, node, protocol_id_list, block_name)

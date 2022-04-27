@@ -1,19 +1,24 @@
-#import zmq
+import zmq
 import time
-#from multiprocessing.connection import Listener
+#from multiprocessing.connection import Listener #This also doesn't seem necessary
 import sys
 from database.database_functions import *
-#from database import connect
-#import protocol_transfer 
-#from protocol_parser import *
-#from zeroMQ_OT2 import *
+from database.database_functions import pull_protocol
+from database.connect import connect
+from protocol_handler.protocol_transfer import transfer
+from protocol_handler.protocol_parser import * 
+# from zeroMQ_OT2 import #This doesn't seem necesary
 
-def handler(Protocol_ID):
+def handler(Protocol_ID): 
     path, protocol = pull_protocol(Protocol_ID)  
     print("Protocol saved into " + path + "directory")
-    protocol_transfer.transfer(path)
+    status = transfer(path)
+    if(status == 1): # error 
+        return "", "", 1
+
     #protocol = "/path/to/Protocol_2022-02-18_17:13:44.py"
-    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/data/" + protocol)
+    print(protocol)
+    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1])
     
     return msg_output, msg_error, msg_errorcode
 
@@ -21,7 +26,7 @@ def send_message_to_OT2(message):
 
     ctx = zmq.Context()
     sock = ctx.socket(zmq.REQ)
-    sock.connect("tcp://IP:8085")
+    sock.connect("tcp://10.193.254.91:8085") # TODO: instead of 10.193.254.91 put your IP  TODO: don't hard code the IP, make it a ROS parameter
 
     print("Starting protocol handling client...")
     while True:

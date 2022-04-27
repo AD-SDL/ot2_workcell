@@ -34,7 +34,7 @@ def client_external(message):
             
  
 
-def pick_another_tip(p20, protocol):
+def pick_another_tip(p20, protocol): 
     #protocol.pause()
     print("!!!Tip is not attached. Picking up a new tip ...!!!")
     p20.drop_tip()

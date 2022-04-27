@@ -6,7 +6,7 @@ import sys
 import cv2
 import numpy as np
 
-def find_draw_fiducial(img):
+def find_draw_fiducial(img): 
     # Made by hand. Should be calculated by calibration for better results
     cameraMatrix = np.array([[ 1000,    0, img.shape[0]/2],
                              [    0, 1000, img.shape[1]/2],

@@ -194,13 +194,12 @@ class OT2(Node):
     '''
     # Handles add_work service calls
     def add_work_handler(self, request, response):
-
         # Get request information
         protocol_id_list = request.protocol_id_list
         block_name = request.block_name
         #files = files.split() 
 
-        if(len(files) == 0):
+        if(len(protocol_id_list) == 0):
             self.get_logger().error("Can't add an empty block")
             response.status = response.ERROR
             return response
@@ -356,12 +355,13 @@ class OT2(Node):
             # Extract file name from temp list
             protocol_id = self.temp_list[0]
             response.protocol_id = protocol_id
+
         except Exception as e:
             self.get_logger().error("Error occured: %r" % (e,))
             response.status = response.ERROR  # Error
             return response
         else:
-            self.get_logger().info("File %s handed to OT2" % name)
+            self.get_logger().info("Protocol ID %s handed to OT2" % protocol_id)
             response.status = response.SUCCESS  # All good
         finally:
             # Exiting critical section

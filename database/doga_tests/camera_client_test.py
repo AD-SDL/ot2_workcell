@@ -6,7 +6,7 @@ import time
 import pickle
 import numpy as np
 #import imutils
-
+ 
 def camera_client():
     IP = "127.0.0.1"
     
