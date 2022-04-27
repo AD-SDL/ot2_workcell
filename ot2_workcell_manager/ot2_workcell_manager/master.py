@@ -390,7 +390,6 @@ class Master(Node):
         """
          # Runs every 15 seconds
         while rclpy.ok():
-            
             time.sleep(15)
                      
             # Find node
