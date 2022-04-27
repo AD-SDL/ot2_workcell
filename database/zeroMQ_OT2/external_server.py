@@ -19,7 +19,7 @@ if __name__ == "__main__":
         i += 1
         time.sleep(1)
         
-    sock.close()
+    sock.close() 
 
 def main_null():
     print("This function is not meant to have a main function")

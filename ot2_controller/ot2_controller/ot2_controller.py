@@ -23,6 +23,8 @@ from arm_client.transfer_api import _load_transfer
 # ot2_client libraries 
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
+from ot2_client.publish_ot2_state_api import heartbeat_transmitter
+
 
 # Other
 from threading import Thread, Lock
@@ -139,6 +141,12 @@ class OT2(Node):
         self.get_logger().info(
             "ID: %s name: %s initialization completed" % (self.id, self.name)
         )
+        
+        # Create a thread to run heartbeat_transmitter
+        heartbeat_thread = Thread(target=heartbeat_transmitter,args=(self,))
+        heartbeat_thread.start()
+     
+  
     '''
     # Handles load_protocols service calls, creates files and loads contents into them
     def load_protocols_handler(self, request, response):

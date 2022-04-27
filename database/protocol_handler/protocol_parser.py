@@ -11,8 +11,8 @@ def protocol_parser(filename):
 
         Return: A new protocol name with a time_stamp
         '''
-         
-        try:
+          
+        try: 
                 # get home location 
                 path = Path()
                 home_location = str(path.home())

@@ -185,6 +185,7 @@ class schedulerManager(Node):
         response.status = response.SUCCESS
         return response
 
+   
     '''
         Processes the block_to_robot service call.
         If status == success the mapping was a success

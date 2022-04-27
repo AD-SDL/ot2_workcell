@@ -129,6 +129,7 @@ class ArmManager(Node):
             "Arm Manager for ID: %s name: %s initialization completed"
             % (self.id, self.name)
         )
+     
 
     # Upon a completed transfer this function adds it to the queue
     def completed_transfer_callback(self, msg):

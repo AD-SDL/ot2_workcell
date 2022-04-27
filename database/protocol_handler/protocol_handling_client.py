@@ -6,10 +6,10 @@ from database.database_functions import *
 from database.database_functions import pull_protocol
 from database.connect import connect
 from protocol_handler.protocol_transfer import transfer
-from protocol_handler.protocol_parser import *
+from protocol_handler.protocol_parser import * 
 # from zeroMQ_OT2 import #This doesn't seem necesary
 
-def handler(Protocol_ID):
+def handler(Protocol_ID): 
     path, protocol = pull_protocol(Protocol_ID)  
     print("Protocol saved into " + path + "directory")
     status = transfer(path)

@@ -3,9 +3,9 @@ import paramiko
 from scp import SCPClient
 from rich import print, pretty, inspect
 from pathlib import Path
-
+ 
 def transfer(local_path):
-	pretty.install()
+	pretty.install() 
 	host_ip = '127.0.0.1'
 	user = 'nerra'
 

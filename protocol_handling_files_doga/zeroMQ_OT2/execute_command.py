@@ -8,5 +8,3 @@ def execute_command(command):
     print(result.stderr)
     return result, result.stdout, result.stderr
 
-def main_null():
-    print("This function is not meant to have a main function") 

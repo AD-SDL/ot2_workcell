@@ -1,4 +1,6 @@
 # ROS libraries 
+from atexit import unregister
+from sqlite3 import Timestamp
 import rclpy
 from rclpy.node import Node
 
@@ -15,14 +17,16 @@ from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
 # Other Libraries
 from threading import Thread, Lock
 import time
+from datetime import datetime
 from pathlib import Path
+import logging 
 
 # Only one master node can be running at anytime, or else you will cause issues
 '''
     This the Master class, which is the central command for the entire system. The purpose of the master class is to handle/provide communication among the different robots on the system. 
     To do so it is required to maintain information about every single robot running on the system which is syncronized with each robot. It is responsbile for allowing the dynamic addition
     and removal of new robots to the system easily and provide an interface for them to find other robots also connected to the system. 
-'''
+''' 
 class Master(Node):
     def __init__(self):
         # Node creation
@@ -45,6 +49,8 @@ class Master(Node):
         # Readability
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
+        self.heartbeat = datetime.now() #datetime(2022,1,1,1,1,1,1) for low number
+        self.heartbeat_node_list = []
 
         # Path setup
         path = Path()
@@ -55,6 +61,7 @@ class Master(Node):
         self.id = "M-1"  # Ultimate position, before 0
         self.type = "master"  # Of type master
         self.name = "master"  # name is master
+
 
         # Service setup
         self.register_service = self.create_service(
@@ -83,9 +90,15 @@ class Master(Node):
         self.OT2_state_reset_subscriber
         self.sch_state_reset_subscriber = self.create_subscription(SchReset, "/sch/sch_state_reset", self.state_reset_callback, 10)
         self.sch_state_reset_subscriber
+        self.heartbeat_subscriber = self.create_subscription(Heartbeat, "/heartbeat/heartbeat_update", self.heartbeat_callback, 15)
+        self.heartbeat_subscriber
 
         # Initialization Complete
         self.get_logger().info("Master initialization complete")
+
+        # Create a thread to run check_heartbeat
+        check_heartbeat_thread = Thread(target=self.check_heartbeat)
+        check_heartbeat_thread.start()
 
     # Registers a worker with the master so modules can be distrubuted
     def handle_register(self, request, response):
@@ -106,6 +119,7 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
+                "heartbeat": self.heartbeat
             }
 
             self.get_logger().info(
@@ -121,6 +135,8 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"],  
                 "name": request.name,
+                "heartbeat": self.heartbeat
+
             }
 
             self.get_logger().info(
@@ -136,6 +152,8 @@ class Master(Node):
                 ),  # Can be searched along with name (each id must be unique)
                 "state": self.state["READY"], 
                 "name": request.name,
+                "heartbeat": self.heartbeat
+
             }
 
             self.get_logger().info(
@@ -160,12 +178,15 @@ class Master(Node):
         self.nodes += 1
         self.nodes_list.append(dict)
 
+
         # Release lock and exit
         self.node_lock.release()
         self.get_logger().info(
             "Registration of ID: %s name: %s complete" % (dict["id"], dict["name"])
         )
         return response
+
+       
 
     # Removes node information upon service call
     def handle_destroy_worker(
@@ -224,7 +245,7 @@ class Master(Node):
         self.node_lock.release()
 
         # Not found
-        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1"}
+        dict = {"type": "-1", "name": "-1", "state": -1, "id": "-1", "heartbeat": datetime.now() } #datetime(2022,1,1,1,1,1,1)
         return dict
 
     # Checks to see if the node/worker is ready (registered with the master)
@@ -321,6 +342,79 @@ class Master(Node):
         self.node_lock.acquire()
         entry['state'] = msg.state
         self.node_lock.release()
+    
+    def heartbeat_callback(self, msg):
+        """heartbeat_callback
+
+            Description: Function to receive the robot heartbeats. Updates the heartbeat time in the "nodes_list" and "hearbeat_node_list" lists.
+            
+            Parameters: 
+                        -msg: Message, that is recived from the nodes. Only contains the robot id.
+        """
+
+        self.get_logger().info("Receiving heartbeat of id: %s..."%msg.id)
+        
+        # Find node
+        entry = self.search_for_node(msg.id)
+
+        # Set current time
+        now = datetime.now()
+ 
+        # set hearbeat timestamp
+        self.node_lock.acquire()
+        entry['heartbeat'] = now
+        self.node_lock.release() 
+
+        count = 0
+        for index in range(len(self.heartbeat_node_list)):
+            if self.heartbeat_node_list[index][0] == entry["id"]:
+                self.heartbeat_node_list[index][1] =  now
+                count+=1
+        if count == 0 and entry["id"] != "-1" :
+            self.heartbeat_node_list.append([entry["id"], now])
+
+        #self.get_logger().info(str(now))
+        #self.get_logger().info("heartbeat_callback --- msg id: %s, self id: %s, entry id %s"%(msg.id, self.id, entry['id']))
+
+        
+
+
+    #Scaning the heartbeat record and checkworkcell_ming the current time
+    def check_heartbeat(self):
+        """check_heartbeat
+
+            Description: Triggered by the thread. 
+                         Scans the heartbeat record of the each node and finds the elapsed time since the last heartbeat update. 
+                         Considers the node dead if the last heartbeat update was more then 30 seconds.
+
+        """
+         # Runs every 15 seconds
+        while rclpy.ok():
+            time.sleep(15)
+                     
+            # Find node
+            for index in range(len(self.heartbeat_node_list)):            
+                #  Recive last updated heartbeat time
+                last = self.heartbeat_node_list[index][1]
+
+                last_timestamp = datetime.strptime(str(last), "%Y-%m-%d %H:%M:%S.%f")
+
+                # Set current time
+                now = datetime.now()
+                current_time =datetime.strptime(str(now), "%Y-%m-%d %H:%M:%S.%f")
+
+                is_node_alive = current_time - last_timestamp
+
+                if(is_node_alive.seconds <= 30):
+                    self.get_logger().info("Node ID: %s is alive. Last Heartbeat recived in %s seconds ago." % (self.heartbeat_node_list[index][0], is_node_alive.seconds))   
+            
+                elif(is_node_alive.seconds > 30):
+                    entry = self.search_for_node(self.heartbeat_node_list[index][0])
+                    entry['state'] = "ERROR"
+                    self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(self.heartbeat_node_list[index][0], last_timestamp))
+                
+            
+
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):

@@ -18,7 +18,7 @@ def listen():
             msg_output, msg_error, msg_returncode = execute_command(msg)
             sock.send_string(msg_output + '@' + msg_error + '@' + str(msg_returncode))
 
- 
+
     sock.close() 
 
 def execute_command(command):
@@ -28,9 +28,6 @@ def execute_command(command):
     print("Error Message:\n" + result.stderr)
     print("Output Message:\n" + result.stdout)
     return result.stdout, result.stderr, result.returncode
-
-def main_null():
-    print("This function is not meant to have a main function")
 
 if __name__ == "__main__":
     listen()

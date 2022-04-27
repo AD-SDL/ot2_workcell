@@ -4,12 +4,12 @@ from scp import SCPClient
 from rich import print, pretty, inspect
 
 def main():
-	pretty.install()
+	pretty.install() 
 
 	host_ip = '127.0.0.1'
 	user = 'ubuntu'
 	passwd = 'ubuntu'
-
+ 
 	try:
 		client = SSHClient()
 		client.load_host_keys('/home/dozgulbas/.ssh/id_rsa.pub')

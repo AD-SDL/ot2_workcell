@@ -16,6 +16,6 @@ if __name__ == '__main__':
         
 
     sock.close
-
+ 
 def main_null():
     print("This function is not meant to have a main function")

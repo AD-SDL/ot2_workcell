@@ -10,7 +10,7 @@ def connect_Database():
         Description: Function to connect to the test_bugs database
 
         Parameters: 
-                
+                 
     """
 
     cnx = connect()

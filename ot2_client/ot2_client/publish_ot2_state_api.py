@@ -4,6 +4,7 @@ from rclpy.node import Node
 
 # Time library
 import time
+from datetime import datetime
 
 # ROS messages and services 
 from workcell_interfaces.srv import *
@@ -11,7 +12,34 @@ from workcell_interfaces.msg import *
 
 '''
     Internal interface for communication between the OT2 nodes to syncronize the state information
-'''
+''' 
+# Function to transmit the heartbeat to the master
+def heartbeat_transmitter(self):
+    """heartbeat_transmitter
+
+        Description: Function to transmit the heartbeat to the master.
+                     Creates and publishes the Heartbeat topic to the master.
+                        
+    """
+
+    while rclpy.ok():    
+        # Create a request for heartbeat message 
+        msg = Heartbeat()
+        msg.id = self.id
+
+        # Create publisher object 
+        transmit_heartbeat = self.create_publisher(Heartbeat, "/heartbeat/heartbeat_update", 10)
+
+        time.sleep(15)
+
+        # Publish the heartbeat
+        transmit_heartbeat.publish(msg)
+        self.get_logger().info("--------- Heartbeat transmitted at %s ----------"% datetime.now())
+       
+    
+     
+
+
 def update_ot2_state(self, current_state, cur_block_name):
 
     # Error checking

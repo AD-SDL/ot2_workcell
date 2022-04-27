@@ -46,6 +46,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Protocol.srv"
   "srv/LoadProtocols.srv"
   "srv/SchedulerWork.srv"
+  "msg/Heartbeat.msg"
   "srv/BlockToRobot.srv"
  )
 
