@@ -88,10 +88,6 @@ class OT2(Node):
         # Current block attribute 
         self.cur_block_name = ""            # The current block name that is being run on this OT2
 
-        # Node timeout info
-        self.node_wait_timeout = 2  # 2 seconds
-        self.node_wait_attempts = 1000  # 10 attempts before error thrown
-
         # Register with master
         args = []
         args.append(self)  # Self
@@ -99,7 +95,7 @@ class OT2(Node):
         args.append(name)  # Name
         status = retry(
             self, _register, 10, 1, args
-        )  # Setups up a retry system for a function, args is empty as we don't want to feed arguments
+        )  # Setups up a retry system for a function
         if status == self.status["ERROR"] or status == self.status["FATAL"]:
             self.get_logger().fatal("Unable to register with master, exiting...")
             sys.exit(1)  # Can't register node even after retrying

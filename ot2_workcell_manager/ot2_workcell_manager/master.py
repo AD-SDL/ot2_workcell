@@ -106,6 +106,13 @@ class Master(Node):
         # Create response
         response = Register.Response()
 
+        # Check name uniqueness 
+        for node in self.nodes_list: 
+            if(node['name'] == request.name): # Not unique 
+                response.status = response.ERROR 
+                response.id = "-1" 
+                return response
+
         # Check type
         '''
             TODO: implement states, more types, and more state information
@@ -185,8 +192,6 @@ class Master(Node):
             "Registration of ID: %s name: %s complete" % (dict["id"], dict["name"])
         )
         return response
-
-       
 
     # Removes node information upon service call
     def handle_destroy_worker(

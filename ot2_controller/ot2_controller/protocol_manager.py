@@ -94,7 +94,7 @@ class OT2ProtocolManager(Node):
         # Get ID and confirm name from manager
         args = []
         args.append(self)
-        status = retry(self, _get_id_name, 1000, 2, args)  # 5 retries 2 second timeout
+        status = retry(self, _get_id_name, 10, 2, args)  # 5 retries 2 second timeout
         if status == self.status["ERROR"]:
             self.get_logger().fatal("Unable to get id from ot2 manager, exiting...")
             sys.exit(1)  # TODO: alert manager of error
