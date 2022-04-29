@@ -1,0 +1,13 @@
+{
+    "blocks": [ {
+                    "block-name": "fpbreak1",
+                    "tasks": "fpbreak.py",
+                    "dependencies": ""  
+                }
+              ],
+    "meta-data": {
+                    "author": "Alan wang",
+                    "email": "alan.wang@anl.gov", 
+                    "description": "Testing an exception in the module being run to see what happens"
+                 }    
+}
