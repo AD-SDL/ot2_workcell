@@ -1,0 +1,18 @@
+{
+    "blocks": [ { 
+                    "block-name": "transfer1",
+                    "tasks": "transfer:transfer1:transfer2:10:army",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transfer2",
+                    "tasks": "transfer:transfer1:transfer2:10:army",
+                    "dependencies": ""  
+                }
+              ],
+    "meta-data": {
+                    "author": "Alan wang",
+                    "email": "alan.wang@anl.gov", 
+                    "description": "Testing for arm commands "
+                 }    
+}
