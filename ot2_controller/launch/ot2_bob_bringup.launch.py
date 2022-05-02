@@ -10,7 +10,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{"name": "bob"}],
         emulate_tty=True,
-#        arguments=[('__log_level:=debug')],
+        arguments=['--ros-args', '--log-level', 'WARN']
     )
     protocol_handler = Node(
         package="ot2_controller",
@@ -18,7 +18,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{"name": "bob"}],
         emulate_tty=True,
-#        arguments=[('__log_level:=debug')],
+        arguments=['--ros-args', '--log-level', 'WARN']
     )
     ld.add_action(ot2_controller)
     ld.add_action(protocol_handler)

@@ -10,6 +10,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{"name": "army"}],
         emulate_tty=True,
+        arguments=['--ros-args', '--log-level', 'WARN']
     )
     arm_transfer_handler = Node(
         package="arm_controller",
@@ -17,6 +18,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{"name": "army"}],
         emulate_tty=True,
+        arguments=['--ros-args', '--log-level', 'WARN']
     )
     ld.add_action(arm_manager)
     ld.add_action(arm_transfer_handler)
