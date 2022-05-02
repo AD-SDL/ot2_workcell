@@ -50,7 +50,6 @@ class Master(Node):
         self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
         self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
         self.heartbeat = datetime.now() #datetime(2022,1,1,1,1,1,1) for low number
-        self.heartbeat_node_list = []
 
         # Path setup
         path = Path()
@@ -370,6 +369,7 @@ class Master(Node):
         entry['heartbeat'] = now
         self.node_lock.release() 
 
+        '''
         count = 0
         for index in range(len(self.heartbeat_node_list)):
             if self.heartbeat_node_list[index][0] == entry["id"]:
@@ -377,12 +377,10 @@ class Master(Node):
                 count+=1
         if count == 0 and entry["id"] != "-1" :
             self.heartbeat_node_list.append([entry["id"], now])
+        '''
 
         #self.get_logger().info(str(now))
         #self.get_logger().info("heartbeat_callback --- msg id: %s, self id: %s, entry id %s"%(msg.id, self.id, entry['id']))
-
-        
-
 
     #Scaning the heartbeat record and checkworkcell_ming the current time
     def check_heartbeat(self):
@@ -398,6 +396,27 @@ class Master(Node):
             time.sleep(15)
                      
             # Find node
+            for entry in self.nodes_list:
+                if entry['type'] == 'scheduler':
+                    continue 
+
+                # Recieve heartbeat time 
+                last = entry['heartbeat']
+                last_timestamp = datetime.strptime(str(last), "%Y-%m-%d %H:%M:%S.%f")
+
+                # Set current time 
+                now = datetime.now()
+                current_time =datetime.strptime(str(now), "%Y-%m-%d %H:%M:%S.%f")
+                is_node_alive = current_time - last_timestamp
+
+                if(is_node_alive.seconds <= 30):
+                    self.get_logger().info("Node ID: %s is alive. Last Heartbeat recived in %s seconds ago." % (entry['id'], is_node_alive.seconds))   
+            
+                elif(is_node_alive.seconds > 30):
+                    entry['state'] = self.status['ERROR']
+                    self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(entry['id'], last_timestamp))
+                
+            '''
             for index in range(len(self.heartbeat_node_list)):            
                 #  Recive last updated heartbeat time
                 last = self.heartbeat_node_list[index][1]
@@ -417,9 +436,7 @@ class Master(Node):
                     entry = self.search_for_node(self.heartbeat_node_list[index][0])
                     entry['state'] = "ERROR"
                     self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(self.heartbeat_node_list[index][0], last_timestamp))
-                
-            
-
+                '''
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):
