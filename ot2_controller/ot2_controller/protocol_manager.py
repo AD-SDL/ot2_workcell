@@ -51,20 +51,28 @@ class OT2ProtocolManager(Node):
         # Create a temporary node so we can read in parameters
         super().__init__("Temp" + str(int(random() * 17237967)))
 
-        # Create parameters for name to be sent through
+        # Declare parameters 
         self.declare_parameter(
             "name", "insert_OT2_protocol_manager_name_here"
         )  # 2nd arg is default value
+        self.declare_parameter(
+            "tcp", "tcp://127.0.0.1:8085"
+        )  # 2nd arg is default value
+
+        # Retrive Parameters
         time.sleep(2) # Wait for the launch file to hand in names
         name = self.get_parameter("name").get_parameter_value().string_value
+        tcp = self.get_parameter("tcp").get_parameter_value().string_value
         while name == "temp" or name == "insert_OT2_protocol_manager_name_here":
             name = self.get_parameter("name").get_parameter_value().string_value
+            tcp = self.get_parameter("tcp").get_parameter_value().string_value
             rclpy.spin_once(self)
             self.get_logger().info("Please enter the name parameter to this node")
 
         # Node creation
         super().__init__("OT2_protocol_manager_" + name)  # User specifies name
         self.name = name
+        self.tcp = tcp
         self.type = "OT_2"
 
         # Lock creation
@@ -183,7 +191,7 @@ class OT2ProtocolManager(Node):
             # Run protocol on OT2, use handler function
             else:
                 self.get_logger().info("Running protocol")
-                msg_error, msg_output, status = handler(int(protocol_id))
+                msg_error, msg_output, status = handler(int(protocol_id), self.tcp)
 
             # Check to see if run was success
             if status == self.status['SUCCESS']:
