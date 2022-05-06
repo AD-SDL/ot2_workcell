@@ -30,16 +30,16 @@ def heartbeat_transmitter(self):
         # Create publisher object 
         transmit_heartbeat = self.create_publisher(Heartbeat, "/heartbeat/heartbeat_update", 10)
 
+        # dead check
+        if(self.dead):
+            return
+
         time.sleep(15)
 
         # Publish the heartbeat
         transmit_heartbeat.publish(msg)
         self.get_logger().info("--------- Heartbeat transmitted at %s ----------"% datetime.now())
        
-    
-     
-
-
 def update_ot2_state(self, current_state, cur_block_name):
 
     # Error checking

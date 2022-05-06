@@ -31,6 +31,10 @@ def heartbeat_transmitter(self):
         # Create publisher object 
         transmit_heartbeat = self.create_publisher(Heartbeat, "/heartbeat/heartbeat_update", 10)
 
+        # Dead check
+        if(self.dead):
+            return
+
         time.sleep(15)
 
         # Publish the heartbeat
