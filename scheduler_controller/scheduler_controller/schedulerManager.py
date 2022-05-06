@@ -172,8 +172,21 @@ class schedulerManager(Node):
         data = json.loads(datastr)
         blocks = data['blocks'] 
 
-        # Add tag to each block 
+        # Add tag to each block and determine unique names within a block
+        name_set = set()
         for block in blocks:
+            # Uniqueness check within workflow file
+            try:
+                if(block['block-name'] in name_set):
+                    response.status = response.ERROR
+                    self.get_logger().error("Duplicate block name %s, workflow file rejected"%(block['block-name']))
+                    return response # Error
+                else:
+                    name_set.add(block['block-name'])
+            except Exception as e:
+                self.get_logger().error("Error %r"%(e,))
+            
+            # Attach tag
             block['block-name'] = str(self.block_name_tag)+"-"+block['block-name']
 
         # Increment tags to maintain uniqueness 

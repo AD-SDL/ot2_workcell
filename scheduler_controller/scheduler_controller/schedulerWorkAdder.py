@@ -121,7 +121,7 @@ class schedulerWorkAdder(Node):
                 active_ot2_nodes += 1
 
         # Deadlock checks
-        self.get_logger().warn("active nodes %d"%(active_ot2_nodes)) #DELETE
+        self.get_logger().warn("Number of active OT2 nodes: %d"%(active_ot2_nodes)) #DELETE
         status = full_check(self, blocks, active_ot2_nodes) 
 
         # Error handling

@@ -1,0 +1,18 @@
+{
+    "blocks": [ {
+                    "block-name": "test1",
+                    "tasks": "item1.py item2.py item1.py item2.py",
+                    "dependencies": ""
+                }, 
+                {
+                    "block-name": "test1",
+                    "tasks": "item2.py item2.py item2.py",
+                    "dependencies": "test1"
+                }
+              ],
+    "meta-data": {
+                    "author": "Alan wang",
+                    "email": "alan.wang@anl.gov", 
+                    "description": "To test out duplicate block names in the workflow files"
+                 }    
+}
