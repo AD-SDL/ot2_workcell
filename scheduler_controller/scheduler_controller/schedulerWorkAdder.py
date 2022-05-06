@@ -47,6 +47,9 @@ class schedulerWorkAdder(Node):
         }
         self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
 
+        # Dead field
+        self.dead = False
+
         # Path setup
         path = Path()
         self.home_location = str(path.home())
@@ -69,6 +72,9 @@ class schedulerWorkAdder(Node):
             if(status == self.status['ERROR']):
                 self.get_logger().error("Error occured in the submitter for file reads")
                 raise Exception("Error occured in submitter for file reads")
+            elif(status == self.status['FATAL']):
+                # exit out
+                return;
 
     '''
         This is the submitter for workflow files which follow the JSON format and allow for dependencies and
@@ -77,6 +83,13 @@ class schedulerWorkAdder(Node):
     def submitter_workflow(self):
         # Get input
         workflow_file_name = input("Workflow file name in OT2_modules: ")
+
+        # Check exit
+        if(workflow_file_name == 'q'):
+            self.dead = True
+            _ = get_node_list(self)         # cause a 2 spins to exit out of while loop (this is kind of a hack)
+            self.get_logger().fatal("Exiting...")
+            return self.status['FATAL']
 
         # Open
         status, datastr = read_workflow_file(self, workflow_file_name)  
@@ -196,7 +209,9 @@ def main(args=None):
         spin_thread = Thread(target=scheduler_work_adder.submitter_thread) # create thread 
         spin_thread.start()
 
-        rclpy.spin(scheduler_work_adder) # spin work adder node
+        while(not scheduler_work_adder.dead):
+            rclpy.spin_once(scheduler_work_adder) # spin work adder node
+            rclpy.spin_once(scheduler_work_adder) # spin work adder node
     except Exception as e: 
         scheduler_work_adder.get_logger().error("Error occured: %r"%(e,))
     except:

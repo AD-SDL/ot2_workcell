@@ -415,28 +415,6 @@ class Master(Node):
                 elif(is_node_alive.seconds > 30):
                     entry['state'] = self.status['ERROR']
                     self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(entry['id'], last_timestamp))
-                
-            '''
-            for index in range(len(self.heartbeat_node_list)):            
-                #  Recive last updated heartbeat time
-                last = self.heartbeat_node_list[index][1]
-
-                last_timestamp = datetime.strptime(str(last), "%Y-%m-%d %H:%M:%S.%f")
-
-                # Set current time
-                now = datetime.now()
-                current_time =datetime.strptime(str(now), "%Y-%m-%d %H:%M:%S.%f")
-
-                is_node_alive = current_time - last_timestamp
-
-                if(is_node_alive.seconds <= 30):
-                    self.get_logger().info("Node ID: %s is alive. Last Heartbeat recived in %s seconds ago." % (self.heartbeat_node_list[index][0], is_node_alive.seconds))   
-            
-                elif(is_node_alive.seconds > 30):
-                    entry = self.search_for_node(self.heartbeat_node_list[index][0])
-                    entry['state'] = "ERROR"
-                    self.get_logger().warning("Node ID: %s Heartbeat is not responding. Last Heartbeat update:  %s" %(self.heartbeat_node_list[index][0], last_timestamp))
-                '''
 
 # This is just for testing, this class can be used anywhere
 def main(args=None):
