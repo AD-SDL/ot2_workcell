@@ -82,7 +82,7 @@ class schedulerWorkAdder(Node):
     '''
     def submitter_workflow(self):
         # Get input
-        workflow_file_name = input("Workflow file name in OT2_modules: ")
+        workflow_file_name = input("Workflow file name in OT2_modules (q to quit): ")
 
         # Check exit
         if(workflow_file_name == 'q'):
