@@ -9,23 +9,23 @@ from protocol_handler.protocol_transfer import transfer
 from protocol_handler.protocol_parser import * 
 # from zeroMQ_OT2 import #This doesn't seem necesary
 
-def handler(Protocol_ID, tcp_value): 
+def handler(Protocol_ID, user, ip, port): 
     path, protocol = pull_protocol(Protocol_ID)  
     #print("Protocol saved into " + path + "directory")
-    status = transfer(path)
+    status = transfer(path, user, ip) # Gives it IP and username to send script over
     if(status == 1): # error 
         return "", "", 1
 
     #print(protocol)
-    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1], tcp_value)
+    msg_error, msg_output, msg_errorcode = send_message_to_OT2("python3 "+ "/tmp/" + protocol.split("/")[-1], user, ip, port)
     
     return msg_output, msg_error, msg_errorcode
 
-def send_message_to_OT2(message, tcp_value):
+def send_message_to_OT2(message, user, ip, port):
 
     ctx = zmq.Context()
     sock = ctx.socket(zmq.REQ)
-    sock.connect(tcp_value) # TODO: instead of 10.193.254.91 put your IP  TODO: don't hard code the IP, make it a ROS parameter
+    sock.connect("tcp://"+ip+":"+port) # TODO: instead of 10.193.254.91 put your IP  TODO: don't hard code the IP, make it a ROS parameter
 
     #print("Starting protocol handling client...")
     while True:

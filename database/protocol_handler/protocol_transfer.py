@@ -4,10 +4,8 @@ from scp import SCPClient
 from rich import print, pretty, inspect
 from pathlib import Path
  
-def transfer(local_path):
+def transfer(local_path, user, host_ip):
 	pretty.install() 
-	host_ip = '127.0.0.1'
-	user = 'nerra'
 
 	# Get home path
 	path = Path()

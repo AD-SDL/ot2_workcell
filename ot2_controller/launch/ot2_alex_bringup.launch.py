@@ -8,7 +8,7 @@ def generate_launch_description():
         package="ot2_controller",
         executable="ot2_controller",
         output='screen',
-        parameters=[{"name": "alex", "tcp":"tcp://10.193.254.91:8085"}],
+        parameters=[{"name": "alex", "ip":"10.195.101.183", "port":"8085", "username":"alanwang"}],
         emulate_tty=True,
         arguments=['--ros-args', '--log-level', 'WARN']
     )
@@ -16,7 +16,7 @@ def generate_launch_description():
         package="ot2_controller",
         executable="protocol_manager",
         output='screen',
-        parameters=[{"name": "alex", "tcp":"tcp://10.193.254.91:8085"}],
+        parameters=[{"name": "alex", "ip":"10.195.101.183", "port":"8085", "username":"alanwang"}],
         emulate_tty=True,
         arguments=['--ros-args', '--log-level', 'WARN']
     )
