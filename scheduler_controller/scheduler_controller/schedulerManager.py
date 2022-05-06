@@ -83,6 +83,7 @@ class schedulerManager(Node):
 
         # State information
         self.current_state = self.state["READY"]  # Start ready
+        self.block_name_tag = 0                  # Increments for each new block, puts a unique tag in front of each
         self.dead = False # kill command
 
         # Path setup
@@ -171,6 +172,13 @@ class schedulerManager(Node):
         data = json.loads(datastr)
         blocks = data['blocks'] 
 
+        # Add tag to each block 
+        for block in blocks:
+            block['block-name'] = str(self.block_name_tag)+"-"+block['block-name']
+
+        # Increment tags to maintain uniqueness 
+        self.block_name_tag += 1
+
         # Parse and add each block 
         self.queue_lock.acquire() # Enter critical section 
         for block in blocks: 
@@ -180,7 +188,6 @@ class schedulerManager(Node):
         # return status 
         response.status = response.SUCCESS
         return response
-
    
     '''
         Processes the block_to_robot service call.
