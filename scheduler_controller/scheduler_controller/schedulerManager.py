@@ -78,10 +78,6 @@ class schedulerManager(Node):
 
             Common Case) 
             If the block has been assigned to a robot then the translation is easy, just replace all block names with the robot name 
-
-            Edge Case) 
-            If the block has not yet been assigned to a robot we then assign it the robot name "unknown", it is then up to the arm to communicate with the scheduler to continue polling 
-            for a new robot-name other than "unknown". (To link the unknown back to the transfer we need to attach the block-name to the end of the string)
         '''
         self.block_to_robot_map = {}
 

@@ -13,6 +13,8 @@ from workcell_interfaces.msg import *
 # OT2_workcell_manager API
 from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
+from ot2_workcell_manager_client.worker_info_api import *
+from ot2_workcell_manager_client.worker_info_api import get_node_list
 
 # scheduler_client 
 from scheduler_client.add_blocks_scheduler import add_blocks_scheduler
@@ -102,8 +104,25 @@ class schedulerWorkAdder(Node):
                 self.get_logger().error("Error occured when getting tasks from block error: %r"%(e,))
                 return self.status['ERROR']
 
+        # Get nodes 
+        try:
+            nodes_list = get_node_list(self) # must pass in self
+        except Exception as e: 
+            self.get_logger().error("Unable to get nodes_list, error: %r"%(e,))
+            return self.status['ERROR']
+        except Exception:
+            self.get_logger().error("Unable to get nodes_list")
+            return self.status['ERROR']
+
+        # Num active OT2 nodes 
+        active_ot2_nodes = 0
+        for node in nodes_list:
+            if(node['type'] == "OT_2" and node['state'] != 2):
+                active_ot2_nodes += 1
+
         # Deadlock checks
-        status = full_check(self, blocks, 2) #TODO: dynamically decide the number of robots
+        self.get_logger().warn("active nodes %d"%(active_ot2_nodes)) #DELETE
+        status = full_check(self, blocks, active_ot2_nodes) 
 
         # Error handling
         if(status == self.status['ERROR']):
