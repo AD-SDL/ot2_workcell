@@ -21,15 +21,16 @@ This workcell will eventually support:
 This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 
 1. `cd ~`
-1. `source /opt/ros/foxy/setup.bash`
-1. `mkdir -p ~/ot2_ws/src`
-1. `cd ~/ot2_ws/src`
-1. `git clone https://github.com/AD-SDL/ot2_workcell.git`
-1. `cd ~/ot2_ws`
-1. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
-1. `sudo apt install python3-colcon-common-extensions`
-3. `colcon build`
-4. `source install/setup.bash`
+2. `source /opt/ros/foxy/setup.bash`
+3. `mkdir -p ~/ot2_ws/src`
+4. `cd ~/ot2_ws/src`
+5. `git clone https://github.com/AD-SDL/ot2_workcell.git`
+6. `git clone https://github.com/AD-SDL/ot2_driver_pkg.git` Bring in OT2 driver
+7. `cd ~/ot2_ws`
+8. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
+9. `sudo apt install python3-colcon-common-extensions`
+10. `colcon build`
+11. `source install/setup.bash`
 
 ## Database Setup 
 1. In `database/protocol_handler/protocol_handling_client.py` in the function`send_message_to_OT2(...)` sock.connect(...) needs to be changed to your IP and whatever port you want 

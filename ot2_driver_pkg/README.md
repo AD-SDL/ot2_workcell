@@ -19,4 +19,4 @@ Packages **must** follow ROS 2 python package format, see useful commands below!
 * `colcon graph --dot | dot -Tpng -o deps.png` Generates a dependency graph
 
 ## Installation Instructions
-1. 'git clone https://github.com/AD-SDL/ot2_driver_pkg.git`
+1. `git clone https://github.com/AD-SDL/ot2_driver_pkg.git`
