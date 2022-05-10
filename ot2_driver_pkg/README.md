@@ -17,3 +17,6 @@ Packages **must** follow ROS 2 python package format, see useful commands below!
 ## Useful ROS Commands
 * `ros2 pkg create --build-type ament_python <package_name>` Creates the barebones for a new ROS 2 package
 * `colcon graph --dot | dot -Tpng -o deps.png` Generates a dependency graph
+
+## Installation Instructions
+1. 'git clone https://github.com/AD-SDL/ot2_driver_pkg.git`

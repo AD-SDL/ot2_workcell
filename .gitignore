@@ -7,6 +7,9 @@ src/ros_tutorials/
 Protocol_Modules/Protocol*
 .vscode/*
 
+# Ignore any driver code
+ot2_driver_pkg/*
+
 # Python
 
 # Byte-compiled / optimized / DLL files
