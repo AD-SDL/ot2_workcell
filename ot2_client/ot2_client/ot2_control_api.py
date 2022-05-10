@@ -10,13 +10,10 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Database 
-from database.database_functions import *
-from database.database_functions import insert_protocol
-from protocol_handler.protocol_parser import *
-from protocol_handler.protocol_parser import protocol_parser
+# ot2_driver
+import ot2_driver_pkg.ot2_driver 
+from ot2_driver_pkg.ot2_driver import load_protocol
 
-    
 '''
     Input: ROS object,  node entry, Single string with the protocol name
     Output: Status signal (self.status)
@@ -55,19 +52,14 @@ def load_protocols_to_ot2(self, entry, name):
             self.get_logger().error("id: %s doesn't exist" % id)
             return self.status["ERROR"]
 
-        type = target_node["type"]  # These will be needed to acess the service
         id = target_node["id"]
 
     except Exception as e:
         self.get_logger().error("Error occured: %r" % (e,))
         return self.status["ERROR"]
 
-    # insert error handling 
-    protocol_new_name = protocol_parser(self.module_location + name)
-
-    # insert protocol into database 
-    protocol_module_location = self.home_location + "/ot2_ws/src/ot2_workcell/Protocol_Modules/" # Get Protocol_Module location
-    protocol_id = insert_protocol(self, protocol_module_location + protocol_new_name, target_node['id'])
+    # ot2_driver load_protocol (loads a protocol to the ot2_driver)
+    protocol_id = load_protocol(self.module_location + name, id) #TODO: switch to name maybe
 
     # return id 
     return protocol_id
@@ -108,7 +100,7 @@ def add_work_to_ot2(self, entry, protocol_id_list, block_name):  # self, id of r
             self.get_logger().error("id: %s doesn't exist" % id)
             return self.status["ERROR"]
 
-        type = target_node["type"]  # These will be needed to access the service
+        node_type = target_node["type"]  # These will be needed to access the service
         id = target_node["id"]
 
     except Exception as e:
@@ -119,8 +111,8 @@ def add_work_to_ot2(self, entry, protocol_id_list, block_name):  # self, id of r
 
     # Client setup
     send_cli = self.create_client(
-        AddWork, "/%s/%s/add_work" % (type, id)
-    )  # format of service is /{type}/{id}/{service name}
+        AddWork, "/%s/%s/add_work" % (node_type, id)
+    )  # format of service is /{node_type}/{id}/{service name}
     while not send_cli.wait_for_service(timeout_sec=2.0):
         self.get_logger().info("Service not available, trying again...")
 

@@ -5,7 +5,7 @@ package_name = 'database'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[package_name, 'protocol_handler', 'zeroMQ_OT2', 'vision_pipette', 'ZeroMQ_External', 'doga_tests'],
+    packages=[package_name, 'protocol_handler', 'zeroMQ_OT2', 'vision_pipette', 'ZeroMQ_External', 'doga_tests', 'ot2_driver_pkg'],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -33,6 +33,7 @@ setup(
             'camera_server = vision_pipette.camera_server:main',
             'camera_client_test = doga_tests.camera_client_test:camera_client',
             'open_shell_ssh = doga_tests.open_shell_ssh:main', 
+            'ot2_driver = ot2_driver_pkg.ot2_driver:main_null',
         ],
     },
 )

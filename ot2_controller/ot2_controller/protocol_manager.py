@@ -39,9 +39,10 @@ from arm_client.transfer_api import _load_transfer
 from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 
-# Database functions
-from protocol_handler.protocol_handling_client import *
-from protocol_handler.protocol_handling_client import handler
+# ot2_driver
+import ot2_driver_pkg.ot2_driver 
+from ot2_driver_pkg.ot2_driver import run_protocol
+
 '''
     The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
     It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
@@ -190,10 +191,9 @@ class OT2ProtocolManager(Node):
             if(str(protocol_id).split(":")[0] == "transfer"):
                 temp = protocol_id.split(":")
                 status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
-            # Run protocol on OT2, use handler function
             else:
-                self.get_logger().info("Running protocol")
-                msg_error, msg_output, status = handler(int(protocol_id), self.username, self.ip, self.port) # Feed in user specified values for OT2
+                self.get_logger().info("Running protocol") #  Run's protocol via the run_protocol_driver
+                msg_error, msg_output, status = run_protocol(int(protocol_id), self.username, self.ip, self.port) # Feed in user specified values for OT2
 
             # Check to see if run was success
             if status == self.status['SUCCESS']:

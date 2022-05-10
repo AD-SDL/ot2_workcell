@@ -14,12 +14,23 @@ Want to split packages away from the ROS packages (we only want ROS packages in 
 * database 
     * `database` database packages could be moved out and abstracted
 
-
-Current system structure (TODO: make a chart)  
+Current system structure
 1. User Interface  
 2. ROS  
     a. TODO: chart for the ROS structure
 3. robot drivers (pf400, ot2)  
 4. database driver  
 
-# Need to create agreed about abstraction protocols/functions!!!
+# OT2 abstraction requirments
+Moving OT2 abstractions out of ROS network. 
+
+## Naming Conventions
+Package **must** be named `ot2_driver_pkg`, and file must be named `ot2_driver`. **No other package** will be imported into the ROS network, and thus invisible to the ROS layer. 
+
+## Functions needed 
+* load_protocol(protocol_path, robot_id)
+    * Loads the protocol to the ot2_driver (knows what protocol code is, current driver does this via database)
+    * Inserts in error handling into the protocol
+* run_protocol(protocol_id, username, ip, port)
+    * Runs the given protocol id on the specified internal RPI4
+    * TODO: get that internal RPI4 specifications from config file not passed via arguments

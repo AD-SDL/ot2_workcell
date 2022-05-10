@@ -25,7 +25,6 @@ from ot2_client.publish_ot2_state_api import *
 from ot2_client.publish_ot2_state_api import _update_ot2_state
 from ot2_client.publish_ot2_state_api import heartbeat_transmitter
 
-
 # Other
 from threading import Thread, Lock
 import sys

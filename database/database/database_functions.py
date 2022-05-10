@@ -35,7 +35,7 @@ def disconnect_Database(cursor,cnx):
     #cursor.close()
     close(cnx)
 
-def insert_protocol(scheduler_node, protocol_file_name: str, robot_name:str):
+def insert_protocol(protocol_file_name: str, robot_name:str):
 
     try:
         try:
