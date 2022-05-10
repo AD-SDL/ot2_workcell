@@ -3,16 +3,14 @@
 <package format="3">
   <name>ot2_driver_pkg</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="alan.linghao.wang@gmail.com">nerra</maintainer>
-  <license>TODO: License declaration</license>
+  <description>OT2 driver</description>
+  <maintainer email="dozgulbas@anl.gov">Doga Ozgulbas</maintainer>
+  <license>MIT License</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
-
-  <exec_depend>database</exec_depend>
 
   <export>
     <build_type>ament_python</build_type>
