@@ -136,3 +136,7 @@ Example workflow file is in the `OT2_Modules/workflow.json`.
 ![Diagram of state](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/stateot2_diagram.png)
 ![Diagram of ROS to Database](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/protocol_handling_diagram.png)
 ![Proposal Diagram](https://raw.githubusercontent.com/AD-SDL/ot2_workcell/master/Diagrams/Proposal.png)
+
+
+## Useful Commands 
+* `colcon graph --dot | dot -Tpng -o deps.png` Generates a dependency graph image for the packages
