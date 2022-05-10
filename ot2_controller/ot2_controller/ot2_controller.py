@@ -73,6 +73,7 @@ class OT2(Node):
 
         # State information
         self.current_state = self.state["READY"]
+        self.dead = False
 
         # Path setup
         path = Path()
@@ -387,7 +388,10 @@ def main(args=None):
         rclpy.spin(ot2node)
     except:
         ot2node.get_logger().fatal("Terminating...")
-
+    
+    # Set to dead
+    ot2node.dead = True
+    
     # Setup args and end
     args = []
     args.append(ot2node) # Self

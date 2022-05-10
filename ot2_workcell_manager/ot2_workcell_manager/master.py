@@ -8,12 +8,6 @@ from rclpy.node import Node
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Retry API
-from ot2_workcell_manager_client.retry_api import *
-
-# OT2 Control API
-from ot2_client.ot2_control_api import load_protocols_to_ot2, add_work_to_ot2
-
 # Other Libraries
 from threading import Thread, Lock
 import time

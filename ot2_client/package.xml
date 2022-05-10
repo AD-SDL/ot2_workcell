@@ -13,8 +13,8 @@
   <test_depend>python3-pytest</test_depend>
 
   <exec_depend>workcell_interfaces</exec_depend>
-  <exec_depend>ot2_workcell_manager_client</exec_depend>
-  <exec_depend>arm_client</exec_depend>
+  <!--<exec_depend>ot2_workcell_manager_client</exec_depend>-->
+  <!--<exec_depend>arm_client</exec_depend>-->
   <exec_depend>database</exec_depend>
 
   <export>

@@ -10,12 +10,6 @@ import time
 from workcell_interfaces.srv import *
 from workcell_interfaces.msg import *
 
-# Retry API
-from ot2_workcell_manager_client.retry_api import *
-
-# Transfer api import
-from arm_client.transfer_api import _load_transfer
-
 # Database 
 from database.database_functions import *
 from database.database_functions import insert_protocol
