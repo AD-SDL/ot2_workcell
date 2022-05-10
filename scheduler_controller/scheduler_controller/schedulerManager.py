@@ -188,6 +188,7 @@ class schedulerManager(Node):
             
             # Attach tag
             block['block-name'] = str(self.block_name_tag)+"-"+block['block-name']
+            block['tag'] = self.block_name_tag                  # for later down the line, the tag needs to be added to all transfers
 
         # Increment tags to maintain uniqueness 
         self.block_name_tag += 1
@@ -315,6 +316,7 @@ class schedulerManager(Node):
                 self.queue_lock.acquire() # enter critical section
                 next_block = self.protocol_queue[0]
                 block_name = next_block['block-name']
+                block_tag = next_block['tag']
                 protocols = next_block['tasks'].split()
                 self.protocol_queue.pop(0) 
                 self.queue_lock.release() 
@@ -326,11 +328,20 @@ class schedulerManager(Node):
                 protocol_id_list = []
                 try:
                     for i in range(len(protocols)):
-                        if(not protocols[i].split(":")[0] == 'transfer'): # Don't send files if transfer
+
+                        # Split protocol (for arm transfers)
+                        protocol_split = protocols[i].split(":")
+
+                        # Handle the protocol
+                        if(not protocol_split[0] == 'transfer'): # Send files if not a transfer
                             protocol_id_list.append(str(load_protocols_to_ot2(self, node, protocols[i])))
-                        else:
-                            protocol_id_list.append(protocols[i])
-                    add_work_to_ot2(self, node, protocol_id_list, block_name)
+                        else: # Protocol is a transfer
+                            protocol_split[1] = str(block_tag) + "-" + protocol_split[1]         # Add in tags 
+                            protocol_split[2] = str(block_tag) + "-" + protocol_split[2]    
+                            protocol_id_list.append(":".join(protocol_split))               # Recreate string
+
+                    # Add work to OT2
+                    add_work_to_ot2(self, node, protocol_id_list, block_name)               
                 except Exception as e:
                     self.get_logger().error("Load/Add protocols failed to OT2: %s, Exception: %r"%(node['id'], e))
                     return self.status['ERROR']
