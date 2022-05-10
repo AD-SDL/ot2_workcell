@@ -8,7 +8,7 @@ Protocol_Modules/Protocol*
 .vscode/*
 
 # Ignore any driver code
-ot2_driver_pkg/*
+ot2_driver_pkg
 
 # Python
 
