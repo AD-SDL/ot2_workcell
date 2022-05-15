@@ -9,6 +9,7 @@ Protocol_Modules/Protocol*
 
 # Ignore any driver code
 ot2_driver_pkg
+arm_driver_pkg
 
 # Python
 
