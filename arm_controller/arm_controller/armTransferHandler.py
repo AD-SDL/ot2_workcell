@@ -35,6 +35,10 @@ from arm_client.publish_arm_state import *
 from arm_client.publish_arm_state import _update_arm_state
 from arm_client.publish_arm_state import heartbeat_transmitter
 
+# Arm driver
+import arm_driver_pkg.arm_driver
+from arm_driver_pkg.arm_driver import arm_transfer
+
 
 # TODO: figure out how to integrate arm code
 '''
@@ -168,6 +172,7 @@ class ArmTransferHandler(Node):
         transfer_request = next_transfer[0].split()  # Split based on whitespaces
         from_name = transfer_request[0]
         to_name = transfer_request[1]
+        job = "TODO" # Not implemented as of right now
 
         # Get node information
         to_entry = get_node_info(self, to_name)
@@ -189,7 +194,8 @@ class ArmTransferHandler(Node):
             self.get_logger().info(
                 "Attempting to transfer complete transfer %s" % str(next_transfer)
             )
-            time.sleep(2)  # TODO: actual transfer code
+            #time.sleep(2)  # TODO: actual transfer code
+            output_msg = arm_transfer(job, from_name, to_name) # Do an arm transfer
             self.get_logger().info("Transfer %s is complete" % str(next_transfer))
         except Exception as e:
             '''
