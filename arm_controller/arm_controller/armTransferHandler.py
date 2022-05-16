@@ -172,7 +172,7 @@ class ArmTransferHandler(Node):
         transfer_request = next_transfer[0].split()  # Split based on whitespaces
         from_name = transfer_request[0]
         to_name = transfer_request[1]
-        job = "TODO" # Not implemented as of right now
+        job = "TODO" # Not implemented as of right now TODO
 
         # Get node information
         to_entry = get_node_info(self, to_name)
@@ -194,8 +194,7 @@ class ArmTransferHandler(Node):
             self.get_logger().info(
                 "Attempting to transfer complete transfer %s" % str(next_transfer)
             )
-            #time.sleep(2)  # TODO: actual transfer code
-            output_msg = arm_transfer(job, from_name, to_name) # Do an arm transfer
+            output_msg = arm_transfer(job, from_name, to_name) # Do an arm transfer TODO: error handling
             self.get_logger().info("Transfer %s is complete" % str(next_transfer))
         except Exception as e:
             '''

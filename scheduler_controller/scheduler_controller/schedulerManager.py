@@ -244,10 +244,8 @@ class schedulerManager(Node):
         if block_name in self.block_to_robot_map:
             self.block_to_robot_map.pop(block_name) # remove it 
 
-        # TODO: This is DEBUG
         self.get_logger().warn("Block name %s processed" %(block_name,)) 
 
-    # Helper function TODO
     def set_state(self, new_state):
         args = []
         args.append(self)
