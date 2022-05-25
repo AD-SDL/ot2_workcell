@@ -16,22 +16,24 @@ This workcell will eventually support:
 * [On Ubuntu, Mac, or Windows](https://docs.ros.org/en/foxy/Installation.html)
 * [On a Raspberry Pi 4](https://roboticsbackend.com/install-ros2-on-raspberry-pi/)
 
+    sudo apt install ros-foxy-desktop
+    sudo apt install python3-colcon-common-extensions
+
 ## Install the Packages
 
-This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
+	source /opt/ros/foxy/setup.bash
+	mkdir -p ~/rpl_ws/src
+	cd ~/rpl_ws/src
 
-1. `cd ~`
-2. `source /opt/ros/foxy/setup.bash`
-3. `mkdir -p ~/ot2_ws/src`
-4. `cd ~/ot2_ws/src`
-5. `git clone https://github.com/AD-SDL/ot2_workcell.git`
-6. `cd ot2_workcell && git clone https://github.com/AD-SDL/ot2_driver_pkg.git && git clone https://github.com/AD-SDL/PF400_cobot.git` Bring in OT2 driver  
-**Note** you will need to change the folder name `PF400_cobot` to `arm_driver_pkg`  
-7. `cd ~/ot2_ws`
-8. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
-9. `sudo apt install python3-colcon-common-extensions`
-10. `colcon build`
-11. `source install/setup.bash`
+	git clone https://github.com/AD-SDL/ot2_workcell
+	git clone https://github.com/AD-SDL/camera-driver
+	git clone https://github.com/AD-SDL/ot2-driver
+	git clone https://github.com/AD-SDL/PF400-driver 
+
+	cd ~/rpl_ws
+	rosdep update && rosdep install -i --from-path src --rosdistro foxy -y
+	colcon build
+	source install/setup.bash
 
 ## Database Setup 
 1. **Note** No need to do this anymore, modify the launch files. In `ot2_driver_pkg/protocol_handler/protocol_handling_client.py` in the function`send_message_to_OT2(...)` sock.connect(...) needs to be changed to your IP and whatever port you want 
