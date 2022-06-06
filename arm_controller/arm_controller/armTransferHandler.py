@@ -36,8 +36,8 @@ from arm_client.publish_arm_state import _update_arm_state
 from arm_client.publish_arm_state import heartbeat_transmitter
 
 # Arm driver
-import arm_driver_pkg.arm_driver
-from arm_driver_pkg.arm_driver import arm_transfer
+import pf400_driver_pkg.pf400_driver
+from pf400_driver_pkg.pf400_driver import pf400_transfer
 
 
 # TODO: figure out how to integrate arm code
@@ -194,7 +194,7 @@ class ArmTransferHandler(Node):
             self.get_logger().info(
                 "Attempting to transfer complete transfer %s" % str(next_transfer)
             )
-            output_msg = arm_transfer(job, from_name, to_name) # Do an arm transfer TODO: error handling
+            output_msg = pf400_transfer(job, from_name, to_name) # Do an arm transfer TODO: error handling
             self.get_logger().info("Transfer %s is complete" % str(next_transfer))
         except Exception as e:
             '''
