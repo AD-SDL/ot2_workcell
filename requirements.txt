@@ -1,0 +1,7 @@
+pyzmq
+setuptools
+mysql-connector-python
+scp
+scpclient
+paramiko
+rich

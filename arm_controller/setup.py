@@ -2,6 +2,14 @@ from setuptools import setup
 import os
 from glob import glob
 
+
+install_requires = []
+with open('requirements.txt') as reqs:
+    for line in reqs.readlines():
+        req = line.strip()
+        if not req or req.startswith('#'):
+            continue
+        install_requires.append(req)
 package_name = "arm_controller"
 
 setup(
@@ -13,7 +21,7 @@ setup(
         ("share/" + package_name, ["package.xml"]),
         (os.path.join("share", package_name), glob("launch/*.launch.py")),
     ],
-    install_requires=["setuptools"],
+    install_requires=install_requires,
     zip_safe=True,
     maintainer="Alan Wang",
     maintainer_email="alan.wang@anl.gov",
