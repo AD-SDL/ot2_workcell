@@ -172,7 +172,7 @@ class ArmTransferHandler(Node):
         transfer_request = next_transfer[0].split()  # Split based on whitespaces
         from_name = transfer_request[0]
         to_name = transfer_request[1]
-        job = "TODO" # Not implemented as of right now TODO
+        job = "transfer" # Not implemented as of right now TODO
 
         # Get node information
         to_entry = get_node_info(self, to_name)

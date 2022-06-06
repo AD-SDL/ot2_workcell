@@ -1,0 +1,19 @@
+{
+    "blocks": [ 
+                { 
+                    "block-name": "transfer1",
+                    "tasks": "item1.py transfer:transfer1:transfer2:10:army",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transfer2",
+                    "tasks": "transfer:transfer1:transfer2:10:army item2.py",
+                    "dependencies": ""  
+                }
+              ],
+    "meta-data": {
+                    "author": "Alan wang",
+                    "email": "alan.wang@anl.gov", 
+                    "description": "To test out json format for workflow files in comparison to setup file format"
+                 }  
+}  
