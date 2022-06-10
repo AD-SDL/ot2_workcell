@@ -95,7 +95,7 @@ If you would like to run the OT2_listener.py in your local for **testing purpose
 1. `source ~/ot2_ws/install/setup.bash`
 2. `python3 ~/ot2_ws/src/ot2_workcell/ot2_driver_pkg/zeroMQ_OT2/OT2_listener.py`
 
-**TODO:** Write a bashrc script in each of OT2s and RPis to automatically launch the listeners when they are powered on. 
+**TODO:** Write a bashrc script in each of the OT2s and RPIs to automatically launch the listeners when they are powered on. 
 
 This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
 that workflow to available OT2s.
