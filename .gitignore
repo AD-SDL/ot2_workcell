@@ -205,3 +205,6 @@ _deps
 # Textbook
 Texts/OS_Textbook.pdf
 *.DS_Store
+ot2_driver/
+pf400_driver/
+workcell_manager/
