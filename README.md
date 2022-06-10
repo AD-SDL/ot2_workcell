@@ -25,7 +25,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 3. `mkdir -p ~/ot2_ws/src`
 4. `cd ~/ot2_ws/src`
 5. `git clone https://github.com/AD-SDL/ot2_workcell.git`
-6. `cd ot2_workcell && git clone https://github.com/AD-SDL/ot2_driver.git && git clone https://github.com/AD-SDL/pf400_driver.git` Bring in OT2 driver  
+6. `cd ot2_workcell && git clone https://github.com/AD-SDL/ot2_driver.git && git clone https://github.com/AD-SDL/pf400_driver.git && git clone https://github.com/AD-SDL/workcell-manager.git`  Bring in OT2 driver / PF400 driver / Scheduler Driver 
 7. `cd ~/ot2_ws`
 8. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
 9. `sudo apt install python3-colcon-common-extensions`
@@ -84,8 +84,18 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 
 **OT2 Client**  
 This is for each OT2 that you plan on recieving jobs on and must be **run on the OT2**.
+1. `ssh -i ot2_ssh_key root@10.140.54.14`  
+2. `cd`
+3. `python3 OT2_listener.py` 
+
+**Note:** Create a new ssh key for each OT2 and use their IP addresses. 
+**Known OT2 IP addresses:** `10.140.54.14` | `10.140.54.15`
+
+If you would like to run the OT2_listener.py in your local for **testing purposes only**
 1. `source ~/ot2_ws/install/setup.bash`
 2. `python3 ~/ot2_ws/src/ot2_workcell/ot2_driver_pkg/zeroMQ_OT2/OT2_listener.py`
+
+**TODO:** Write a bashrc script in each of OT2s and RPis to automatically launch the listeners when they are powered on. 
 
 This will cause nodes to be registered with master and you can insert workflow files via the `Scheduler Work Adder` which will prompt you for workflow files. It will automatically schedule 
 that workflow to available OT2s.
