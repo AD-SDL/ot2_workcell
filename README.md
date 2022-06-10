@@ -25,7 +25,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 3. `mkdir -p ~/ot2_ws/src`
 4. `cd ~/ot2_ws/src`
 5. `git clone https://github.com/AD-SDL/ot2_workcell.git`
-6. `cd ot2_workcell && git clone https://github.com/AD-SDL/ot2_driver.git && git clone https://github.com/AD-SDL/pf400_driver.git && git clone https://github.com/AD-SDL/workcell-manager.git`  Bring in OT2 driver / PF400 driver / Scheduler Driver 
+6. `cd ot2_workcell && git clone https://github.com/AD-SDL/ot2_driver.git && git clone https://github.com/AD-SDL/pf400_driver.git && git clone https://github.com/AD-SDL/workcell_manager.git`  Bring in OT2 driver / PF400 driver / Scheduler Driver 
 7. `cd ~/ot2_ws`
 8. `rosdep update && rosdep install -i --from-path src --rosdistro foxy -y`
 9. `sudo apt install python3-colcon-common-extensions`
