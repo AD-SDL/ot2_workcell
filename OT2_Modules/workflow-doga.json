@@ -2,12 +2,12 @@
     "blocks": [ 
                 { 
                     "block-name": "transfer1",
-                    "tasks": "item1.py transfer:transfer1:transfer2:10:army",
+                    "tasks": "item1.py",
                     "dependencies": ""  
                 },
                 {
                     "block-name": "transfer2",
-                    "tasks": "transfer:transfer1:transfer2:10:army item2.py",
+                    "tasks": "item2.py",
                     "dependencies": ""  
                 }
               ],
