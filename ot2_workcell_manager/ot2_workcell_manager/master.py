@@ -71,30 +71,30 @@ class Master(Node):
         )  # Blank request returns a list of all the nodes the master knows about
 
         # Subscription State setup
-        self.arm_state_subscriber = self.create_subscription(ArmStateUpdate, "/arm/arm_state_update", self.node_state_update_callback, 10)
-        self.arm_state_subscriber
+        self.pf400_state_subscriber = self.create_subscription(PF400StateUpdate, "/pf400/pf400_state_update", self.node_state_update_callback, 10)
+        self.pf400_state_subscriber
         self.OT2_state_subscriber = self.create_subscription(OT2StateUpdate, "/OT_2/ot2_state_update", self.node_state_update_callback, 10)
         self.OT2_state_subscriber 
         self.sch_state_subscriber = self.create_subscription(SchStateUpdate, "/sch/sch_state_update", self.node_state_update_callback, 10) # TODO incorporate into scheduler 
         self.sch_state_subscriber 
-        self.arm_state_reset_subscriber = self.create_subscription(PeelerUpdate, "/peeler/peeler_state_update", self.node_state_update_callback, 10)
-        self.arm_state_reset_subscriber  
-        self.arm_state_reset_subscriber = self.create_subscription(SealerUpdate, "/sealer/sealer_state_update", self.node_state_update_callback, 10)
-        self.arm_state_reset_subscriber
-        self.arm_state_reset_subscriber = self.create_subscription(PlateStackerUpdate, "/platestacker/platestacker_state_update", self.node_state_update_callback, 10)
-        self.arm_state_reset_subscriber                  
-        self.arm_state_reset_subscriber = self.create_subscription(ArmReset, "/arm/arm_state_reset", self.state_reset_callback, 10)
-        self.arm_state_reset_subscriber 
+        self.peeler_state_reset_subscriber = self.create_subscription(PeelerUpdate, "/peeler/peeler_state_update", self.node_state_update_callback, 10)
+        self.peeler_state_reset_subscriber  
+        self.sealer_state_reset_subscriber = self.create_subscription(SealerUpdate, "/sealer/sealer_state_update", self.node_state_update_callback, 10)
+        self.sealer_state_reset_subscriber
+        self.platestacker_state_reset_subscriber = self.create_subscription(PlateStackerUpdate, "/platestacker/platestacker_state_update", self.node_state_update_callback, 10)
+        self.platestacker_state_reset_subscriber                  
+        self.pf400_state_reset_subscriber = self.create_subscription(PF400Reset, "/pf400/pf400_state_reset", self.state_reset_callback, 10)
+        self.pf400_state_reset_subscriber 
         self.OT2_state_reset_subscriber = self.create_subscription(OT2Reset, "/OT_2/ot2_state_reset", self.state_reset_callback, 10)
         self.OT2_state_reset_subscriber
         self.sch_state_reset_subscriber = self.create_subscription(SchReset, "/sch/sch_state_reset", self.state_reset_callback, 10)
         self.sch_state_reset_subscriber
-        self.arm_state_reset_subscriber = self.create_subscription(PeelerReset, "/peeler/peeler_state_reset", self.state_reset_callback, 10)
-        self.arm_state_reset_subscriber 
-        self.arm_state_reset_subscriber = self.create_subscription(SealerReset, "/sealer/sealer_state_reset", self.state_reset_callback, 10)
-        self.arm_state_reset_subscriber    
-        self.arm_state_reset_subscriber = self.create_subscription(PlateStackerReset, "/platestacker/platestacker_state_reset", self.state_reset_callback, 10)
-        self.arm_state_reset_subscriber         
+        self.peeler_state_reset_subscriber = self.create_subscription(PeelerReset, "/peeler/peeler_state_reset", self.state_reset_callback, 10)
+        self.peeler_state_reset_subscriber 
+        self.sealer_state_reset_subscriber = self.create_subscription(SealerReset, "/sealer/sealer_state_reset", self.state_reset_callback, 10)
+        self.sealer_state_reset_subscriber    
+        self.platestacker_state_reset_subscriber = self.create_subscription(PlateStackerReset, "/platestacker/platestacker_state_reset", self.state_reset_callback, 10)
+        self.platestacker_state_reset_subscriber         
         self.heartbeat_subscriber = self.create_subscription(Heartbeat, "/heartbeat/heartbeat_update", self.heartbeat_callback, 15)
         self.heartbeat_subscriber
 
@@ -139,9 +139,9 @@ class Master(Node):
                 % (dict["id"], dict["name"])
             )
 
-        elif request.type == "arm":
+        elif request.type == "pf400":
             dict = { 
-                "type": "arm",
+                "type": "pf400",
                 "id": "A"
                 + str(
                     self.nodes
