@@ -77,11 +77,11 @@ class Master(Node):
         self.OT2_state_subscriber 
         self.sch_state_subscriber = self.create_subscription(SchStateUpdate, "/sch/sch_state_update", self.node_state_update_callback, 10) # TODO incorporate into scheduler 
         self.sch_state_subscriber 
-        self.arm_state_reset_subscriber = self.create_subscription(PeelerUpdate, "/peeler/peeler_state_reset", self.node_state_update_callback, 10)
+        self.arm_state_reset_subscriber = self.create_subscription(PeelerUpdate, "/peeler/peeler_state_update", self.node_state_update_callback, 10)
         self.arm_state_reset_subscriber  
-        self.arm_state_reset_subscriber = self.create_subscription(SealerUpdate, "/sealer/sealer_state_reset", self.node_state_update_callback, 10)
+        self.arm_state_reset_subscriber = self.create_subscription(SealerUpdate, "/sealer/sealer_state_update", self.node_state_update_callback, 10)
         self.arm_state_reset_subscriber
-        self.arm_state_reset_subscriber = self.create_subscription(PlateStackerUpdate, "/platestacker/platestacker_state_reset", self.node_state_update_callback, 10)
+        self.arm_state_reset_subscriber = self.create_subscription(PlateStackerUpdate, "/platestacker/platestacker_state_update", self.node_state_update_callback, 10)
         self.arm_state_reset_subscriber                  
         self.arm_state_reset_subscriber = self.create_subscription(ArmReset, "/arm/arm_state_reset", self.state_reset_callback, 10)
         self.arm_state_reset_subscriber 
