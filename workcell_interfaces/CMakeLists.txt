@@ -33,8 +33,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetNodeInfo.srv"
   "srv/GetNodeList.srv"
   "srv/GetId.srv"
-  "msg/ArmStateUpdate.msg"
-  "msg/ArmReset.msg"
+  "msg/PF400StateUpdate.msg"
+  "msg/PF400Reset.msg"
   "msg/OT2Reset.msg"
   "msg/OT2StateUpdate.msg"
   "msg/SchStateUpdate.msg"
@@ -48,6 +48,12 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SchedulerWork.srv"
   "msg/Heartbeat.msg"
   "srv/BlockToRobot.srv"
+  "msg/PeelerStateUpdate.msg"
+  "msg/PeelerReset.msg"
+  "msg/SealerStateUpdate.msg"
+  "msg/SealerReset.msg"
+  "msg/PlateStackerStateUpdate.msg"
+  "msg/PlateStackerReset.msg"
  )
 
 ament_export_dependencies(rosidl_default_runtime)

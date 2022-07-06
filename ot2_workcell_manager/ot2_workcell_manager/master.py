@@ -77,11 +77,11 @@ class Master(Node):
         self.OT2_state_subscriber 
         self.sch_state_subscriber = self.create_subscription(SchStateUpdate, "/sch/sch_state_update", self.node_state_update_callback, 10) # TODO incorporate into scheduler 
         self.sch_state_subscriber 
-        self.peeler_state_reset_subscriber = self.create_subscription(PeelerUpdate, "/peeler/peeler_state_update", self.node_state_update_callback, 10)
+        self.peeler_state_reset_subscriber = self.create_subscription(PeelerStateUpdate, "/peeler/peeler_state_update", self.node_state_update_callback, 10)
         self.peeler_state_reset_subscriber  
-        self.sealer_state_reset_subscriber = self.create_subscription(SealerUpdate, "/sealer/sealer_state_update", self.node_state_update_callback, 10)
+        self.sealer_state_reset_subscriber = self.create_subscription(SealerStateUpdate, "/sealer/sealer_state_update", self.node_state_update_callback, 10)
         self.sealer_state_reset_subscriber
-        self.platestacker_state_reset_subscriber = self.create_subscription(PlateStackerUpdate, "/platestacker/platestacker_state_update", self.node_state_update_callback, 10)
+        self.platestacker_state_reset_subscriber = self.create_subscription(PlateStackerStateUpdate, "/platestacker/platestacker_state_update", self.node_state_update_callback, 10)
         self.platestacker_state_reset_subscriber                  
         self.pf400_state_reset_subscriber = self.create_subscription(PF400Reset, "/pf400/pf400_state_reset", self.state_reset_callback, 10)
         self.pf400_state_reset_subscriber 

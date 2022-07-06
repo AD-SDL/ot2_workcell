@@ -64,7 +64,7 @@ This is assuming an Ubuntu 20.04 environment with ROS Foxy installed.
 
 **Arm**
 1. `source ~/ot2_ws/install/setup.bash`
-2. `ros2 launch arm_controller arm_bringup.launch.py`
+2. `ros2 launch pf400_controller pf400_bringup.launch.py`
 
 **Opentrons OT-2 bob**
 1. `source ~/ot2_ws/install/setup.bash`

@@ -31,9 +31,9 @@ from ot2_workcell_manager_client.worker_info_api import (
     get_node_info,
 )
 
-# Arm Libraries 
-from arm_client.transfer_api import *
-from arm_client.transfer_api import _load_transfer
+# pf400 Libraries 
+from pf400_client.transfer_api import *
+from pf400_client.transfer_api import _load_transfer
 
 # ot2_client libraries 
 from ot2_client.publish_ot2_state_api import *
@@ -45,7 +45,7 @@ from ot2_driver_pkg.ot2_driver import run_protocol
 
 '''
     The OT2ProtocolManager node is the node responsible for executing protocols on the OT2, and syncronize state information.
-    It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning arm transfer requests. 
+    It also has code to allow for the initiation of transfers through the retry api and is the one responsible for beginning pf400 transfer requests. 
 '''
 class OT2ProtocolManager(Node):
     def __init__(self, name):
@@ -187,10 +187,10 @@ class OT2ProtocolManager(Node):
         try:
             self.set_state(self.state["BUSY"]) # Set system to BUSY
 
-            # Conducting an arm transfer
+            # Conducting an pf400 transfer
             if(str(protocol_id).split(":")[0] == "transfer"):
                 temp = protocol_id.split(":")
-                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, arm
+                status = self.transfer(temp[1], temp[2], temp[3], temp[4]) # from, to, item, pf400
             else:
                 self.get_logger().info("Running protocol") #  Run's protocol via the run_protocol_driver
                 msg_error, msg_output, status = run_protocol(int(protocol_id), self.username, self.ip, self.port) # Feed in user specified values for OT2
@@ -216,7 +216,7 @@ class OT2ProtocolManager(Node):
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.get_logger().error("Can't change state, the state of the pf400 is already error")
             self.state_lock.release() # release lock
             return # exit out of function
 
@@ -282,7 +282,7 @@ class OT2ProtocolManager(Node):
     # Function to constantly poll manager queue for protocols
     '''
         Upon error to this thread, the get_next_protocol infinite loop will terminate with the respective nodes being alerted of an error occuring. However, all services of the node 
-        and subscribers will remain operational, but the only way to restart the arm would require restarting the entire node, it might be beneficial to add restart capabilties. 
+        and subscribers will remain operational, but the only way to restart the pf400 would require restarting the entire node, it might be beneficial to add restart capabilties. 
 
         TODO: It might make sense to have it poll at a higher or lower frequency this is up to testing, or change this to something configurable by the launch file
     '''
@@ -308,13 +308,13 @@ class OT2ProtocolManager(Node):
 
 
     # Function to setup transfer
-    def transfer(self, from_name, to_name, item, arm_name):
+    def transfer(self, from_name, to_name, item, pf400_name):
         args = []
         args.append(self)
         args.append(from_name)
         args.append(to_name)
         args.append(item)
-        args.append(arm_name)
+        args.append(pf400_name)
         status = retry(self, _load_transfer, 200, 4, args)
         return status
 

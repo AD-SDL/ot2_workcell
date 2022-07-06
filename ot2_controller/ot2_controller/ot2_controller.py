@@ -16,9 +16,9 @@ from ot2_workcell_manager_client.retry_api import *
 from ot2_workcell_manager_client.register_api import *
 from ot2_workcell_manager_client.register_api import _register, _deregister_node
 
-# Arm library
-from arm_client.transfer_api import *
-from arm_client.transfer_api import _load_transfer
+# pf400 library
+from pf400_client.transfer_api import *
+from pf400_client.transfer_api import _load_transfer
 
 # ot2_client libraries 
 from ot2_client.publish_ot2_state_api import *
@@ -255,7 +255,7 @@ class OT2(Node):
 
         # Prevent changing state when in an error state
         if(self.current_state == self.state['ERROR']):
-            self.get_logger().error("Can't change state, the state of the arm is already error")
+            self.get_logger().error("Can't change state, the state of the pf400 is already error")
             self.state_lock.release() # release lock
             return # exit out of function
 
