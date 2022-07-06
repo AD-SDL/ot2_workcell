@@ -1,8 +1,13 @@
 {
     "blocks": [ 
                 { 
+                    "block-name": "transfer0",
+                    "tasks": "transfer:transfer0:transfer1:plate_rack:army",
+                    "dependencies": ""  
+                },
+                {
                     "block-name": "transfer1",
-                    "tasks": "item1.py transfer:transfer1:transfer2:10:army",
+                    "tasks": "transfer:transfer0:transfer1:plate_rack:army item1.py transfer:transfer1:transfer2:10:army",
                     "dependencies": ""  
                 },
                 {
@@ -16,4 +21,4 @@
                 "email": "dozgulbas@anl.gov", 
                 "description": "To test out json format for workflow files in comparison to setup file format"
              }  
-}  
+}

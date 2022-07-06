@@ -1,0 +1,18 @@
+{
+    "blocks": [ { 
+                    "block-name": "plate_rack",
+                    "tasks": "transfer:plate_rack:transfer2:plate_rack:army",
+                    "dependencies": ""  
+                },
+                {
+                    "block-name": "transfer2",
+                    "tasks": "transfer:plate_rack:transfer2:plate_rack:army",
+                    "dependencies": ""  
+                }
+              ],
+    "meta-data": {
+                    "author": "Doga Ozgulbas",
+                    "email": "dozgulbas@anl.gov", 
+                    "description": "To test out json format for workflow files in comparison to setup file format"
+                 }  
+}  

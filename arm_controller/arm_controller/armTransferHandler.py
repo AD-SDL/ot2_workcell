@@ -173,18 +173,32 @@ class ArmTransferHandler(Node):
         from_name = transfer_request[0]
         to_name = transfer_request[1]
         job = "transfer" # Not implemented as of right now TODO
+        job2 =  transfer_request[2]
+        print("-----------------------------------",next_transfer,"--------------------------------")
+        print ("------------------",transfer_request,"------------------------")
+        if job2 =="plate_rack":
+            from_name = job2
+        else:
+            # Get node information
+            from_entry = get_node_info(self, from_name)
 
-        # Get node information
-        to_entry = get_node_info(self, to_name)
-        from_entry = get_node_info(self, from_name)
+            # Error checking
+            if from_entry["type"] == "-1":  # Doesn't exist
+                self.get_logger().error("node: %s doesn't exist with master" % from_name)
+                return self.status["ERROR"]
 
-        # Error checking
-        if to_entry["type"] == "-1":  # Doesn't exist
-            self.get_logger().error("node: %s doesn't exist with master" % to_name)
-            return self.status["ERROR"]
-        if from_entry["type"] == "-1":  # Doesn't exist
-            self.get_logger().error("node: %s doesn't exist with master" % from_name)
-            return self.status["ERROR"]
+        if job2 == "completed":  
+            to_name = job2
+
+        else:      
+            to_entry = get_node_info(self, to_name)
+
+            if to_entry["type"] == "-1":  # Doesn't exist
+                self.get_logger().error("node: %s doesn't exist with master" % to_name)
+                return self.status["ERROR"]
+
+
+        
 
         # Update state and let it be know that we are busy
         self.set_state(self.state["BUSY"]) # Set system state to BUSY 
