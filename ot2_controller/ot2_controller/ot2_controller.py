@@ -67,8 +67,8 @@ class OT2(Node):
         self.state_lock = Lock() # Access to the state
 
         # readability
-        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: sync with master
-        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "WAITING": 10}
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3, "COMPLETED": 4}  # TODO: sync with master
+        self.status = {"ERROR": 1, "SUCCESS": 0, "WARNING": 2, "FATAL": 3, "COMPLETED": 4, "WAITING": 10}
 
         # State information
         self.current_state = self.state["READY"]

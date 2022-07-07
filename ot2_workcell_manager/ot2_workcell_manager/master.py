@@ -41,8 +41,8 @@ class Master(Node):
         self.sub_list = []
 
         # Readability
-        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3}  # TODO: more states
-        self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "WAITING": 10}
+        self.state = {"BUSY": 1, "READY": 0, "ERROR": 2, "QUEUED": 3,"COMPLETED": 4}  # TODO: more states
+        self.status = {"SUCCESS": 0, "WARNING": 2, "ERROR": 1, "FATAL": 3, "COMPLETED": 4, "WAITING": 10}
         self.heartbeat = datetime.now() #datetime(2022,1,1,1,1,1,1) for low number
 
         # Path setup
